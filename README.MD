@@ -2,7 +2,7 @@
 
 ## Tautan Penting
 - PWS Deployment: TBA
-- Figma Design: TBA
+- Figma Design: [Figma](https://www.figma.com/design/S8q8mgXES8W0DCOCbV5cL3)
 
 ## Deskripsi dan Overview
 Sayangin merupakan platform belanja online untuk barang *preloved* yang masih layak pakai. Hal yang membedakan kami dari produk serupa lainnya adalah setiap pengguna memiliki lemari digital untuk mendata barang-barang miliknya. Pengguna yang sudah lama tidak menggunakan suatu barang akan diberi pengingat dari sistem, dan akan diberikan opsi untuk menjual, mendonasikan, atau menyimpannya.

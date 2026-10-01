@@ -1,0 +1,426 @@
+{% load static %}
+
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sayangin — Belanja preloved, rawat lemarimu</title>
+    <meta name="description" content="Sayangin: marketplace barang preloved dengan Lemari Digital, Tunda Beli, dan donasi tepat sasaran.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital@1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tokens.css">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/home.css">
+</head>
+
+<body>
+    <!-- Icon sprite (sama dengan komponen icon/* di Figma) -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></symbol>
+        <symbol id="i-cart" viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></symbol>
+        <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></symbol>
+        <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+        <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+        <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+        <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+        <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+        <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M8.5 4L3.5 7l2 4 2.5-1v10h8V10l2.5 1 2-4-5-3a3.5 3.5 0 0 1-7 0z"/></symbol>
+        <symbol id="i-dress" viewBox="0 0 24 24"><path d="M9.5 3h5l-1 5 4.5 13H6L10.5 8l-1-5z"/><path d="M10.5 8h3"/></symbol>
+        <symbol id="i-chair" viewBox="0 0 24 24"><path d="M7 3h10v8H7z"/><path d="M5 11h14v3H5zM7 14v7M17 14v7"/></symbol>
+        <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M4 16v-4a8 8 0 0 1 16 0v4"/><rect x="3" y="14" width="4" height="6" rx="1.2"/><rect x="17" y="14" width="4" height="6" rx="1.2"/></symbol>
+        <symbol id="i-watch" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 10v2l1.5 1.2M9.5 7.5L10 3h4l.5 4.5M9.5 16.5L10 21h4l.5-4.5"/></symbol>
+        <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/></symbol>
+        <symbol id="i-wardrobe" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M12 3v18M10 11v2M14 11v2"/></symbol>
+        <symbol id="i-gift" viewBox="0 0 24 24"><path d="M3.5 8h17v4h-17zM5 12v9h14v-9M12 8v13"/><path d="M12 8C10.5 4.5 6.5 4.5 7.2 7c.3 1 2.3 1 4.8 1zM12 8c1.5-3.5 5.5-3.5 4.8-1-.3 1-2.3 1-4.8 1z"/></symbol>
+        <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19C5 10.5 11 5 19.5 4.5 19 13 13.5 19 5 19z"/><path d="M5 19l8.5-8.5"/></symbol>
+        <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M7 3h10M7 21h10M8 3c0 5 8 5.5 8 9s-8 4-8 9M16 3c0 5-8 5.5-8 9s8 4 8 9"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#main">Lewati ke konten</a>
+
+    <!-- ================= HEADER ================= -->
+    <header class="site-header" data-auth="guest">
+        <div class="container">
+        <div class="site-header__bar">
+            <div class="site-header__left">
+            <button class="icon-btn site-header__menu-btn" type="button" aria-label="Buka menu" aria-controls="drawer" aria-expanded="false" data-drawer-open>
+                <svg class="icon"><use href="#i-menu"/></svg>
+            </button>
+            <a href="{% url 'main:show_main' %}" class="logo" aria-label="Sayangin — beranda">sayangin</a>
+
+            <nav class="primary-nav" aria-label="Navigasi utama">
+                <ul>
+                <li class="has-dropdown">
+                    <button class="primary-nav__link primary-nav__link--categories" type="button" aria-expanded="false" aria-controls="cat-menu" data-dropdown>
+                    <svg class="icon icon--sm"><use href="#i-grid"/></svg>
+                    Kategori
+                    <svg class="icon icon--sm"><use href="#i-chev-down"/></svg>
+                    </button>
+                    <div class="dropdown" id="cat-menu">
+                    <a href="#etalase"><svg class="icon"><use href="#i-shirt"/></svg>Pakaian Pria</a>
+                    <a href="#etalase"><svg class="icon"><use href="#i-dress"/></svg>Pakaian Wanita</a>
+                    <a href="#etalase"><svg class="icon"><use href="#i-chair"/></svg>Furnitur</a>
+                    <a href="#etalase"><svg class="icon"><use href="#i-headphones"/></svg>Hiburan</a>
+                    <a href="#etalase"><svg class="icon"><use href="#i-watch"/></svg>Aksesori</a>
+                    </div>
+                </li>
+                <li><a class="primary-nav__link" href="#cara-kerja">Lemari Digital</a></li>
+                <li><a class="primary-nav__link" href="#lembaga">Donasi</a></li>
+                <li><a class="primary-nav__link" href="#cara-kerja">Dampak</a></li>
+                </ul>
+            </nav>
+            </div>
+
+            <div class="site-header__actions">
+                <a class="icon-btn" href="#" aria-label="Keranjang (0 barang)">
+                    <svg class="icon"><use href="#i-cart"/></svg>
+                </a>
+
+                <!-- Check if the user is logged in -->
+                {% if user.is_authenticated %}
+                    <span class="auth-links" style="font-weight: 600;">
+                        Halo, {{ user.username }}
+                    </span>
+                    <a class="btn btn--outline btn--sm" href="{% url 'main:logout_user' %}">Keluar</a>
+                    
+                    <a class="icon-btn mobile-only" href="#" aria-label="Akun">
+                        <svg class="icon"><use href="#i-user"/></svg>
+                    </a>
+                {% else %}
+                    <!-- Show original buttons if they are a guest -->
+                    <div class="auth-links">
+                        <a href="{% url 'main:show_login' %}">Masuk</a><span aria-hidden="true">/</span><a href="{% url 'main:show_register' %}">Daftar</a>
+                    </div>
+                    <a class="btn btn--outline btn--sm" href="#lembaga">Daftar Lembaga</a>
+                    
+                    <a class="icon-btn mobile-only" href="{% url 'main:show_login' %}" aria-label="Akun">
+                        <svg class="icon"><use href="#i-user"/></svg>
+                    </a>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <form class="site-header__search" role="search" action="#etalase">
+            <label class="search">
+            <svg class="icon"><use href="#i-search"/></svg>
+            <span class="visually-hidden">Cari barang</span>
+            <input type="search" name="q" placeholder="Cari kemeja, kursi rotan, buku…" autocomplete="off">
+            </label>
+        </form>
+        </div>
+    </header>
+
+    <!-- Drawer menu mobile -->
+    <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+        <div class="drawer__head">
+            <a href="{% url 'main:show_main' %}" class="logo">sayangin</a>
+            <button class="icon-btn" type="button" aria-label="Tutup menu" data-drawer-close>
+                <svg class="icon"><use href="#i-close"/></svg>
+            </button>
+        </div>
+        <nav class="drawer__nav" aria-label="Navigasi mobile">
+            <a href="#explore"><svg class="icon"><use href="#i-grid"/></svg><span>Kategori</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
+            <a href="#cara-kerja"><svg class="icon"><use href="#i-wardrobe"/></svg><span>Lemari Digital</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
+            <a href="#cara-kerja"><svg class="icon"><use href="#i-hourglass"/></svg><span>Tunda Beli</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
+            <a href="#lembaga"><svg class="icon"><use href="#i-gift"/></svg><span>Donasi</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
+            <a href="#cara-kerja"><svg class="icon"><use href="#i-leaf"/></svg><span>Dampak</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
+        </nav>
+        <div class="drawer__actions">
+            {% if user.is_authenticated %}
+                <p style="text-align: center; margin-bottom: 1rem; font-weight: 600;">Halo, {{ user.username }}!</p>
+                <a class="btn btn--outline btn--block" href="{% url 'main:logout_user' %}">Keluar</a>
+            {% else %}
+                <a class="btn btn--primary btn--block" href="{% url 'main:show_login' %}">Masuk</a>
+                <a class="btn btn--outline btn--block" href="{% url 'main:show_register' %}">Daftar akun</a>
+                <a class="btn btn--secondary btn--block" href="#lembaga">Daftar Lembaga</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <main id="main">
+        <!-- ================= HERO (slider) ================= -->
+        <section class="hero" aria-roledescription="carousel" aria-label="Sorotan Sayangin">
+        <div class="container hero__inner">
+            <div class="hero__track" data-slider>
+            <article class="hero__slide is-active" aria-roledescription="slide" aria-label="1 dari 3">
+                <div class="hero__copy">
+                <p class="eyebrow hero__eyebrow">Est. 2026 —</p>
+                <h1 class="hero__title">Barang yang disayang tidak seharusnya berakhir di gudang.</h1>
+                <p class="caption-serif hero__caption">Catat isi lemarimu, jual yang lama tak terpakai, donasikan yang dibutuhkan orang lain, dan tahan dulu keinginan beli yang baru.</p>
+                <div class="hero__ctas">
+                    <a class="btn btn--primary" href="{% url 'main:show_register' %}">Mulai dari lemarimu</a>
+                    <a class="btn btn--link" href="#cara-kerja">Cara kerjanya <svg class="icon"><use href="#i-arrow"/></svg></a>
+                </div>
+                </div>
+                <figure class="hero__media" style="--tint: var(--tint-straw)">
+                <span class="photo-ph">[Foto: lemari terbuka dengan baju terlipat rapi]</span>
+                </figure>
+            </article>
+
+            <article class="hero__slide" aria-roledescription="slide" aria-label="2 dari 3" aria-hidden="true">
+                <div class="hero__copy">
+                <p class="eyebrow hero__eyebrow">Donasi tepat sasaran</p>
+                <h2 class="hero__title">Beri yang benar-benar dibutuhkan.</h2>
+                <p class="caption-serif hero__caption">Lembaga mitra menulis daftar kebutuhan. Kamu tinggal mencocokkan dengan isi lemarimu.</p>
+                <div class="hero__ctas">
+                    <a class="btn btn--primary" href="#lembaga" tabindex="-1">Lihat daftar kebutuhan</a>
+                    <a class="btn btn--link" href="#cara-kerja" tabindex="-1">Cara kerjanya <svg class="icon"><use href="#i-arrow"/></svg></a>
+                </div>
+                </div>
+                <figure class="hero__media" style="--tint: var(--tint-mint)">
+                <span class="photo-ph">[Foto: kardus donasi berisi buku]</span>
+                </figure>
+            </article>
+
+            <article class="hero__slide" aria-roledescription="slide" aria-label="3 dari 3" aria-hidden="true">
+                <div class="hero__copy">
+                <p class="eyebrow hero__eyebrow">Tunda beli</p>
+                <h2 class="hero__title">Tahan dulu, cari versi preloved-nya.</h2>
+                <p class="caption-serif hero__caption">Masukkan barang impianmu ke daftar tunggu. Selama itu, kami carikan padanan bekasnya.</p>
+                <div class="hero__ctas">
+                    <a class="btn btn--primary" href="{% url 'main:show_register' %}" tabindex="-1">Coba tunda beli</a>
+                    <a class="btn btn--link" href="#etalase" tabindex="-1">Lihat etalase <svg class="icon"><use href="#i-arrow"/></svg></a>
+                </div>
+                </div>
+                <figure class="hero__media" style="--tint: var(--tint-blush)">
+                <span class="photo-ph">[Foto: tangan memegang label harga]</span>
+                </figure>
+            </article>
+            </div>
+
+            <div class="hero__dots" role="tablist" aria-label="Pilih slide">
+            <button type="button" role="tab" aria-selected="true" aria-label="Slide 1"></button>
+            <button type="button" role="tab" aria-selected="false" aria-label="Slide 2"></button>
+            <button type="button" role="tab" aria-selected="false" aria-label="Slide 3"></button>
+            </div>
+        </div>
+        </section>
+
+        <!-- ================= EXPLORE + CARA KERJA ================= -->
+        <section class="container discover">
+        <div class="explore" id="explore">
+            <div class="section-head">
+            <h2>Explore Sayangin</h2>
+            <a class="btn btn--link" href="#etalase">Semua kategori <svg class="icon"><use href="#i-arrow"/></svg></a>
+            </div>
+            <ul class="explore__grid">
+            <li><a class="category-item" href="#etalase"><span class="category-item__icon"><svg class="icon"><use href="#i-shirt"/></svg></span>Pakaian Pria</a></li>
+            <li><a class="category-item" href="#etalase"><span class="category-item__icon"><svg class="icon"><use href="#i-dress"/></svg></span>Pakaian Wanita</a></li>
+            <li><a class="category-item" href="#etalase"><span class="category-item__icon"><svg class="icon"><use href="#i-chair"/></svg></span>Furnitur</a></li>
+            <li><a class="category-item" href="#etalase"><span class="category-item__icon"><svg class="icon"><use href="#i-headphones"/></svg></span>Hiburan</a></li>
+            <li><a class="category-item" href="#etalase"><span class="category-item__icon"><svg class="icon"><use href="#i-watch"/></svg></span>Aksesori</a></li>
+            <li><a class="category-item" href="#etalase"><span class="category-item__icon"><svg class="icon"><use href="#i-more"/></svg></span>Lainnya</a></li>
+            </ul>
+        </div>
+
+        <aside class="how-panel" id="cara-kerja" aria-labelledby="how-title">
+            <div class="how-panel__head">
+            <h2 id="how-title">Cara kerja Sayangin</h2>
+            <a class="btn btn--link" href="#">Selengkapnya <svg class="icon"><use href="#i-arrow"/></svg></a>
+            </div>
+            <ol class="how-panel__steps">
+            <li class="step-card">
+                <div class="step-card__media" style="--tint: var(--tint-wheat)"><span class="photo-ph">[Foto: tumpukan baju]</span></div>
+                <p class="eyebrow">Lemari Digital</p>
+                <h3>Semua barangmu, dalam satu lemari.</h3>
+            </li>
+            <li class="step-card">
+                <div class="step-card__media" style="--tint: var(--tint-mint)"><span class="photo-ph">[Foto: label harga]</span></div>
+                <p class="eyebrow">Tunda Beli</p>
+                <h3>Tahan dulu, cari versi preloved-nya.</h3>
+            </li>
+            <li class="step-card">
+                <div class="step-card__media" style="--tint: var(--tint-straw)"><span class="photo-ph">[Foto: kardus donasi]</span></div>
+                <p class="eyebrow">Donasi</p>
+                <h3>Beri yang benar-benar dibutuhkan.</h3>
+            </li>
+            <li class="step-card">
+                <div class="step-card__media" style="--tint: var(--tint-stone)"><span class="photo-ph">[Foto: catatan kecil]</span></div>
+                <p class="eyebrow">Dampak</p>
+                <h3>Lihat seberapa jauh kamu melangkah.</h3>
+            </li>
+            </ol>
+        </aside>
+        </section>
+
+        <!-- ================= ETALASE ================= -->
+        <section class="section recommended" id="etalase" aria-labelledby="rec-title">
+        <div class="container">
+            <div class="section-head">
+            <div>
+                <span class="eyebrow">Etalase</span>
+                <h2 id="rec-title">Rekomendasi untukmu</h2>
+            </div>
+            <a class="btn btn--outline desktop-only" href="#">Lihat semua etalase</a>
+            </div>
+
+            <ul class="product-grid" data-product-grid>
+            <!-- Kartu statis; bisa diganti data DummyJSON lewat /static/js/main.js -->
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-wheat)">
+                <span class="badge">Pakaian</span><span class="photo-ph">[Foto: kemeja dilipat]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Kemeja linen krem"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Kemeja linen krem</a></h3>
+                <p class="product-card__price">Rp85.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Jakarta Selatan</span><span class="product-card__cond">Jarang dipakai</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-blush)">
+                <span class="badge">Pakaian</span><span class="photo-ph">[Foto: rok digantung]</span>
+                <button class="fav-btn" type="button" aria-pressed="true" aria-label="Simpan Rok plisket cokelat tua"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Rok plisket cokelat tua</a></h3>
+                <p class="product-card__price">Rp65.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Bandung</span><span class="product-card__cond">Seperti baru</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-straw)">
+                <span class="badge">Furnitur</span><span class="photo-ph">[Foto: kursi rotan]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Kursi rotan kecil"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Kursi rotan kecil</a></h3>
+                <p class="product-card__price">Rp240.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Yogyakarta</span><span class="product-card__cond">Bekas pakai</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-stone)">
+                <span class="badge">Hiburan</span><span class="photo-ph">[Foto: kamera di meja]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Kamera analog 35mm"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Kamera analog 35mm</a></h3>
+                <p class="product-card__price">Rp750.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Surabaya</span><span class="product-card__cond">Jarang dipakai</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-mint)">
+                <span class="badge">Aksesori</span><span class="photo-ph">[Foto: tote bag]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Tote bag kanvas"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Tote bag kanvas</a></h3>
+                <p class="product-card__price">Rp45.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Depok</span><span class="product-card__cond">Seperti baru</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-sage)">
+                <span class="badge">Hiburan</span><span class="photo-ph">[Foto: tumpukan buku]</span>
+                <button class="fav-btn" type="button" aria-pressed="true" aria-label="Simpan Paket novel sastra"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Paket novel sastra (5 buku)</a></h3>
+                <p class="product-card__price">Rp120.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Bekasi</span><span class="product-card__cond">Bekas pakai</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-mint)">
+                <span class="badge">Pakaian</span><span class="photo-ph">[Foto: jaket denim]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Jaket denim oversized"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Jaket denim oversized</a></h3>
+                <p class="product-card__price">Rp150.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Tangerang</span><span class="product-card__cond">Jarang dipakai</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-wheat)">
+                <span class="badge">Furnitur</span><span class="photo-ph">[Foto: lampu meja]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Lampu meja kayu"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Lampu meja kayu</a></h3>
+                <p class="product-card__price">Rp95.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Bogor</span><span class="product-card__cond">Seperti baru</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-blush)">
+                <span class="badge">Hiburan</span><span class="photo-ph">[Foto: gitar]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Gitar akustik"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Gitar akustik</a></h3>
+                <p class="product-card__price">Rp600.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Malang</span><span class="product-card__cond">Bekas pakai</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-stone)">
+                <span class="badge">Pakaian</span><span class="photo-ph">[Foto: blazer]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Blazer wol abu"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Blazer wol abu</a></h3>
+                <p class="product-card__price">Rp180.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Jakarta Pusat</span><span class="product-card__cond">Jarang dipakai</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-sage)">
+                <span class="badge">Aksesori</span><span class="photo-ph">[Foto: jam tangan]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Jam tangan kulit"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Jam tangan kulit</a></h3>
+                <p class="product-card__price">Rp210.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Semarang</span><span class="product-card__cond">Seperti baru</span></p>
+            </li>
+            <li class="product-card">
+                <div class="product-card__media" style="--tint: var(--tint-straw)">
+                <span class="badge">Furnitur</span><span class="photo-ph">[Foto: rak buku]</span>
+                <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan Rak buku 3 susun"><svg class="icon"><use href="#i-heart"/></svg></button>
+                </div>
+                <h3 class="product-card__title"><a href="#">Rak buku 3 susun</a></h3>
+                <p class="product-card__price">Rp300.000</p>
+                <p class="product-card__meta"><span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>Jakarta Timur</span><span class="product-card__cond">Bekas pakai</span></p>
+            </li>
+            </ul>
+
+            <a class="btn btn--outline btn--block mobile-only recommended__more" href="#">Lihat semua etalase</a>
+        </div>
+        </section>
+
+        <!-- ================= LEMBAGA MITRA ================= -->
+        <section class="partner" id="lembaga" aria-labelledby="partner-title">
+        <div class="container partner__inner">
+            <figure class="partner__media"><span class="photo-ph">[Foto: rak donasi di panti]</span></figure>
+            <div class="partner__copy">
+            <p class="eyebrow">Untuk lembaga mitra</p>
+            <h2 id="partner-title">Panti dan sekolah bisa bilang apa yang mereka butuhkan.</h2>
+            <p>Lembaga mitra membuat daftar kebutuhan yang spesifik. Pengguna mencocokkannya dengan barang di lemari, jadi donasi yang datang benar-benar terpakai.</p>
+            <a class="btn btn--link" href="{% url 'main:show_register' %}">Daftarkan lembaga <svg class="icon"><use href="#i-arrow"/></svg></a>
+            </div>
+        </div>
+        </section>
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="site-footer">
+        <div class="container">
+        <div class="site-footer__top">
+            <div class="site-footer__brand">
+            <a href="{% url 'main:show_main' %}" class="logo">sayangin</a>
+            <p class="caption-serif">Barang yang disayang tidak seharusnya berakhir di gudang.</p>
+            </div>
+            <div class="site-footer__cols">
+            <nav class="site-footer__col" aria-labelledby="f-donasi">
+                <h2 id="f-donasi">Donasi</h2>
+                <ul><li><a href="#lembaga">Daftar Kebutuhan</a></li><li><a href="#">Cara Donasi (FAQ)</a></li><li><a href="#lembaga">Daftar Lembaga</a></li></ul>
+            </nav>
+            <nav class="site-footer__col" aria-labelledby="f-jelajahi">
+                <h2 id="f-jelajahi">Jelajahi</h2>
+                <ul><li><a href="#etalase">Belanja</a></li><li><a href="#cara-kerja">Lemari Digital</a></li><li><a href="#cara-kerja">Dampak</a></li></ul>
+            </nav>
+            <nav class="site-footer__col" aria-labelledby="f-tentang">
+                <h2 id="f-tentang">Tentang</h2>
+                <ul><li><a href="#">Tentang Kami</a></li><li><a href="#">Tim</a></li><li><a href="#">Kontak</a></li></ul>
+            </nav>
+            </div>
+        </div>
+        <div class="site-footer__bottom">
+            <p>© 2026 Sayangin, Inc.</p>
+            <p>Dibuat untuk barang yang masih layak dipakai.</p>
+        </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js" defer></script>
+</body>
+</html>

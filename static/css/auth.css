@@ -1,0 +1,91 @@
+/* ==========================================================
+   Sayangin — Login & Register
+   ========================================================== */
+
+.auth { display: grid; grid-template-columns: minmax(420px, 600px) minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+
+/* Panel merek (kiri) */
+.auth__panel {
+  position: sticky; top: 0; height: 100vh; height: 100dvh;
+  display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-8);
+  padding: var(--space-12) var(--space-16);
+  background: var(--color-secondary); color: var(--color-on-secondary);
+}
+.auth__panel-content { display: grid; gap: var(--space-6); }
+.auth__media {
+  position: relative; height: clamp(200px, 32vh, 300px);
+  border-radius: var(--radius-md); overflow: hidden;
+  --tint: var(--color-secondary-hover);
+}
+.auth__media .photo-ph { color: var(--color-on-secondary); padding: var(--space-4); }
+.auth__panel h2 { font-size: var(--text-3xl); color: var(--tint-wheat); }
+.auth__panel .caption-serif { color: var(--color-on-secondary); max-width: 420px; }
+.auth__copyright { font-size: var(--text-xs); }
+
+/* Area form (kanan) */
+.auth__main { display: flex; flex-direction: column; padding: var(--space-10) var(--space-16); }
+.auth__back {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); font-weight: 500; color: var(--color-text-muted);
+}
+.auth__back:hover { color: var(--color-primary); }
+.auth__center { flex: 1; display: grid; place-items: center; padding-block: var(--space-10); }
+.auth__card { width: 100%; max-width: 400px; display: grid; gap: var(--space-6); }
+.auth__heading { display: grid; gap: var(--space-3); }
+.auth__heading h1 { font-size: clamp(1.75rem, 1.2rem + 1.4vw, 2.25rem); }
+.auth__heading p:last-child { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+.auth-form { display: grid; gap: var(--space-5); }
+.auth-form__options { display: flex; justify-content: flex-end; margin-top: calc(var(--space-2) * -1); }
+.text-link { font-size: var(--text-sm); font-weight: 500; color: var(--color-primary); }
+.text-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.auth-form__terms { font-size: var(--text-xs); color: var(--color-text-muted); }
+.auth-form__terms a { color: var(--color-text); text-decoration: underline; text-underline-offset: 2px; }
+
+.auth__divider { height: 1px; background: var(--color-border); border: 0; margin: 0; }
+.auth__switch { text-align: center; font-size: var(--text-sm); color: var(--color-text-muted); }
+.auth__switch a { color: var(--color-primary); font-weight: 500; margin-left: 4px; }
+.auth__org { text-align: center; font-size: var(--text-xs); color: var(--color-text-muted); }
+.auth__org a { color: var(--color-accent-strong); margin-left: 4px; }
+.auth__switch a:hover, .auth__org a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Header khusus mobile (di dalam band) */
+.auth__mobile-top { display: none; }
+.auth__band-heading { display: none; }
+
+/* ==========================================================
+   Responsive
+   ========================================================== */
+@media (max-width: 1100px) {
+  .auth { grid-template-columns: 420px minmax(0, 1fr); }
+  .auth__panel { padding: var(--space-10); }
+  .auth__main { padding: var(--space-8) var(--space-10); }
+}
+
+@media (max-width: 860px) {
+  .auth { display: block; }
+
+  /* Panel menjadi band ringkas di atas form */
+  .auth__panel {
+    position: static; height: auto;
+    padding: var(--space-4) var(--space-4) var(--space-8);
+    gap: var(--space-6);
+  }
+  .auth__panel-content, .auth__copyright, .auth__panel > .logo { display: none; }
+  .auth__mobile-top { display: flex; align-items: center; justify-content: space-between; }
+  .auth__mobile-top .icon-btn { color: var(--color-on-secondary); }
+  .auth__mobile-top .icon-btn:hover { background: var(--color-secondary-hover); }
+  .auth__band-heading { display: grid; gap: var(--space-3); }
+  .auth__band-heading .eyebrow { color: var(--color-on-secondary); }
+  .auth__band-heading h1 { font-size: var(--text-2xl); color: var(--tint-wheat); }
+  .auth__band-heading p:last-child { font-size: var(--text-sm); }
+
+  .auth__main { padding: var(--space-8) var(--space-4) var(--space-10); }
+  .auth__back, .auth__heading { display: none; }
+  .auth__center { display: block; padding: 0; }
+  .auth__card { max-width: none; }
+
+  .auth .btn--primary { min-height: 52px; }
+  .field__input { font-size: 1rem; } /* cegah auto-zoom iOS */
+}

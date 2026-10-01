@@ -1,0 +1,124 @@
+/* ==========================================================
+   Sayangin — Design Tokens
+   Sumber: color palette & text styles milik tim Sayangin.
+   Nilai hex adalah perkiraan dari swatch; sesuaikan bila
+   nilai asli di Figma berbeda (cukup ubah di sini).
+   ========================================================== */
+
+:root {
+  /* ---------- Raw palette ---------- */
+  --coffee-bean:    #2B1216;
+  --cedar:          #3E1F17;
+  --cowboy:         #4D2A2D;
+  --night-bordeaux: #5E1C24;
+  --dark-burgundy:  #720B10;
+  --vesuvius:       #A8430C;
+  --burnt-sienna:   #EC8661;
+  --mondo:          #44432A;
+  --hemlock:        #5D5B3A;
+  --ferra:          #6F4E50;
+
+  /* Netral hangat (turunan untuk background & kartu) */
+  --cream-50:  #FCF7EE;
+  --cream-100: #F7EFE1;
+  --cream-200: #EFE3CF;
+  --sand-300:  #E3D3B6;
+  --sand-400:  #CDB997;
+
+  /* Warna placeholder foto (dari mockup hi-fi) */
+  --tint-wheat: #EBDDBB;
+  --tint-mint:  #DDE9E0;
+  --tint-straw: #E4D4B0;
+  --tint-stone: #D8D2B9;
+  --tint-blush: #F1D9CC;
+  --tint-sage:  #D5D9C2;
+
+  /* ---------- Semantic tokens ---------- */
+  --color-primary:         var(--dark-burgundy);
+  --color-primary-hover:   var(--night-bordeaux);
+  --color-on-primary:      var(--cream-50);
+  --color-secondary:       var(--mondo);
+  --color-secondary-hover: var(--hemlock);
+  --color-on-secondary:    var(--cream-100);
+  --color-accent:          var(--burnt-sienna);
+  --color-accent-strong:   var(--vesuvius);
+
+  --color-bg:         var(--cream-50);
+  --color-surface:    #FFFDF8;
+  --color-surface-2:  var(--cream-100);
+  --color-text:       var(--coffee-bean);
+  --color-text-muted: var(--ferra);
+  --color-border:     var(--cream-200);
+  --color-border-strong: var(--sand-400);
+
+  --color-success:    #4F6B3A;
+  --color-success-bg: #E6EBD9;
+  --color-error:      #B3261E;
+  --color-error-bg:   #F7E1DC;
+  --color-focus:      var(--vesuvius);
+
+  /* ---------- Typography ---------- */
+  --font-display: "Libre Caslon Display", "Libre Caslon Text", Georgia, serif;
+  --font-serif:   "Libre Caslon Text", Georgia, serif;
+  --font-sans:    "Hanken Grotesk", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-brand:   "Bricolage Grotesque", var(--font-sans);
+
+  /* Skala tipe (fluid: mobile → desktop) */
+  --text-xs:   0.75rem;                              /* 12 */
+  --text-sm:   0.875rem;                             /* 14 */
+  --text-base: 1rem;                                 /* 16 */
+  --text-lg:   1.125rem;                             /* 18 */
+  --text-xl:   clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-2xl:  clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  --text-3xl:  clamp(2rem, 1.5rem + 2vw, 3rem);
+  --text-hero: clamp(2.25rem, 1.4rem + 3.4vw, 4rem);
+
+  --leading-tight: 1.1;
+  --leading-snug:  1.3;
+  --leading-body:  1.6;
+
+  --tracking-label: 0.14em;
+
+  /* ---------- Spacing (basis 4px) ---------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  --section-gap: clamp(3rem, 2rem + 4vw, 5.5rem);
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 3rem);
+  --container: 1280px;
+
+  /* ---------- Shape ---------- */
+  --radius-sm: 2px;   /* tombol, input — mengikuti mockup yang tegas */
+  --radius-md: 4px;   /* kartu */
+  --radius-lg: 8px;   /* panel besar */
+  --radius-pill: 999px;
+
+  --border-width: 1px;
+
+  /* ---------- Elevation ---------- */
+  --shadow-sm: 0 1px 2px rgba(43, 18, 22, 0.06);
+  --shadow-md: 0 8px 24px -12px rgba(43, 18, 22, 0.22);
+  --shadow-lg: 0 20px 48px -20px rgba(43, 18, 22, 0.35);
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration: 250ms;
+
+  /* ---------- Layout ---------- */
+  --header-h: 64px;
+  --control-h: 48px;
+}
+
+@media (min-width: 1024px) {
+  :root { --control-h: 44px; }
+}

@@ -121,3 +121,9 @@ sftp-config.json
 
 # macOS
 .DS_Store
+
+# tailwind
+node_modules/
+npm-debug.log
+.pnp
+.pnp.js

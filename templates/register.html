@@ -1,0 +1,120 @@
+{% load static %}
+
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daftar — Sayangin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  </svg>
+
+  <div class="auth">
+    <aside class="auth__panel">
+      <a href="{% url 'main:show_main' %}" class="logo logo--light" aria-label="Sayangin — beranda">sayangin</a>
+
+      <div class="auth__mobile-top">
+        <a href="{% url 'main:show_main' %}" class="logo logo--light" aria-label="Sayangin — beranda">sayangin</a>
+        <a href="{% url 'main:show_main' %}" class="icon-btn" aria-label="Tutup, kembali ke beranda"><svg class="icon"><use href="#i-close"/></svg></a>
+      </div>
+      <div class="auth__band-heading">
+        <p class="eyebrow">Buat akun</p>
+        <h1>Mulai dari lemarimu.</h1>
+        <p>Satu akun untuk belanja preloved, menjual isi lemari, dan berdonasi tepat sasaran.</p>
+      </div>
+
+      <div class="auth__panel-content">
+        <figure class="auth__media"><span class="photo-ph">[Foto: kardus berisi barang preloved]</span></figure>
+        <h2>Barang yang disayang, dipakai lebih lama.</h2>
+        <p class="caption-serif">Catat isi lemari, tunda belanja impulsif, dan lihat dampak yang kamu buat.</p>
+      </div>
+      <p class="auth__copyright">© 2026 Sayangin, Inc.</p>
+    </aside>
+
+    <main class="auth__main">
+      <a class="auth__back" href="{% url 'main:show_main' %}"><svg class="icon icon--sm"><use href="#i-chev-left"/></svg>Kembali ke beranda</a>
+
+      <div class="auth__center">
+        <div class="auth__card">
+          <header class="auth__heading">
+            <p class="eyebrow">Buat akun</p>
+            <h1>Mulai dari lemarimu.</h1>
+            <p>Satu akun untuk belanja preloved, menjual isi lemari, dan berdonasi tepat sasaran.</p>
+          </header>
+
+          <form class="auth-form" id="register-form" method="POST" action="{% url 'main:show_register' %}" novalidate>
+            {% csrf_token %}
+            <!-- Client-side JS alert -->
+            <div class="alert" role="alert" hidden data-form-alert></div>
+
+            <!-- Server-side Django alerts -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'error' %}alert--error{% else %}alert--success{% endif %}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="field">
+              <label class="field__label" for="username">Nama pengguna</label>
+              <div class="field__control">
+                <input class="field__input" id="username" name="username" type="text" autocomplete="username" placeholder="contoh: rania.y" minlength="3" maxlength="30" pattern="[A-Za-z0-9._]+" required>
+              </div>
+              <p class="field__error" id="username-error" aria-live="polite"></p>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="email">Email</label>
+              <div class="field__control">
+                <input class="field__input" id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required>
+              </div>
+              <p class="field__error" id="email-error" aria-live="polite"></p>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="password">Kata sandi</label>
+              <div class="field__control field__control--toggle">
+                <input class="field__input" id="password" name="password" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter" minlength="8" required aria-describedby="password-help">
+                <button class="field__toggle" type="button" aria-label="Tampilkan kata sandi" aria-pressed="false" data-toggle-password="password"><svg class="icon"><use href="#i-eye"/></svg></button>
+              </div>
+              <p class="field__help" id="password-help">Minimal 8 karakter, kombinasi huruf dan angka.</p>
+              <p class="field__error" id="password-error" aria-live="polite"></p>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="confirm">Konfirmasi kata sandi</label>
+              <div class="field__control field__control--toggle">
+                <input class="field__input" id="confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Ulangi kata sandi" required>
+                <button class="field__toggle" type="button" aria-label="Tampilkan konfirmasi kata sandi" aria-pressed="false" data-toggle-password="confirm"><svg class="icon"><use href="#i-eye"/></svg></button>
+              </div>
+              <p class="field__error" id="confirm-error" aria-live="polite"></p>
+            </div>
+
+            <button class="btn btn--primary btn--block" type="submit">Daftar</button>
+            <p class="auth-form__terms">Dengan mendaftar, kamu menyetujui <a href="#">Syarat Layanan</a> dan <a href="#">Kebijakan Privasi</a> Sayangin.</p>
+          </form>
+
+          <hr class="auth__divider">
+          <p class="auth__switch">Sudah punya akun?<a href="{% url 'main:show_login' %}">Masuk</a></p>
+          <p class="auth__org">Mewakili panti atau sekolah?<a href="{% url 'main:show_register' %}?tipe=lembaga">Daftarkan lembaga</a></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/js/auth.js" defer></script>
+</body>
+</html>
