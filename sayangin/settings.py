@@ -30,11 +30,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'fallback?')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = not PRODUCTION
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "muhammad-ghazi51-sayang-in.pws.cs.ui.ac.id"]
 
 CSRF_TRUSTED_ORIGINS = [
+    "https://muhammad-ghazi51-sayang-in.pws.cs.ui.ac.id",
     "https://localhost:8000",
-    "https://127.0.0.1:8000"
+    "https://127.0.0.1:8000",
 ]
 
 CSRF_COOKIE_SECURE = True
