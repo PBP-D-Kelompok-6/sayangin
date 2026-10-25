@@ -6,13 +6,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Masuk — Sayangin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital@1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/tokens.css">
-  <link rel="stylesheet" href="/static/css/base.css">
-  <link rel="stylesheet" href="/static/css/components.css">
-  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+  {% include 'includes/fonts.html' %}
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -100,6 +98,6 @@
     </main>
   </div>
 
-  <script src="/static/js/auth.js" defer></script>
+  <script src="{% static 'js/auth.js' %}" defer></script>
 </body>
 </html>

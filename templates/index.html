@@ -7,142 +7,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sayangin — Belanja preloved, rawat lemarimu</title>
     <meta name="description" content="Sayangin: marketplace barang preloved dengan Lemari Digital, Tunda Beli, dan donasi tepat sasaran.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital@1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/tokens.css">
-    <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/components.css">
-    <link rel="stylesheet" href="/static/css/home.css">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    {% include 'includes/fonts.html' %}
 </head>
 
 <body>
-    <!-- Icon sprite (sama dengan komponen icon/* di Figma) -->
-    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></symbol>
-        <symbol id="i-cart" viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></symbol>
-        <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></symbol>
-        <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
-        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></symbol>
-        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
-        <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
-        <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></symbol>
-        <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
-        <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
-        <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
-        <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M8.5 4L3.5 7l2 4 2.5-1v10h8V10l2.5 1 2-4-5-3a3.5 3.5 0 0 1-7 0z"/></symbol>
-        <symbol id="i-dress" viewBox="0 0 24 24"><path d="M9.5 3h5l-1 5 4.5 13H6L10.5 8l-1-5z"/><path d="M10.5 8h3"/></symbol>
-        <symbol id="i-chair" viewBox="0 0 24 24"><path d="M7 3h10v8H7z"/><path d="M5 11h14v3H5zM7 14v7M17 14v7"/></symbol>
-        <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M4 16v-4a8 8 0 0 1 16 0v4"/><rect x="3" y="14" width="4" height="6" rx="1.2"/><rect x="17" y="14" width="4" height="6" rx="1.2"/></symbol>
-        <symbol id="i-watch" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 10v2l1.5 1.2M9.5 7.5L10 3h4l.5 4.5M9.5 16.5L10 21h4l.5-4.5"/></symbol>
-        <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/></symbol>
-        <symbol id="i-wardrobe" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M12 3v18M10 11v2M14 11v2"/></symbol>
-        <symbol id="i-gift" viewBox="0 0 24 24"><path d="M3.5 8h17v4h-17zM5 12v9h14v-9M12 8v13"/><path d="M12 8C10.5 4.5 6.5 4.5 7.2 7c.3 1 2.3 1 4.8 1zM12 8c1.5-3.5 5.5-3.5 4.8-1-.3 1-2.3 1-4.8 1z"/></symbol>
-        <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19C5 10.5 11 5 19.5 4.5 19 13 13.5 19 5 19z"/><path d="M5 19l8.5-8.5"/></symbol>
-        <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M7 3h10M7 21h10M8 3c0 5 8 5.5 8 9s-8 4-8 9M16 3c0 5-8 5.5-8 9s8 4 8 9"/></symbol>
-    </svg>
+    {% include 'includes/icons.html' %}
 
     <a class="skip-link" href="#main">Lewati ke konten</a>
 
-    <!-- ================= HEADER ================= -->
-    <header class="site-header" data-auth="guest">
-        <div class="container">
-        <div class="site-header__bar">
-            <div class="site-header__left">
-            <button class="icon-btn site-header__menu-btn" type="button" aria-label="Buka menu" aria-controls="drawer" aria-expanded="false" data-drawer-open>
-                <svg class="icon"><use href="#i-menu"/></svg>
-            </button>
-            <a href="{% url 'main:show_main' %}" class="logo" aria-label="Sayangin — beranda">sayangin</a>
-
-            <nav class="primary-nav" aria-label="Navigasi utama">
-                <ul>
-                <li class="has-dropdown">
-                    <button class="primary-nav__link primary-nav__link--categories" type="button" aria-expanded="false" aria-controls="cat-menu" data-dropdown>
-                    <svg class="icon icon--sm"><use href="#i-grid"/></svg>
-                    Kategori
-                    <svg class="icon icon--sm"><use href="#i-chev-down"/></svg>
-                    </button>
-                    <div class="dropdown" id="cat-menu">
-                    <a href="#etalase"><svg class="icon"><use href="#i-shirt"/></svg>Pakaian Pria</a>
-                    <a href="#etalase"><svg class="icon"><use href="#i-dress"/></svg>Pakaian Wanita</a>
-                    <a href="#etalase"><svg class="icon"><use href="#i-chair"/></svg>Furnitur</a>
-                    <a href="#etalase"><svg class="icon"><use href="#i-headphones"/></svg>Hiburan</a>
-                    <a href="#etalase"><svg class="icon"><use href="#i-watch"/></svg>Aksesori</a>
-                    </div>
-                </li>
-                <li><a class="primary-nav__link" href="#cara-kerja">Lemari Digital</a></li>
-                <li><a class="primary-nav__link" href="#lembaga">Donasi</a></li>
-                <li><a class="primary-nav__link" href="#cara-kerja">Dampak</a></li>
-                </ul>
-            </nav>
-            </div>
-
-            <div class="site-header__actions">
-                <a class="icon-btn" href="#" aria-label="Keranjang (0 barang)">
-                    <svg class="icon"><use href="#i-cart"/></svg>
-                </a>
-
-                <!-- Check if the user is logged in -->
-                {% if user.is_authenticated %}
-                    <span class="auth-links" style="font-weight: 600;">
-                        Halo, {{ user.username }}
-                    </span>
-                    <a class="btn btn--outline btn--sm" href="{% url 'main:logout_user' %}">Keluar</a>
-                    
-                    <a class="icon-btn mobile-only" href="#" aria-label="Akun">
-                        <svg class="icon"><use href="#i-user"/></svg>
-                    </a>
-                {% else %}
-                    <!-- Show original buttons if they are a guest -->
-                    <div class="auth-links">
-                        <a href="{% url 'main:show_login' %}">Masuk</a><span aria-hidden="true">/</span><a href="{% url 'main:show_register' %}">Daftar</a>
-                    </div>
-                    <a class="btn btn--outline btn--sm" href="#lembaga">Daftar Lembaga</a>
-                    
-                    <a class="icon-btn mobile-only" href="{% url 'main:show_login' %}" aria-label="Akun">
-                        <svg class="icon"><use href="#i-user"/></svg>
-                    </a>
-                {% endif %}
-            </div>
-
-        </div>
-
-        <form class="site-header__search" role="search" action="#etalase">
-            <label class="search">
-            <svg class="icon"><use href="#i-search"/></svg>
-            <span class="visually-hidden">Cari barang</span>
-            <input type="search" name="q" placeholder="Cari kemeja, kursi rotan, buku…" autocomplete="off">
-            </label>
-        </form>
-        </div>
-    </header>
-
-    <!-- Drawer menu mobile -->
-    <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Menu" hidden>
-        <div class="drawer__head">
-            <a href="{% url 'main:show_main' %}" class="logo">sayangin</a>
-            <button class="icon-btn" type="button" aria-label="Tutup menu" data-drawer-close>
-                <svg class="icon"><use href="#i-close"/></svg>
-            </button>
-        </div>
-        <nav class="drawer__nav" aria-label="Navigasi mobile">
-            <a href="#explore"><svg class="icon"><use href="#i-grid"/></svg><span>Kategori</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
-            <a href="#cara-kerja"><svg class="icon"><use href="#i-wardrobe"/></svg><span>Lemari Digital</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
-            <a href="#cara-kerja"><svg class="icon"><use href="#i-hourglass"/></svg><span>Tunda Beli</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
-            <a href="#lembaga"><svg class="icon"><use href="#i-gift"/></svg><span>Donasi</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
-            <a href="#cara-kerja"><svg class="icon"><use href="#i-leaf"/></svg><span>Dampak</span><svg class="icon icon--sm"><use href="#i-chev-right"/></svg></a>
-        </nav>
-        <div class="drawer__actions">
-            {% if user.is_authenticated %}
-                <p style="text-align: center; margin-bottom: 1rem; font-weight: 600;">Halo, {{ user.username }}!</p>
-                <a class="btn btn--outline btn--block" href="{% url 'main:logout_user' %}">Keluar</a>
-            {% else %}
-                <a class="btn btn--primary btn--block" href="{% url 'main:show_login' %}">Masuk</a>
-                <a class="btn btn--outline btn--block" href="{% url 'main:show_register' %}">Daftar akun</a>
-                <a class="btn btn--secondary btn--block" href="#lembaga">Daftar Lembaga</a>
-            {% endif %}
-        </div>
-    </div>
+    {% include 'includes/navbar.html' %}
 
     <main id="main">
         <!-- ================= HERO (slider) ================= -->
@@ -385,7 +262,7 @@
             <p class="eyebrow">Untuk lembaga mitra</p>
             <h2 id="partner-title">Panti dan sekolah bisa bilang apa yang mereka butuhkan.</h2>
             <p>Lembaga mitra membuat daftar kebutuhan yang spesifik. Pengguna mencocokkannya dengan barang di lemari, jadi donasi yang datang benar-benar terpakai.</p>
-            <a class="btn btn--link" href="{% url 'main:show_register' %}">Daftarkan lembaga <svg class="icon"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn--link" href="{% url 'main:show_register' %}?tipe=lembaga">Daftarkan lembaga <svg class="icon"><use href="#i-arrow"/></svg></a>
             </div>
         </div>
         </section>
@@ -421,6 +298,6 @@
         </div>
     </footer>
 
-    <script src="/static/js/main.js" defer></script>
+    <script src="{% static 'js/main.js' %}" defer></script>
 </body>
 </html>

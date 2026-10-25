@@ -1,0 +1,281 @@
+
+{% load static %}
+
+{% comment %}
+Determine where the profile button should lead.
+The role comes from the database, not JavaScript.
+{% endcomment %}
+
+{% if user.is_authenticated %}
+    {% if user.profile.role == 'LEMBAGA' %}
+        {% url 'main:edit_institution_profile' as account_url %}
+    {% else %}
+        {% url 'main:show_profile' as account_url %}
+    {% endif %}
+{% endif %}
+
+<header class="site-header"
+        data-auth="{% if user.is_authenticated %}member{% else %}guest{% endif %}">
+    <div class="container">
+        <div class="site-header__bar">
+            <div class="site-header__left">
+                <!-- mobile menu button -->
+                <button
+                    class="icon-btn site-header__menu-btn"
+                    type="button"
+                    aria-label="Buka menu"
+                    aria-controls="drawer"
+                    aria-expanded="false"
+                    data-drawer-open>
+                    <svg class="icon" aria-hidden="true">
+                        <use href="#i-menu"/>
+                    </svg>
+                </button>
+
+                <!-- logo -->
+                <a href="{% url 'main:show_main' %}"
+                class="logo"
+                aria-label="Sayangin — beranda">
+                    sayangin
+                </a>
+
+                <!-- desktop navi -->
+                <nav class="primary-nav" aria-label="Navigasi utama">
+                    <ul>
+                        <li class="has-dropdown">
+                            <button
+                                class="primary-nav__link primary-nav__link--categories"
+                                type="button"
+                                aria-expanded="false"
+                                aria-controls="cat-menu"
+                                data-dropdown>
+                                <svg class="icon icon--sm" aria-hidden="true">
+                                    <use href="#i-grid"/>
+                                </svg>
+                                Kategori
+                                <svg class="icon icon--sm" aria-hidden="true">
+                                    <use href="#i-chev-down"/>
+                                </svg>
+                            </button>
+
+                            <div class="dropdown" id="cat-menu">
+                                <a href="{% url 'main:show_main' %}#etalase">
+                                    <svg class="icon"><use href="#i-shirt"/></svg>
+                                    Pakaian Pria
+                                </a>
+                                <a href="{% url 'main:show_main' %}#etalase">
+                                    <svg class="icon"><use href="#i-dress"/></svg>
+                                    Pakaian Wanita
+                                </a>
+                                <a href="{% url 'main:show_main' %}#etalase">
+                                    <svg class="icon"><use href="#i-chair"/></svg>
+                                    Furnitur
+                                </a>
+                                <a href="{% url 'main:show_main' %}#etalase">
+                                    <svg class="icon"><use href="#i-headphones"/></svg>
+                                    Hiburan
+                                </a>
+                                <a href="{% url 'main:show_main' %}#etalase">
+                                    <svg class="icon"><use href="#i-watch"/></svg>
+                                    Aksesori
+                                </a>
+                            </div>
+                        </li>
+
+                        <li>
+                            <a class="primary-nav__link"
+                            href="{% url 'main:show_main' %}#cara-kerja">
+                                Lemari Digital
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="primary-nav__link"
+                            href="{% url 'main:show_main' %}#lembaga">
+                                Donasi
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="primary-nav__link"
+                            href="{% url 'main:show_main' %}#cara-kerja">
+                                Dampak
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+            <!-- account navi -->
+            <div class="site-header__actions">
+                {% if user.is_authenticated %}
+                    <span class="auth-links desktop-only">
+                        Halo, {{ user.username }}!
+                    </span>
+                    <!-- role-aware desktop profile button -->
+                    <a class="btn btn--outline btn--sm desktop-only"
+                    href="{{ account_url }}">
+                        {% if user.profile.role == 'LEMBAGA' %}
+                            Profil Lembaga
+                        {% else %}
+                            Profil Saya
+                        {% endif %}
+                    </a>
+
+                    <!-- mobile profile icon -->
+                    <a class="icon-btn mobile-only"
+                    href="{{ account_url }}"
+                    aria-label="Buka profil">
+                        <svg class="icon" aria-hidden="true">
+                            <use href="#i-user"/>
+                        </svg>
+                    </a>
+
+                    <!-- desktop logout -->
+                    <form class="nav-logout-form desktop-only"
+                        method="POST"
+                        action="{% url 'main:logout_user' %}">
+                        {% csrf_token %}
+                        <button class="btn btn--outline btn--sm"
+                                type="submit">
+                            Keluar
+                        </button>
+                    </form>
+
+                {% else %}
+                    <!-- guest navigation -->
+                    <div class="auth-links desktop-only">
+                        <a href="{% url 'main:show_login' %}">
+                            Masuk
+                        </a>
+                        <span aria-hidden="true">/</span>
+                        <a href="{% url 'main:show_register' %}">
+                            Daftar
+                        </a>
+                    </div>
+
+                    <a class="btn btn--outline btn--sm desktop-only navbar__institution-link"
+                    href="{% url 'main:show_register' %}?tipe=lembaga">
+                        Daftar Lembaga
+                    </a>
+
+                    <a class="icon-btn mobile-only"
+                    href="{% url 'main:show_login' %}"
+                    aria-label="Masuk">
+                        <svg class="icon" aria-hidden="true">
+                            <use href="#i-user"/>
+                        </svg>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- search bar -->
+        <form class="site-header__search"
+            role="search"
+            action="{% url 'main:show_main' %}#etalase"
+            method="GET">
+            <label class="search">
+                <svg class="icon" aria-hidden="true">
+                    <use href="#i-search"/>
+                </svg>
+                <span class="visually-hidden">Cari barang</span>
+                <input
+                    type="search"
+                    name="q"
+                    placeholder="Cari kemeja, kursi rotan, buku…"
+                    autocomplete="off">
+            </label>
+        </form>
+    </div>
+</header>
+
+<!-- shared mobile drawer -->
+<div class="drawer"
+    id="drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Menu"
+    hidden>
+
+    <div class="drawer__head">
+        <a href="{% url 'main:show_main' %}" class="logo">
+            sayangin
+        </a>
+
+        <button class="icon-btn"
+                type="button"
+                aria-label="Tutup menu"
+                data-drawer-close>
+            <svg class="icon" aria-hidden="true">
+                <use href="#i-close"/>
+            </svg>
+        </button>
+    </div>
+
+    <nav class="drawer__nav" aria-label="Navigasi mobile">
+        <a href="{% url 'main:show_main' %}#explore">
+            <svg class="icon"><use href="#i-grid"/></svg>
+            <span>Kategori</span>
+        </a>
+
+        <a href="{% url 'main:show_main' %}#cara-kerja">
+            <svg class="icon"><use href="#i-wardrobe"/></svg>
+            <span>Lemari Digital</span>
+        </a>
+
+        <a href="{% url 'main:show_main' %}#lembaga">
+            <svg class="icon"><use href="#i-gift"/></svg>
+            <span>Donasi</span>
+        </a>
+
+        <a href="{% url 'main:show_main' %}#cara-kerja">
+            <svg class="icon"><use href="#i-leaf"/></svg>
+            <span>Dampak</span>
+        </a>
+
+        {% if user.is_authenticated %}
+            <a href="{{ account_url }}">
+                <svg class="icon"><use href="#i-user"/></svg>
+                <span>
+                    {% if user.profile.role == 'LEMBAGA' %}
+                        Profil Lembaga
+                    {% else %}
+                        Profil Saya
+                    {% endif %}
+                </span>
+            </a>
+        {% endif %}
+    </nav>
+
+    <div class="drawer__actions">
+        {% if user.is_authenticated %}
+            <p>Halo, {{ user.username }}!</p>
+            <form class="nav-logout-form"
+                method="POST"
+                action="{% url 'main:logout_user' %}">
+                {% csrf_token %}
+                <button class="btn btn--outline btn--block"
+                        type="submit">
+                    Keluar
+                </button>
+            </form>
+
+        {% else %}
+            <a class="btn btn--primary btn--block"
+            href="{% url 'main:show_login' %}">
+                Masuk
+            </a>
+
+            <a class="btn btn--outline btn--block"
+            href="{% url 'main:show_register' %}">
+                Daftar akun
+            </a>
+
+            <a class="btn btn--outline btn--block"
+            href="{% url 'main:show_register' %}?tipe=lembaga">
+                Daftar Lembaga
+            </a>
+        {% endif %}
+    </div>
+</div>

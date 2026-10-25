@@ -1,0 +1,116 @@
+/* content container */
+.institution-profile {
+    max-width: 960px;
+    margin: 0 auto;
+    padding-top: 48px;
+    padding-bottom: 80px;
+}
+
+/* header */
+.institution-profile__header {
+    margin-bottom: 32px;
+}
+
+.institution-profile__header h1 {
+    margin: 8px 0 16px;
+}
+
+.institution-profile__header p {
+    line-height: 1.6;
+}
+
+/* institution summary and form cards */
+.institution-profile .card {
+    padding: 32px;
+    margin-bottom: 24px;
+}
+
+.institution-profile .card h2 {
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+/* success message */
+.institution-profile__message {
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    border: 1px solid #b8ccb8;
+    border-radius: 8px;
+    background-color: #f2f7f0;
+    line-height: 1.5;
+}
+
+/* form layout */
+.institution-profile__form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+/* individual field group */
+.institution-profile__form .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+}
+
+/* field labels */
+.institution-profile__form .field__label {
+    display: block;
+    margin: 0;
+    font-weight: 600;
+}
+
+/* field containers */
+.institution-profile__form .field__control {
+    width: 100%;
+}
+
+/* input, select, textarea styling */
+.institution-profile__form .field__input {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+}
+
+/* multiline inputs */
+.institution-profile__form textarea.field__input {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* error msg */
+.institution-profile__form .field__error {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* submit button */
+.institution-profile__form .btn {
+    align-self: flex-start;
+    margin-top: 8px;
+}
+
+/* mobile responsive adjustments */
+@media (max-width: 768px) {
+    .institution-profile {
+        padding-top: 24px;
+        padding-bottom: 48px;
+    }
+
+    .institution-profile .card {
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .institution-profile__form {
+        gap: 20px;
+    }
+
+    .institution-profile__form .btn {
+        width: 100%;
+    }
+}

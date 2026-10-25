@@ -6,13 +6,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Daftar — Sayangin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital@1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/tokens.css">
-  <link rel="stylesheet" href="/static/css/base.css">
-  <link rel="stylesheet" href="/static/css/components.css">
-  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+  {% include 'includes/fonts.html' %}
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -49,13 +47,24 @@
       <div class="auth__center">
         <div class="auth__card">
           <header class="auth__heading">
-            <p class="eyebrow">Buat akun</p>
-            <h1>Mulai dari lemarimu.</h1>
-            <p>Satu akun untuk belanja preloved, menjual isi lemari, dan berdonasi tepat sasaran.</p>
+            {% if is_lembaga %}
+              <p class="eyebrow">Daftar lembaga</p>
+              <h1>Daftarkan lembagamu.</h1>
+              <p>
+                Bergabung bersama Sayangin untuk membagikan kebutuhan lembagamu dan menerima donasi tepat sasaran.
+              </p>
+            {% else %}
+              <p class="eyebrow">Buat akun</p>
+              <h1>Mulai dari lemarimu.</h1>
+              <p>
+                Satu akun untuk belanja preloved, menjual isi lemari, dan berdonasi tepat sasaran.
+              </p>
+            {% endif %}
           </header>
 
           <form class="auth-form" id="register-form" method="POST" action="{% url 'main:show_register' %}" novalidate>
             {% csrf_token %}
+            <input type="hidden" name="account_type" value="{{ account_type }}">
             <!-- Client-side JS alert -->
             <div class="alert" role="alert" hidden data-form-alert></div>
 
@@ -69,9 +78,15 @@
             {% endif %}
 
             <div class="field">
-              <label class="field__label" for="username">Nama pengguna</label>
+              <label class="field__label" for="username">
+                {% if is_lembaga %}
+                  Username akun lembaga
+                {% else %}
+                  Nama pengguna
+                {% endif %}
+              </label>
               <div class="field__control">
-                <input class="field__input" id="username" name="username" type="text" autocomplete="username" placeholder="contoh: rania.y" minlength="3" maxlength="30" pattern="[A-Za-z0-9._]+" required>
+                <input class="field__input" id="username" name="username" type="text" autocomplete="username" placeholder="{% if is_lembaga %}contoh: panti_harapan{% else %}contoh: rania.y{% endif %}" minlength="3" maxlength="30" pattern="[A-Za-z0-9._]+" required>
               </div>
               <p class="field__error" id="username-error" aria-live="polite"></p>
             </div>
@@ -103,7 +118,13 @@
               <p class="field__error" id="confirm-error" aria-live="polite"></p>
             </div>
 
-            <button class="btn btn--primary btn--block" type="submit">Daftar</button>
+            <button class="btn btn--primary btn--block" type="submit">
+              {% if is_lembaga %}
+                Daftarkan lembaga
+              {% else %}
+                Daftar
+              {% endif %}
+            </button>
             <p class="auth-form__terms">Dengan mendaftar, kamu menyetujui <a href="#">Syarat Layanan</a> dan <a href="#">Kebijakan Privasi</a> Sayangin.</p>
           </form>
 
@@ -115,6 +136,6 @@
     </main>
   </div>
 
-  <script src="/static/js/auth.js" defer></script>
+  <script src="{% static 'js/auth.js' %}" defer></script>
 </body>
 </html>
