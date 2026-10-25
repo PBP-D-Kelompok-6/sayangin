@@ -27,6 +27,43 @@
   closeBtn?.addEventListener('click', () => setDrawer(false));
   drawer?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setDrawer(false)));
 
+  /* logout confirmation modal */
+  const logoutDialog = document.getElementById('logout-dialog');
+  if (logoutDialog) {
+    const logoutTriggers = document.querySelectorAll('[data-dialog-open="logout-dialog"]');
+    logoutTriggers.forEach((button) => {
+      button.addEventListener('click', () => {
+        if (drawer && !drawer.hidden) {
+          setDrawer(false);
+        }
+
+        if (!logoutDialog.open) {
+          logoutDialog.showModal();
+        }
+      });
+    });
+
+    const closeButtons = logoutDialog.querySelectorAll('[data-dialog-close]');
+    closeButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        logoutDialog.close();
+      });
+    });
+
+    logoutDialog.addEventListener('click', (event) => {
+      if (event.target !== logoutDialog) {
+        return;
+      }
+
+      const rect = logoutDialog.getBoundingClientRect();
+      const outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+
+      if (outside) {
+        logoutDialog.close();
+      }
+    });
+  }
+
   /* ---------- Dropdown kategori ---------- */
   document.querySelectorAll('[data-dropdown]').forEach(btn => {
     const menu = document.getElementById(btn.getAttribute('aria-controls'));

@@ -132,15 +132,11 @@ The role comes from the database, not JavaScript.
                     </a>
 
                     <!-- desktop logout -->
-                    <form class="nav-logout-form desktop-only"
-                        method="POST"
-                        action="{% url 'main:logout_user' %}">
-                        {% csrf_token %}
-                        <button class="btn btn--outline btn--sm"
-                                type="submit">
-                            Keluar
-                        </button>
-                    </form>
+                    <button class="btn btn--outline btn--sm desktop-only"
+                            type="button"
+                            data-dialog-open="logout-dialog">
+                        Keluar
+                    </button>
 
                 {% else %}
                     <!-- guest navigation -->
@@ -251,16 +247,11 @@ The role comes from the database, not JavaScript.
     <div class="drawer__actions">
         {% if user.is_authenticated %}
             <p>Halo, {{ user.username }}!</p>
-            <form class="nav-logout-form"
-                method="POST"
-                action="{% url 'main:logout_user' %}">
-                {% csrf_token %}
-                <button class="btn btn--outline btn--block"
-                        type="submit">
-                    Keluar
-                </button>
-            </form>
-
+            <button class="btn btn--outline btn--block"
+                    type="button"
+                    data-dialog-open="logout-dialog">
+                Keluar
+            </button>
         {% else %}
             <a class="btn btn--primary btn--block"
             href="{% url 'main:show_login' %}">
@@ -279,3 +270,5 @@ The role comes from the database, not JavaScript.
         {% endif %}
     </div>
 </div>
+
+{% include 'includes/logout_modal.html' %}

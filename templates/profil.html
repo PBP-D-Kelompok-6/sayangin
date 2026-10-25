@@ -109,20 +109,6 @@
     <a href="donasi.html"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg>Donasi</a>
     <a href="dampak.html"><svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg>Dampak</a>
   </nav>
-  <dialog class="dialog" id="logout-dialog" aria-labelledby="logout-title">
-    <div class="dialog__icon"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg></div>
-    <h2 id="logout-title">Yakin ingin keluar?</h2>
-    <p>Lemari dan progres dampakmu tetap tersimpan. Kamu bisa masuk lagi kapan saja.</p>
-    <div class="dialog__actions">
-      <button class="btn btn--outline" type="button" data-dialog-close>Batal</button>
-      <form method="POST" action="{% url 'main:logout_user' %}">
-        {% csrf_token %}
-        <button class="btn btn--primary" type="submit">
-          Keluar
-        </button>
-      </form>
-    </div>
-  </dialog>
   <div class="toast-region" aria-live="polite" data-toast-region></div>
   <script src="{% static 'js/data.js' %}" defer></script>
   <script src="{% static 'js/main.js' %}" defer></script>

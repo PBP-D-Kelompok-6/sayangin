@@ -1,0 +1,32 @@
+{% if user.is_authenticated %}
+<dialog class="logout-modal" id="logout-dialog" aria-labelledby="logout-dialog-title" aria-describedby="logout-dialog-description">
+    <!-- Logout icon -->
+    <div class="logout-modal__icon" aria-hidden="true">
+        <svg class="icon">
+            <use href="#i-logout"></use>
+        </svg>
+    </div>
+
+    <!-- Confirmation text -->
+    <h2 class="logout-modal__title" id="logout-dialog-title">
+        Yakin ingin keluar?
+    </h2>
+
+    <p class="logout-modal__description" id="logout-dialog-description">
+        Lemari dan progres dampakmu tetap tersimpan.
+        Kamu bisa masuk lagi kapan saja.
+    </p>
+
+    <!-- Logout confirmation -->
+    <form class="logout-modal__actions" method="POST" action="{% url 'main:logout_user' %}">
+        {% csrf_token %}
+        <button class="btn btn--outline" type="button" data-dialog-close autofocus>
+            Batal
+        </button>
+
+        <button class="btn btn--primary" type="submit">
+            Keluar
+        </button>
+    </form>
+</dialog>
+{% endif %}

@@ -371,6 +371,66 @@ body.no-scroll { overflow: hidden; }
   width: 100%;
 }
 
+.logout-modal {
+  width: min(396px, calc(100% - 32px));
+  max-width: 396px;
+  margin: auto;
+  padding: 30px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+}
+
+.logout-modal::backdrop {
+  background: rgba(30, 12, 16, 0.82);
+}
+
+.logout-modal__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  background: #F0DAD0;
+  color: var(--color-accent-strong);
+}
+
+.logout-modal__icon .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.logout-modal__title {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.logout-modal__description {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.logout-modal__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.logout-modal__actions .btn {
+  width: 100%;
+  min-height: 44px;
+}
+
 /* ==========================================================
    Responsive — komponen
    ========================================================== */
@@ -400,4 +460,16 @@ body.no-scroll { overflow: hidden; }
 
 @media (min-width: 901px) {
   .drawer { display: none; }
+}
+
+@media (max-width: 480px) {
+  .logout-modal {
+    padding: 24px;
+  }
+  .logout-modal__actions {
+    gap: 10px;
+  }
+  .logout-modal__actions .btn {
+    padding-inline: 8px;
+  }
 }
