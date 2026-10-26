@@ -2,7 +2,7 @@
 {% load static rupiah %}
 {% block title %}{{ product.name }}{% endblock %}
 {% block page_class %}page--detail{% endblock %}
-{% block body_class %}{% if not product.is_sold and product.seller != user %}has-buy-bar{% endif %}{% endblock %}
+{% block body_class %}no-m-topbar{% if not product.is_sold and product.seller != user %} has-buy-bar{% endif %}{% endblock %}
 
 {% block content %}
 <nav class="crumbs" aria-label="Breadcrumb">
@@ -81,5 +81,3 @@
 </section>
 {% endif %}
 {% endblock %}
-
-{% block topbar %}<div class="desk-only">{{ block.super }}</div>{% endblock %}
