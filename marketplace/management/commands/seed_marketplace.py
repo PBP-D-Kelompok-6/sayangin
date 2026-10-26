@@ -5,22 +5,22 @@ from marketplace.models import Product
 
 # (penjual, nama, harga, kategori, kondisi, ukuran, kota, gambar, catatan)
 PRODUCTS = [
-    ('nadia.r', 'Blazer wol abu', 185000, 'atasan', 'terawat', 'M', 'Jakarta', 'blazer-abu', 'Kancing kedua sedikit longgar.'),
-    ('nadia.r', 'Blus organza', 95000, 'atasan', 'seperti_baru', 'S', 'Jakarta', 'blus-organza', ''),
-    ('nadia.r', 'Tas mesh', 120000, 'tas', 'terawat', '', 'Jakarta', 'tas-mesh', ''),
-    ('bimapras', 'Set novel vintage, 3 buku', 60000, 'buku', 'seperti_baru', '', 'Depok', 'buku-vintage', ''),
-    ('bimapras', 'Sweter bintang', 110000, 'atasan', 'seperti_baru', 'L', 'Depok', 'sweter-bintang', ''),
-    ('bimapras', 'Kamera film', 450000, 'aksesori', 'terawat', '', 'Depok', 'kamera-film', 'Lensa ada goresan halus.'),
-    ('sekar.w', 'Rok tulle', 130000, 'bawahan', 'terawat', 'M', 'Bandung', 'rok-tulle', ''),
-    ('sekar.w', 'Heels chrome', 210000, 'sepatu', 'seperti_baru', '38', 'Bandung', 'heels-chrome', ''),
-    ('sekar.w', 'Kardigan rajut marun', 90000, 'atasan', 'terawat', 'M', 'Bandung', 'kardigan-marun', ''),
-    ('sekar.w', 'Mantel camel', 320000, 'atasan', 'terawat', 'L', 'Bandung', 'mantel-camel', ''),
-    ('dimas.k', 'Jaket track suede', 175000, 'atasan', 'terawat', 'M', 'Bogor', 'jaket-track-zaitun', ''),
-    ('dimas.k', 'Jaket kulit cokelat', 380000, 'atasan', 'cacat', 'L', 'Bogor', 'jaket-kulit', 'Ada lecet kecil di siku kiri.'),
-    ('dimas.k', 'Henley sage', 75000, 'atasan', 'seperti_baru', 'M', 'Bogor', 'henley-sage', ''),
-    ('ayu.p', 'Kacamata ring', 85000, 'aksesori', 'seperti_baru', '', 'Surabaya', 'kacamata-ring', ''),
-    ('ayu.p', 'Atasan kerah bulu', 140000, 'atasan', 'terawat', 'S', 'Surabaya', 'atasan-bulu', ''),
-    ('ayu.p', 'Tote metalik', 160000, 'tas', 'seperti_baru', '', 'Surabaya', 'tas-tote-metalik', ''),
+    ('nadia.r', 'Blazer wol abu', 85000, 'atasan', 'terawat', 'M', 'Jakarta', 'blazer-abu', 'Kancing kedua sedikit longgar.'),
+    ('nadia.r', 'Blus organza', 45000, 'atasan', 'seperti_baru', 'S', 'Jakarta', 'blus-organza', ''),
+    ('nadia.r', 'Tas mesh', 55000, 'tas', 'terawat', '', 'Jakarta', 'tas-mesh', ''),
+    ('bimapras', 'Set novel vintage, 3 buku', 35000, 'buku', 'seperti_baru', '', 'Depok', 'buku-vintage', ''),
+    ('bimapras', 'Sweter bintang', 50000, 'atasan', 'seperti_baru', 'L', 'Depok', 'sweter-bintang', ''),
+    ('bimapras', 'Kamera film', 250000, 'aksesori', 'terawat', '', 'Depok', 'kamera-film', 'Lensa ada goresan halus.'),
+    ('sekar.w', 'Rok tulle', 50000, 'bawahan', 'terawat', 'M', 'Bandung', 'rok-tulle', ''),
+    ('sekar.w', 'Heels chrome', 90000, 'sepatu', 'seperti_baru', '38', 'Bandung', 'heels-chrome', ''),
+    ('sekar.w', 'Kardigan rajut marun', 45000, 'atasan', 'terawat', 'M', 'Bandung', 'kardigan-marun', ''),
+    ('sekar.w', 'Mantel camel', 120000, 'atasan', 'terawat', 'L', 'Bandung', 'mantel-camel', ''),
+    ('dimas.k', 'Jaket track suede', 75000, 'atasan', 'terawat', 'M', 'Bogor', 'jaket-track-zaitun', ''),
+    ('dimas.k', 'Jaket kulit cokelat', 150000, 'atasan', 'cacat', 'L', 'Bogor', 'jaket-kulit', 'Ada lecet kecil di siku kiri.'),
+    ('dimas.k', 'Henley sage', 35000, 'atasan', 'seperti_baru', 'M', 'Bogor', 'henley-sage', ''),
+    ('ayu.p', 'Kacamata ring', 30000, 'aksesori', 'seperti_baru', '', 'Surabaya', 'kacamata-ring', ''),
+    ('ayu.p', 'Atasan kerah bulu', 55000, 'atasan', 'terawat', 'S', 'Surabaya', 'atasan-bulu', ''),
+    ('ayu.p', 'Tote metalik', 65000, 'tas', 'seperti_baru', '', 'Surabaya', 'tas-tote-metalik', ''),
 ]
 
 
