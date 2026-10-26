@@ -224,11 +224,7 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .filter-panel { grid-template-columns: 1fr 1fr; }
 }
 
-/* Tampilan dipilih menurut PERANGKAT, bukan lebar jendela (sama dengan landing):
-   layar sentuh tanpa mouse = versi mobile; laptop/PC tetap desktop, minimal 1024px (lebih sempit -> scroll samping). */
-@media (hover: hover), (pointer: fine) { body { min-width: 1024px; } }
-
-@media (hover: none) and (pointer: coarse) {
+@media (max-width: 760px) {
   .desk-only { display: none !important; }
   .m-only { display: revert !important; }
   body { padding-bottom: 72px; }
@@ -312,4 +308,4 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .track-head { flex-direction: column; align-items: flex-start; }
   .side { width: 100%; }
 }
-@media (hover: hover), (pointer: fine) { .m-total { display: none; } }
+@media (min-width: 761px) { .m-total { display: none; } }
