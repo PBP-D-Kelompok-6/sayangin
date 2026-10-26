@@ -1,0 +1,82 @@
+{% extends 'marketplace/base.html' %}
+{% load rupiah static %}
+{% block title %}Checkout{% endblock %}
+{% block page_class %}page--checkout{% endblock %}
+
+{% block topbar %}
+<header class="topbar checkout-bar">
+    <a href="{% url 'main:show_main' %}" class="logo"><img src="{% static 'marketplace/img/logo.png' %}" alt="">sayangin</a>
+    <a href="{% block back_url %}{% url 'marketplace:cart' %}{% endblock %}" class="icon-link m-only" aria-label="Kembali"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></a>
+    <span class="m-title m-only">Checkout</span>
+    <span class="eyebrow"><span class="desk-only">Checkout aman</span><span class="m-only">Langkah {{ step }} / 3</span></span>
+    <span class="spacer desk-only"></span>
+    <a href="{% url 'marketplace:cart' %}" class="header-link desk-only">← Kembali ke keranjang</a>
+</header>
+{% endblock %}
+
+{% block tabbar %}{% endblock %}
+
+{% block content %}
+<div class="m-progress" aria-hidden="true"><span style="width: {% widthratio step 3 100 %}%"></span></div>
+<ol class="steps" aria-label="Langkah checkout">
+    <li class="{% if step > 1 %}done{% else %}now{% endif %}" {% if step == 1 %}aria-current="step"{% endif %}>
+        <span class="dot">{% if step > 1 %}<svg class="icon" style="width:12px;height:12px" aria-hidden="true"><use href="#i-check"/></svg>{% else %}1{% endif %}</span>Alamat
+    </li>
+    <li aria-hidden="true" class="bar{% if step > 1 %} done{% endif %}"></li>
+    <li class="{% if step > 2 %}done{% elif step == 2 %}now{% endif %}" {% if step == 2 %}aria-current="step"{% endif %}>
+        <span class="dot">{% if step > 2 %}<svg class="icon" style="width:12px;height:12px" aria-hidden="true"><use href="#i-check"/></svg>{% else %}2{% endif %}</span>Pengiriman
+    </li>
+    <li aria-hidden="true" class="bar{% if step > 2 %} done{% endif %}"></li>
+    <li class="{% if step == 3 %}now{% endif %}" {% if step == 3 %}aria-current="step"{% endif %}><span class="dot">3</span>Pembayaran</li>
+</ol>
+
+<form method="post" class="two-col" id="checkout" novalidate>
+    {% csrf_token %}
+    <div>
+        {% block steps %}{% endblock %}
+        <details class="m-breakdown">
+            <summary>Rincian biaya</summary>
+            <div><span>Subtotal ({{ count }} barang)</span><span>{{ subtotal|rupiah }}</span></div>
+            <div><span>Ongkir</span><span data-ongkir>{% if shipping %}{{ shipping|rupiah }}{% else %}–{% endif %}</span></div>
+        </details>
+    </div>
+
+    <aside class="summary" aria-label="Ringkasan">
+        <span class="summary-title">Ringkasan</span>
+        <div class="row"><span>Subtotal ({{ count }} barang)</span><span>{{ subtotal|rupiah }}</span></div>
+        <div class="row"><span>Ongkir</span><span data-ongkir>{% if shipping %}{{ shipping|rupiah }}{% else %}–{% endif %}</span></div>
+        <div class="row total"><span>Total</span><b data-total>{{ subtotal|add:shipping|rupiah }}</b></div>
+        <span class="m-total"><span class="eyebrow" style="color:#BFB2AC">Total</span><b data-total>{{ subtotal|add:shipping|rupiah }}</b></span>
+        {% block submit %}{% endblock %}
+        <small class="impact">Membeli preloved ini menambah poin dampakmu.</small>
+    </aside>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    // Ringkasan ikut berubah saat kurir dipilih; tombol aktif setelah semua isian valid.
+    const form = document.getElementById('checkout');
+    const pay = document.getElementById('pay');
+    const subtotal = {{ subtotal }};
+    const rp = n => 'Rp' + n.toLocaleString('id-ID');
+    const update = () => {
+        const radios = form.querySelectorAll('input[data-cost]');
+        if (radios.length) {
+            const costs = [...form.querySelectorAll('input[data-cost]:checked')].map(i => +i.dataset.cost);
+            const ongkir = costs.reduce((a, b) => a + b, 0);
+            document.querySelectorAll('[data-ongkir]').forEach(el => el.textContent = costs.length ? rp(ongkir) : '–');
+            document.querySelectorAll('[data-total]').forEach(el => el.textContent = rp(subtotal + ongkir));
+        }
+        const ok = form.checkValidity();
+        pay.disabled = !ok;
+        const hint = document.getElementById('pay-hint');
+        if (hint) hint.hidden = ok;
+    };
+    form.addEventListener('input', update);
+    form.addEventListener('change', update);
+    update();
+})();
+</script>
+{% endblock %}

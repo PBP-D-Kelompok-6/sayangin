@@ -28,15 +28,33 @@ class MarketplaceFlowTest(TestCase):
         self.client.post(reverse('marketplace:add_to_cart', args=[self.p1.pk]))
         self.client.post(reverse('marketplace:add_to_cart', args=[self.p2.pk]))
 
-        # Kurir belum dipilih -> ditolak, tidak ada pesanan.
-        address = {'recipient': 'Ira', 'phone': '0812', 'address': 'Jl. Margonda', 'city': 'Depok', 'payment': 'transfer'}
-        r = self.client.post(reverse('marketplace:checkout'), address)
+        # Langkah 1: alamat wajib lengkap.
+        r = self.client.post(reverse('marketplace:checkout_address'), {'recipient': 'Ira'})
         self.assertEqual(r.status_code, 200)
+        address = {'recipient': 'Ira', 'phone': '0812', 'address': 'Jl. Margonda', 'city': 'Depok'}
+        r = self.client.post(reverse('marketplace:checkout_address'), address)
+        self.assertRedirects(r, reverse('marketplace:checkout_shipping'))
+
+        # Langkah 3 belum bisa dibuka sebelum kurir dipilih.
+        r = self.client.get(reverse('marketplace:checkout_payment'))
+        self.assertRedirects(r, reverse('marketplace:checkout_shipping'))
+        r = self.client.post(reverse('marketplace:checkout_shipping'), {})
+        self.assertContains(r, 'Pilih kurir untuk penjual ini dulu.')
+        r = self.client.post(reverse('marketplace:checkout_shipping'), {f'courier_{self.seller.pk}': 'kilat'})
+        self.assertRedirects(r, reverse('marketplace:checkout_payment'))
         self.assertFalse(Order.objects.exists())
 
-        r = self.client.post(reverse('marketplace:checkout'), {**address, f'courier_{self.seller.pk}': 'kilat'})
+        r = self.client.post(reverse('marketplace:checkout_payment'), {'payment': 'transfer'})
         order = Order.objects.get()
+        self.assertEqual(order.city, 'Depok')
+        self.assertIn('dibayar', order.status_times)
+        steps = order.steps()
+        self.assertTrue(steps[0]['done'])  # pembayaran langsung tercentang
+        self.assertTrue(steps[1]['now'])   # menunggu penjual mengemas
         self.assertRedirects(r, reverse('marketplace:order_detail', args=[order.pk]))
+        page = self.client.get(reverse('marketplace:order_detail', args=[order.pk]))
+        self.assertContains(page, 'Pesanan diterima')
+        self.assertContains(page, 'disabled')
         self.assertEqual(order.total, 185000 + 120000 + 30000)
         self.assertFalse(CartItem.objects.exists())
         self.assertFalse(Product.objects.filter(is_sold=False).exists())

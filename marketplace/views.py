@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from .models import CartItem, Order, OrderItem, Product
 
 SORTS = {'terbaru': '-created_at', 'termurah': 'price', 'termahal': '-price'}
+ADDRESS_FIELDS = ('recipient', 'phone', 'address', 'city')
 
 
 def _int_or_none(value):
@@ -23,6 +24,7 @@ def catalog(request):
     conditions = request.GET.getlist('kondisi')
     sizes = request.GET.getlist('ukuran')
     city = request.GET.get('lokasi', '')
+    seller = request.GET.get('penjual', '')
     price_min = _int_or_none(request.GET.get('min'))
     price_max = _int_or_none(request.GET.get('maks'))
     sort = request.GET.get('urut', 'terbaru')
@@ -37,6 +39,8 @@ def catalog(request):
         products = products.filter(size__in=sizes)
     if city:
         products = products.filter(city=city)
+    if seller:
+        products = products.filter(seller__username=seller)
     if price_min is not None:
         products = products.filter(price__gte=price_min)
     if price_max is not None:
@@ -49,6 +53,7 @@ def catalog(request):
         'kondisi': dict(Product.CONDITION_CHOICES),
         'ukuran': {s: f'Ukuran {s}' for s in sizes},
         'lokasi': {city: city},
+        'penjual': {seller: f'@{seller}'},
         'min': {request.GET.get('min'): f'Min {request.GET.get("min")}'},
         'maks': {request.GET.get('maks'): f'Maks {request.GET.get("maks")}'},
     }
@@ -63,6 +68,7 @@ def catalog(request):
 
     return render(request, 'marketplace/catalog.html', {
         'products': products,
+        'total_available': Product.objects.filter(is_sold=False).count(),
         'q': q,
         'searching': bool(q or active),
         'active_filters': active,
@@ -70,8 +76,8 @@ def catalog(request):
         'conditions': Product.CONDITION_CHOICES,
         'sizes': ['S', 'M', 'L', 'XL'],
         'cities': Product.objects.filter(is_sold=False).values_list('city', flat=True).distinct().order_by('city'),
-        'selected': {'kategori': categories, 'kondisi': conditions, 'ukuran': sizes,
-                     'lokasi': city, 'min': request.GET.get('min', ''), 'maks': request.GET.get('maks', '')},
+        'selected': {'kategori': categories, 'kondisi': conditions, 'ukuran': sizes, 'lokasi': city,
+                     'penjual': seller, 'min': request.GET.get('min', ''), 'maks': request.GET.get('maks', '')},
         'sort': sort,
     })
 
@@ -84,6 +90,7 @@ def product_detail(request, pk):
         'product': product,
         'similar': similar,
         'in_cart': in_cart,
+        'seller_listings': Product.objects.filter(seller=product.seller, is_sold=False).count(),
         'shipping_from': min(Order.COURIER_COST.values()),
     })
 
@@ -116,64 +123,126 @@ def _cart_groups(user):
     return [(seller, list(group)) for seller, group in groupby(items, key=lambda i: i.product.seller)]
 
 
+def _subtotal(groups):
+    return sum(i.product.price for _, items in groups for i in items)
+
+
+def _count(groups):
+    return sum(len(items) for _, items in groups)
+
+
 @login_required
 def cart(request):
     groups = _cart_groups(request.user)
-    subtotal = sum(i.product.price for _, items in groups for i in items)
-    return render(request, 'marketplace/cart.html', {'groups': groups, 'subtotal': subtotal})
+    return render(request, 'marketplace/cart.html', {'groups': groups, 'subtotal': _subtotal(groups)})
 
 
 @login_required
 def checkout(request):
+    """Pintu masuk: lanjut ke langkah pertama yang belum lengkap."""
+    if 'checkout_address' in request.session:
+        return redirect('marketplace:checkout_shipping')
+    return redirect('marketplace:checkout_address')
+
+
+@login_required
+def checkout_address(request):
     groups = _cart_groups(request.user)
     if not groups:
         messages.error(request, 'Keranjangmu kosong.')
         return redirect('marketplace:catalog')
 
-    form = request.POST
+    # Isi otomatis dari sesi atau alamat pesanan terakhir, supaya tidak mengetik ulang.
+    last = Order.objects.filter(buyer=request.user).first()
+    initial = request.session.get('checkout_address') or (
+        {f: getattr(last, f) for f in ADDRESS_FIELDS} if last else {'recipient': request.user.get_full_name()})
+    form, errors = initial, {}
+    if request.method == 'POST':
+        form = {f: request.POST.get(f, '').strip() for f in ADDRESS_FIELDS}
+        errors = {f: 'Wajib diisi.' for f, v in form.items() if not v}
+        if not errors:
+            request.session['checkout_address'] = form
+            return redirect('marketplace:checkout_shipping')
+    return render(request, 'marketplace/checkout_address.html', {
+        'step': 1, 'form': form, 'errors': errors,
+        'groups': groups, 'subtotal': _subtotal(groups), 'count': _count(groups), 'shipping': 0,
+    })
+
+
+@login_required
+def checkout_shipping(request):
+    groups = _cart_groups(request.user)
+    address = request.session.get('checkout_address')
+    if not groups:
+        return redirect('marketplace:cart')
+    if not address:
+        return redirect('marketplace:checkout_address')
+
+    chosen = request.session.get('checkout_couriers', {})
     errors = {}
     if request.method == 'POST':
-        for field in ('recipient', 'phone', 'address', 'city'):
-            if not form.get(field, '').strip():
-                errors[field] = 'Wajib diisi.'
-        for seller, _ in groups:
-            if form.get(f'courier_{seller.pk}') not in Order.COURIER_COST:
-                errors[f'courier_{seller.pk}'] = 'Pilih kurir untuk penjual ini dulu.'
-        if form.get('payment') not in dict(Order.PAYMENT_CHOICES):
-            errors['payment'] = 'Pilih metode pembayaran.'
-
+        chosen = {str(s.pk): request.POST.get(f'courier_{s.pk}') for s, _ in groups}
+        errors = {k: 'Pilih kurir untuk penjual ini dulu.' for k, v in chosen.items() if v not in Order.COURIER_COST}
         if not errors:
+            request.session['checkout_couriers'] = chosen
+            return redirect('marketplace:checkout_payment')
+
+    shipping = sum(Order.COURIER_COST.get(chosen.get(str(s.pk)), 0) for s, _ in groups)
+    return render(request, 'marketplace/checkout_shipping.html', {
+        'step': 2, 'address': address,
+        'groups': [{'seller': s, 'items': items, 'courier': chosen.get(str(s.pk)), 'error': errors.get(str(s.pk))}
+                   for s, items in groups],
+        'couriers': [(key, label, Order.COURIER_COST[key]) for key, label in Order.COURIER_CHOICES],
+        'subtotal': _subtotal(groups), 'count': _count(groups), 'shipping': shipping,
+    })
+
+
+@login_required
+def checkout_payment(request):
+    groups = _cart_groups(request.user)
+    address = request.session.get('checkout_address')
+    couriers = request.session.get('checkout_couriers', {})
+    if not groups:
+        return redirect('marketplace:cart')
+    if not address:
+        return redirect('marketplace:checkout_address')
+    if any(couriers.get(str(s.pk)) not in Order.COURIER_COST for s, _ in groups):
+        return redirect('marketplace:checkout_shipping')
+
+    error = None
+    if request.method == 'POST':
+        payment = request.POST.get('payment')
+        if payment not in dict(Order.PAYMENT_CHOICES):
+            error = 'Pilih metode pembayaran.'
+        else:
             with transaction.atomic():
                 orders = []
                 for seller, items in groups:
-                    courier = form[f'courier_{seller.pk}']
-                    order = Order.objects.create(
-                        buyer=request.user, seller=seller,
-                        recipient=form['recipient'].strip(), phone=form['phone'].strip(),
-                        address=form['address'].strip(), city=form['city'].strip(),
-                        courier=courier, shipping_cost=Order.COURIER_COST[courier],
-                        payment_method=form['payment'],
-                    )
-                    for item in items:
-                        p = item.product
-                        OrderItem.objects.create(order=order, product=p, name=p.name, price=p.price, image=p.image)
+                    courier = couriers[str(seller.pk)]
+                    order = Order(buyer=request.user, seller=seller, courier=courier,
+                                  shipping_cost=Order.COURIER_COST[courier], payment_method=payment, **address)
+                    order.set_status('dibayar')
+                    order.save()
+                    OrderItem.objects.bulk_create([
+                        OrderItem(order=order, product=i.product, name=i.product.name,
+                                  price=i.product.price, image=i.product.image) for i in items])
                     Product.objects.filter(pk__in=[i.product_id for i in items]).update(is_sold=True)
                     orders.append(order)
                 CartItem.objects.filter(user=request.user).delete()
+            request.session.pop('checkout_couriers', None)
             messages.success(request, 'Pembayaran diterima. Terima kasih sudah memilih preloved!')
             if len(orders) == 1:
                 return redirect('marketplace:order_detail', pk=orders[0].pk)
             return redirect('marketplace:orders')
 
-    return render(request, 'marketplace/checkout.html', {
-        'groups': [{'seller': seller, 'items': items,
-                    'courier': form.get(f'courier_{seller.pk}'),
-                    'error': errors.get(f'courier_{seller.pk}')} for seller, items in groups],
-        'subtotal': sum(i.product.price for _, items in groups for i in items),
-        'couriers': [(key, label, Order.COURIER_COST[key]) for key, label in Order.COURIER_CHOICES],
+    labels = dict(Order.COURIER_CHOICES)
+    return render(request, 'marketplace/checkout_payment.html', {
+        'step': 3, 'address': address, 'error': error,
+        'groups': [{'seller': s, 'items': items, 'courier': labels[couriers[str(s.pk)]],
+                    'cost': Order.COURIER_COST[couriers[str(s.pk)]]} for s, items in groups],
         'payments': Order.PAYMENT_CHOICES,
-        'form': form,
-        'errors': errors,
+        'subtotal': _subtotal(groups), 'count': _count(groups),
+        'shipping': sum(Order.COURIER_COST[couriers[str(s.pk)]] for s, _ in groups),
     })
 
 
@@ -196,20 +265,20 @@ def order_detail(request, pk):
         action = request.POST.get('action')
         keys = [key for key, _ in Order.STATUS_CHOICES]
         if action == 'advance' and is_seller and order.status in ('dibayar', 'dikemas', 'dikirim'):
-            order.status = keys[order.status_index + 1]
+            order.set_status(keys[order.status_index + 1])
             if order.status == 'dikirim':
                 order.tracking_number = 'JNE' + get_random_string(10, '0123456789')
             order.save()
         elif action == 'confirm' and is_buyer and order.status == 'tiba':
-            order.status = 'selesai'
+            order.set_status('selesai')
             order.save()
         return redirect('marketplace:order_detail', pk=pk)
 
-    steps = [{'label': label, 'done': i < order.status_index, 'now': i == order.status_index}
-             for i, (_, label) in enumerate(Order.STATUS_CHOICES)]
     next_label = None
     if is_seller and order.status in ('dibayar', 'dikemas', 'dikirim'):
         next_label = {'dibayar': 'Tandai dikemas', 'dikemas': 'Tandai dikirim', 'dikirim': 'Tandai tiba'}[order.status]
+    title, emphasis = Order.STATUS_TITLE[order.status]
     return render(request, 'marketplace/order_detail.html', {
-        'order': order, 'steps': steps, 'is_buyer': is_buyer, 'next_label': next_label,
+        'order': order, 'steps': order.steps(), 'is_buyer': is_buyer, 'next_label': next_label,
+        'title': title, 'emphasis': emphasis, 'short_status': Order.STATUS_SHORT[order.status],
     })

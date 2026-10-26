@@ -11,6 +11,9 @@ urlpatterns = [
     path('keranjang/', views.cart, name='cart'),
     path('keranjang/<int:pk>/hapus/', views.remove_from_cart, name='remove_from_cart'),
     path('checkout/', views.checkout, name='checkout'),
+    path('checkout/alamat/', views.checkout_address, name='checkout_address'),
+    path('checkout/pengiriman/', views.checkout_shipping, name='checkout_shipping'),
+    path('checkout/pembayaran/', views.checkout_payment, name='checkout_payment'),
     path('pesanan/', views.orders, name='orders'),
     path('pesanan/<int:pk>/', views.order_detail, name='order_detail'),
 ]

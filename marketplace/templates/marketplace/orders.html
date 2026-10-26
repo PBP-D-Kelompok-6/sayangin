@@ -16,7 +16,7 @@
     <a class="order-row" href="{% url 'marketplace:order_detail' o.pk %}">
         <span class="photo" style="background-image: url('{% static o.items.all.0.image %}')"></span>
         <span><b>#{{ o.code }}</b> · {{ o.items.all|length }} barang dari @{{ o.seller.username }}<br><span class="muted">{{ o.created_at|date:"j M Y" }} · {{ o.total|rupiah }}</span></span>
-        <span class="status-pill">{{ o.get_status_display }}</span>
+        <span class="status-pill">{{ o.status_short }}</span>
     </a>
     {% endfor %}
 </div>
@@ -34,7 +34,7 @@
     <a class="order-row" href="{% url 'marketplace:order_detail' o.pk %}">
         <span class="photo" style="background-image: url('{% static o.items.all.0.image %}')"></span>
         <span><b>#{{ o.code }}</b> · untuk @{{ o.buyer.username }}<br><span class="muted">{{ o.created_at|date:"j M Y" }} · {{ o.get_courier_display }}</span></span>
-        <span class="status-pill">{{ o.get_status_display }}</span>
+        <span class="status-pill">{{ o.status_short }}</span>
     </a>
     {% endfor %}
 </div>

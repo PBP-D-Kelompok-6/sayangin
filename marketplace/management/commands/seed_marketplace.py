@@ -24,6 +24,9 @@ PRODUCTS = [
 ]
 
 
+USED = {'Blazer wol abu': '2 tahun', 'Jaket kulit cokelat': '3 tahun', 'Kamera film': '5 tahun', 'Mantel camel': '1 tahun'}
+
+
 class Command(BaseCommand):
     help = 'Isi marketplace dengan penjual dan barang contoh (aman dijalankan berulang).'
 
@@ -34,9 +37,10 @@ class Command(BaseCommand):
             if new:
                 user.set_unusable_password()
                 user.save()
-            _, new = Product.objects.get_or_create(seller=user, name=name, defaults={
+            _, new = Product.objects.update_or_create(seller=user, name=name, defaults={
                 'price': price, 'category': category, 'condition': condition, 'size': size,
                 'city': city, 'image': f'marketplace/img/{img}.jpg', 'condition_note': note,
+                'used_duration': USED.get(name, ''),
             })
             created += new
         self.stdout.write(self.style.SUCCESS(f'{created} barang baru ditambahkan.'))
