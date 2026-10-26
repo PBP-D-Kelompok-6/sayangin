@@ -1,7 +1,7 @@
 # ❤️ sayangin
 
 ## Tautan Penting
-- PWS Deployment: TBA
+- PWS Deployment: [PWS](https://muhammad-ghazi51-sayang-in.pws.cs.ui.ac.id)
 - Figma Design: [Figma](https://www.figma.com/design/S8q8mgXES8W0DCOCbV5cL3)
 
 ## Deskripsi dan Overview
