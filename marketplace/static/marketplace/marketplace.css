@@ -38,22 +38,16 @@ p { margin: 0; }
 
 /* ---------- Header ---------- */
 /* Sticky header: tetap di atas saat di-scroll (di HP sudah ada tab bar bawah, jadi hanya desktop). */
-.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 28px; height: 72px; padding: 0 32px; border-bottom: 1px solid rgba(26,18,16,.1); background: rgba(250,250,248,.9); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.topbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 28px; height: 80px; padding: 0 40px; border-bottom: 1px solid rgba(26,18,16,.1); background: rgba(250,250,248,.9); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 html { scroll-padding-top: 88px; }
-.logo { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-size: 26px; text-decoration: none; }
-.logo img { width: 35px; height: 35px; mix-blend-mode: multiply; }
-.nav { display: flex; gap: 22px; font-weight: 500; }
-.nav a { color: var(--ink-muted); text-decoration: none; padding: 12px 0; }
-.nav a[aria-current="page"] { color: var(--accent); border-bottom: 2px solid var(--accent); }
 .search { flex: 1; min-width: 0; height: 42px; border: 1px solid var(--line-strong); border-radius: 999px; padding: 0 12px 0 16px; display: flex; align-items: center; gap: 8px; background: var(--surface); }
 .search:focus-within { border-color: var(--ink); }
 .search .icon { width: 16px; height: 16px; }
 .search input { border: 0; outline: 0; flex: 1; min-width: 0; font: inherit; background: transparent; }
-.kbd { min-width: 23px; height: 20px; padding: 0 6px; border: 1px solid var(--line-strong); border-radius: 5px; font: 11px var(--font-label); color: var(--ink-faint); display: inline-flex; align-items: center; justify-content: center; }
-.header-link { text-decoration: none; padding: 12px 4px; font-weight: 500; white-space: nowrap; }
 .avatar { width: 36px; height: 36px; flex: none; border-radius: 50%; background: radial-gradient(circle at 34% 28%, #FFF 0 6%, rgba(255,255,255,0) 26%), conic-gradient(from 160deg, #3A221C, #D8C6BF, #7A1E2A, #F4ECE8, #4E2E26, #B7A39B, #3A221C); }
 .icon-link { position: relative; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .badge { position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--accent); color: #FFF; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.m-topbar { display: none; }  /* desktop memakai navbar bersama */
 .m-title { font-family: var(--font-display); font-size: 26px; line-height: 1; text-decoration: none; }
 
 /* Tab bar mobile */
@@ -215,9 +209,7 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1100px) {
-  .topbar { gap: 16px; padding: 0 20px; }
-  .nav { gap: 16px; }
-  .topbar .hide-md { display: none; }
+  .topbar { gap: 16px; padding: 0 24px; }
   .grid { --cols: 4; }
   .grid--results { --cols: 3; }
   .gallery { width: 46%; }
@@ -233,7 +225,7 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   /* Header mobile: judul halaman + ikon, lalu pencarian */
   .topbar { position: static; height: auto; padding: 12px 16px; gap: 12px 4px; flex-wrap: wrap; border-bottom: 0; background: var(--bg); }
   html { scroll-padding-top: 0; }
-  .topbar .logo, .topbar .nav, .topbar .header-link, .kbd { display: none; }
+  .m-topbar { display: flex; }
   .m-title { flex: 1; }
   .topbar .search { order: 5; flex-basis: 100%; height: 44px; }
   .topbar .avatar { margin-left: 4px; }

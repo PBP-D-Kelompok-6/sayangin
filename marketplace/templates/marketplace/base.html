@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/site-header.css' %}">
     <link rel="stylesheet" href="{% static 'marketplace/marketplace.css' %}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -25,25 +26,13 @@
     </svg>
 
     {% block topbar %}
-    <header class="topbar">
-        <a href="{% url 'main:show_main' %}" class="logo"><img src="{% static 'marketplace/img/logo.png' %}" alt="">sayangin</a>
-        <a href="{% url 'marketplace:catalog' %}" class="m-title m-only">{% block m_title %}Market<em class="em">place</em>{% endblock %}</a>
-        <nav class="nav" aria-label="Utama">
-            <a href="{% url 'main:show_main' %}">Beranda</a>
-            <a href="#">Lemari</a>
-            <a href="{% url 'marketplace:catalog' %}" aria-current="page">Marketplace</a>
-            <a href="#">Donasi</a>
-            <a href="#">Dampak</a>
-        </nav>
-        <form class="search" role="search" action="{% url 'marketplace:catalog' %}">
-            <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
-            <input type="search" name="q" value="{{ q }}" aria-label="Cari barang preloved" placeholder="Cari barang preloved" id="search">
-            <kbd class="kbd" title="Tekan / untuk mencari">/</kbd>
-        </form>
-        <a href="#" class="header-link hide-md">Tunda Beli</a>
-        <a href="{% url 'marketplace:cart' %}" class="header-link">Keranjang ({{ cart_count }})</a>
-        <a href="#" class="icon-link m-only" aria-label="Tunda Beli"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></a>
-        <a href="{% url 'marketplace:cart' %}" class="icon-link m-only" aria-label="Keranjang, {{ cart_count }} barang">
+    {# Desktop: navbar bersama (sama persis dengan landing page). #}
+    {% include 'partials/site_header.html' with active='marketplace' search_open=True %}
+    {# HP: pola mobile dari desain marketplace (judul + ikon + cari, navigasi lewat tab bar bawah). #}
+    <header class="topbar m-topbar">
+        <a href="{% url 'marketplace:catalog' %}" class="m-title">{% block m_title %}Market<em class="em">place</em>{% endblock %}</a>
+        <a href="#" class="icon-link" aria-label="Tunda Beli"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></a>
+        <a href="{% url 'marketplace:cart' %}" class="icon-link" aria-label="Keranjang, {{ cart_count }} barang">
             <svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg>{% if cart_count %}<span class="badge">{{ cart_count }}</span>{% endif %}
         </a>
         {% if user.is_authenticated %}
@@ -51,6 +40,10 @@
         {% else %}
             <a href="{% url 'main:show_login' %}" class="btn">Masuk</a>
         {% endif %}
+        <form class="search" role="search" action="{% url 'marketplace:catalog' %}">
+            <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg>
+            <input type="search" name="q" value="{{ q }}" aria-label="Cari barang preloved" placeholder="Cari barang preloved">
+        </form>
     </header>
     {% endblock %}
 
@@ -73,14 +66,7 @@
 
     <script>
     (() => {
-        // Pintasan "/" untuk mencari (golden rule 2).
-        const search = document.getElementById('search');
-        document.addEventListener('keydown', e => {
-            if (e.key === '/' && search && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
-                e.preventDefault();
-                search.focus();
-            }
-        });
+        // Pintasan "/" untuk mencari ada di navbar bersama (partials/site_header.html).
         // ponytail: "suka" hanya disimpan di browser; sambungkan ke modul Tunda Beli kalau sudah ada.
         let liked = [];
         try { liked = JSON.parse(localStorage.getItem('sayangin-suka') || '[]'); } catch (e) {}
