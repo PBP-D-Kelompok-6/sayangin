@@ -1,0 +1,45 @@
+{% load static %}<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Marketplace{% endblock %} — Sayangin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'marketplace/marketplace.css' %}">
+</head>
+<body>
+    {% block header %}
+    <header class="mp-header">
+        <a href="{% url 'main:show_main' %}" class="logo">sayangin</a>
+        <nav class="mp-nav" aria-label="Utama">
+            <a href="{% url 'main:show_main' %}">Beranda</a>
+            <a href="#">Lemari</a>
+            <a href="{% url 'marketplace:catalog' %}" aria-current="page">Marketplace</a>
+            <a href="#">Donasi</a>
+            <a href="#">Dampak</a>
+        </nav>
+        <form class="search" role="search" action="{% url 'marketplace:catalog' %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+            <input type="search" name="q" value="{{ q }}" aria-label="Cari" placeholder="Cari barang preloved">
+        </form>
+        <a href="#" class="header-link hide-sm">Tunda Beli</a>
+        <a href="{% url 'marketplace:cart' %}" class="header-link">Keranjang ({{ cart_count }})</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'marketplace:orders' %}" class="avatar" aria-label="Pesanan saya"></a>
+        {% else %}
+            <a href="{% url 'main:show_login' %}" class="header-link">Masuk</a>
+        {% endif %}
+    </header>
+    {% endblock %}
+
+    <main class="page">
+        {% for message in messages %}
+            <p class="flash {{ message.tags }}" role="status">{{ message }}</p>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

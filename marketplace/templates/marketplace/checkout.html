@@ -1,0 +1,119 @@
+{% extends 'marketplace/base.html' %}
+{% load static rupiah %}
+{% block title %}Checkout{% endblock %}
+
+{% block header %}
+<header class="mp-header checkout-header">
+    <a href="{% url 'main:show_main' %}" class="logo">sayangin</a>
+    <span class="eyebrow">Checkout aman</span>
+    <span class="spacer"></span>
+    <a href="{% url 'marketplace:cart' %}" class="header-link">← Kembali ke keranjang</a>
+</header>
+{% endblock %}
+
+{% block content %}
+<ol class="steps" aria-label="Langkah checkout">
+    <li><span class="dot">1</span>Alamat</li>
+    <li aria-hidden="true" class="bar"></li>
+    <li><span class="dot">2</span>Pengiriman</li>
+    <li aria-hidden="true" class="bar"></li>
+    <li><span class="dot">3</span>Pembayaran</li>
+</ol>
+
+<form method="post" class="two-col" id="checkout" novalidate>
+    {% csrf_token %}
+    <div>
+        <section class="block">
+            <h2>1 · Alamat</h2>
+            <div class="form-grid">
+                <label>Nama penerima
+                    <input class="input" name="recipient" value="{{ form.recipient|default:user.get_full_name }}" autocomplete="name" required>
+                    {% if errors.recipient %}<span class="err">{{ errors.recipient }}</span>{% endif %}
+                </label>
+                <label>No. HP
+                    <input class="input" name="phone" type="tel" value="{{ form.phone }}" autocomplete="tel" required>
+                    {% if errors.phone %}<span class="err">{{ errors.phone }}</span>{% endif %}
+                </label>
+                <label class="wide">Alamat lengkap
+                    <textarea class="input" name="address" rows="2" autocomplete="street-address" required>{{ form.address }}</textarea>
+                    {% if errors.address %}<span class="err">{{ errors.address }}</span>{% endif %}
+                </label>
+                <label>Kota
+                    <input class="input" name="city" value="{{ form.city }}" autocomplete="address-level2" required>
+                    {% if errors.city %}<span class="err">{{ errors.city }}</span>{% endif %}
+                </label>
+            </div>
+        </section>
+
+        <h2 class="block" style="font-size:24px; padding-bottom:0">2 · Pengiriman</h2>
+        {% for g in groups %}
+        <section class="block">
+            <span class="soft">Dari <b style="color: var(--ink)">@{{ g.seller.username }}</b> · {{ g.items.0.product.city }}</span>
+            {% for item in g.items %}
+            <div class="line-item" data-price="{{ item.product.price }}">
+                <div class="photo" style="background-image: url('{% static item.product.image %}')"></div>
+                <span>{{ item.product.name }}{% if item.product.size %}, {{ item.product.size }}{% endif %}<br><span class="muted">{{ item.product.get_condition_display }}</span></span>
+                <b>{{ item.product.price|rupiah }}</b>
+            </div>
+            {% endfor %}
+            <fieldset class="couriers">
+                <legend>Pilih kurir</legend>
+                {% for key, label, cost in couriers %}
+                <label class="option">
+                    <input type="radio" name="courier_{{ g.seller.pk }}" value="{{ key }}" data-cost="{{ cost }}" required {% if g.courier == key %}checked{% endif %}>
+                    <span>{{ label }}</span><b>{{ cost|rupiah }}</b>
+                </label>
+                {% endfor %}
+            </fieldset>
+            {% if g.error %}<span class="err" role="alert">{{ g.error }}</span>{% endif %}
+        </section>
+        {% endfor %}
+
+        <section class="block">
+            <h2>3 · Pembayaran</h2>
+            <fieldset class="couriers">
+                <legend class="visually-hidden">Metode pembayaran</legend>
+                {% for key, label in payments %}
+                <label class="option">
+                    <input type="radio" name="payment" value="{{ key }}" required {% if form.payment == key %}checked{% endif %}>
+                    <span>{{ label }}</span>
+                </label>
+                {% endfor %}
+            </fieldset>
+            {% if errors.payment %}<span class="err" role="alert">{{ errors.payment }}</span>{% endif %}
+        </section>
+    </div>
+
+    <aside class="summary" aria-label="Ringkasan">
+        <span class="summary-title">Ringkasan</span>
+        <div class="row"><span>Subtotal</span><span>{{ subtotal|rupiah }}</span></div>
+        <div class="row"><span>Ongkir</span><span id="ongkir">–</span></div>
+        <div class="row total"><span>Total</span><b id="total">{{ subtotal|rupiah }}</b></div>
+        <button type="submit" class="btn btn-lg btn-silver" id="pay">Bayar sekarang</button>
+        <small id="pay-hint">Tombol aktif setelah alamat, semua kurir, dan pembayaran dipilih.</small>
+        <small class="impact">Membeli preloved ini menambah poin dampakmu.</small>
+    </aside>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const form = document.getElementById('checkout');
+    const subtotal = {{ subtotal }};
+    const rp = n => 'Rp' + n.toLocaleString('id-ID');
+    const update = () => {
+        const costs = [...form.querySelectorAll('input[data-cost]:checked')].map(i => +i.dataset.cost);
+        const ongkir = costs.reduce((a, b) => a + b, 0);
+        document.getElementById('ongkir').textContent = costs.length ? rp(ongkir) : '–';
+        document.getElementById('total').textContent = rp(subtotal + ongkir);
+        const ok = form.checkValidity();
+        document.getElementById('pay').disabled = !ok;
+        document.getElementById('pay-hint').hidden = ok;
+    };
+    form.addEventListener('input', update);
+    form.addEventListener('change', update);
+    update();
+})();
+</script>
+{% endblock %}

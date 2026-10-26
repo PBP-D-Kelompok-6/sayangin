@@ -1,0 +1,74 @@
+{% extends 'marketplace/base.html' %}
+{% load static rupiah %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'marketplace:catalog' %}">Marketplace</a> /
+    <a href="{% url 'marketplace:catalog' %}?kategori={{ product.category }}">{{ product.get_category_display }}</a> /
+    {{ product.name }}
+</nav>
+
+<div class="detail">
+    <div class="gallery">
+        {# ponytail: satu foto per barang; tambah model ProductImage + thumbnail kalau penjual unggah banyak foto. #}
+        <div class="photo gallery-main" role="img" aria-label="{{ product.name }}" style="background-image: url('{% static product.image %}')"></div>
+    </div>
+
+    <div class="detail-info">
+        <h1>{{ product.name }}{% if product.size %}, ukuran {{ product.size }}{% endif %}</h1>
+        <b class="price-lg">{{ product.price|rupiah }}</b>
+        <div class="note">
+            <b>Kondisi: {{ product.get_condition_display }}</b>
+            {% if product.condition_note %}<span class="soft">Catatan penjual: {{ product.condition_note }}</span>{% endif %}
+        </div>
+        <div class="specs">
+            {% if product.size %}<span>Ukuran <b>{{ product.size }}</b></span>{% endif %}
+            <span>Berat <b>{{ product.weight_grams }} g</b></span>
+            <span>Lokasi <b>{{ product.city }}</b></span>
+        </div>
+        {% if product.description %}<p class="soft" style="margin:0">{{ product.description }}</p>{% endif %}
+        <div class="note note-row">
+            <span><b>Ongkir ke alamatmu</b><br><span class="soft">Mulai {{ shipping_from|rupiah }} · tiba 2–4 hari</span></span>
+        </div>
+
+        {% if product.is_sold %}
+            <button type="button" class="btn btn-lg" disabled>Sudah terjual</button>
+        {% elif product.seller == user %}
+            <p class="note">Ini barangmu sendiri.</p>
+        {% else %}
+        <div class="buy-row">
+            {% if in_cart %}
+                <a class="btn btn-lg btn-silver" href="{% url 'marketplace:cart' %}">Sudah di keranjang · lihat</a>
+            {% else %}
+                <form method="post" action="{% url 'marketplace:add_to_cart' product.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-lg btn-silver">Tambah ke keranjang</button>
+                </form>
+            {% endif %}
+            <form method="post" action="{% url 'marketplace:add_to_cart' product.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="checkout">
+                <button type="submit" class="btn btn-lg btn-ghost">Beli sekarang</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="seller">
+            <span class="avatar" aria-hidden="true"></span>
+            <span style="flex:1"><b>@{{ product.seller.username }}</b><br><span class="soft">{{ product.city }}</span></span>
+        </div>
+    </div>
+</div>
+
+{% if similar %}
+<section style="display:flex; flex-direction:column; gap:12px; margin-top:12px">
+    <h2 style="font-size:26px">Barang <em>serupa</em></h2>
+    <div class="similar">
+        {% for s in similar %}
+            <a class="photo" href="{% url 'marketplace:detail' s.pk %}" aria-label="{{ s.name }}" style="background-image: url('{% static s.image %}')"></a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

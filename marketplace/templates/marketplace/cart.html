@@ -1,0 +1,46 @@
+{% extends 'marketplace/base.html' %}
+{% load static rupiah %}
+{% block title %}Keranjang{% endblock %}
+
+{% block content %}
+<div class="catalog-head">
+    <div>
+        <span class="eyebrow">Keranjang</span>
+        <h1>Barang <em>pilihanmu</em></h1>
+    </div>
+</div>
+
+{% if groups %}
+<div class="two-col">
+    <div>
+        {% for seller, items in groups %}
+        <section class="block">
+            <span class="soft">Dari <b style="color: var(--ink)">@{{ seller.username }}</b></span>
+            {% for item in items %}
+            <div class="line-item">
+                <a class="photo" href="{% url 'marketplace:detail' item.product.pk %}" aria-label="{{ item.product.name }}" style="background-image: url('{% static item.product.image %}')"></a>
+                <span>{{ item.product.name }}{% if item.product.size %}, {{ item.product.size }}{% endif %}<br><span class="muted">{{ item.product.get_condition_display }} · {{ item.product.city }}</span></span>
+                <b>{{ item.product.price|rupiah }}</b>
+                <form method="post" action="{% url 'marketplace:remove_from_cart' item.product.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="link-btn" aria-label="Hapus {{ item.product.name }}">Hapus</button>
+                </form>
+            </div>
+            {% endfor %}
+        </section>
+        {% endfor %}
+    </div>
+    <aside class="summary" aria-label="Ringkasan">
+        <span class="summary-title">Ringkasan</span>
+        <div class="row"><span>Subtotal</span><span>{{ subtotal|rupiah }}</span></div>
+        <small>Ongkir dipilih per penjual di langkah berikutnya.</small>
+        <a class="btn btn-lg btn-silver" href="{% url 'marketplace:checkout' %}">Checkout</a>
+    </aside>
+</div>
+{% else %}
+<div class="empty">
+    <h2>Keranjang masih <em>kosong</em></h2>
+    <a class="btn" href="{% url 'marketplace:catalog' %}">Jelajahi marketplace</a>
+</div>
+{% endif %}
+{% endblock %}

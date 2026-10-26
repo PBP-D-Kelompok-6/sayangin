@@ -1,0 +1,42 @@
+{% extends 'marketplace/base.html' %}
+{% load static rupiah %}
+{% block title %}Pesanan saya{% endblock %}
+
+{% block content %}
+<div class="catalog-head">
+    <div>
+        <span class="eyebrow">Riwayat transaksi</span>
+        <h1>Pesanan <em>saya</em></h1>
+    </div>
+</div>
+
+{% if orders %}
+<div class="order-list">
+    {% for o in orders %}
+    <a class="order-row" href="{% url 'marketplace:order_detail' o.pk %}">
+        <span class="photo" style="background-image: url('{% static o.items.all.0.image %}')"></span>
+        <span><b>#{{ o.code }}</b> · {{ o.items.all|length }} barang dari @{{ o.seller.username }}<br><span class="muted">{{ o.created_at|date:"j M Y" }} · {{ o.total|rupiah }}</span></span>
+        <span class="status-pill">{{ o.get_status_display }}</span>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+    <h2>Belum ada <em>pesanan</em></h2>
+    <a class="btn" href="{% url 'marketplace:catalog' %}">Mulai belanja preloved</a>
+</div>
+{% endif %}
+
+{% if sales %}
+<h2 style="font-size:28px; margin-top:24px">Pesanan <em>masuk</em></h2>
+<div class="order-list">
+    {% for o in sales %}
+    <a class="order-row" href="{% url 'marketplace:order_detail' o.pk %}">
+        <span class="photo" style="background-image: url('{% static o.items.all.0.image %}')"></span>
+        <span><b>#{{ o.code }}</b> · untuk @{{ o.buyer.username }}<br><span class="muted">{{ o.created_at|date:"j M Y" }} · {{ o.get_courier_display }}</span></span>
+        <span class="status-pill">{{ o.get_status_display }}</span>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
