@@ -1,0 +1,109 @@
+
+{% load static %}
+
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profil Lembaga — Sayangin</title>
+    <meta name="description" content="Profil, ringkasan lemari, dan dampakmu di Sayangin.">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="stylesheet" href="{% static 'css/institution-profile.css' %}">
+    {% include 'includes/fonts.html' %}
+</head>
+
+<body>
+    {% include 'includes/icons.html' %}
+    {% include 'includes/navbar.html' %}
+
+    <main class="container page institution-profile">
+        <section class="profile-head institution-profile__header">
+        <div class="profile-head__text">
+            <p class="eyebrow">Akun Lembaga</p>
+            <h1>Profil Lembaga</h1>
+            <p>
+            Kelola informasi lembagamu agar pengguna
+            Sayangin dapat mengenal lembagamu.
+            </p>
+        </div>
+        </section>
+
+        {% if messages %}
+        {% for message in messages %}
+            <div class="institution-profile__message" role="status">
+                {{ message }}
+            </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if institution %}
+        <section class="card">
+            <h2>{{ institution.name }}</h2>
+            {% if institution.is_verified %}
+            <span class="chip chip--success">
+                Terverifikasi
+            </span>
+            {% else %}
+            <span class="chip chip--warning">
+                Belum diverifikasi
+            </span>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <section class="card">
+            <h2>
+                {% if institution %}
+                Edit Informasi Lembaga
+                {% else %}
+                Lengkapi Informasi Lembaga
+                {% endif %}
+            </h2>
+
+            <form class="institution-profile__form" method="POST"
+                action="{% url 'main:edit_institution_profile' %}">
+            {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="alert" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+            {% for field in form %}
+                <div class="field">
+                    <label class="field__label" for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    <div class="field__control">
+                        {{ field }}
+                    </div>
+
+                {% if field.help_text %}
+                    <p class="field__help">
+                    {{ field.help_text }}
+                    </p>
+                {% endif %}
+
+                {% for error in field.errors %}
+                    <p class="field__error" role="alert">
+                    {{ error }}
+                    </p>
+                {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button class="btn btn--primary" type="submit">
+                Simpan Profil
+            </button>
+
+            </form>
+        </section>
+    </main>
+    <script src="{% static 'js/main.js' %}" defer></script>
+</body>
+</html>

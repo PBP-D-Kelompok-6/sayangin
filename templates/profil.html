@@ -1,0 +1,116 @@
+{% load static %}
+
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil — Sayangin</title>
+  <meta name="description" content="Profil, ringkasan lemari, dan dampakmu di Sayangin.">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% include 'includes/fonts.html' %}
+</head>
+<body class="has-bottom-nav">
+  {% include 'includes/icons.html' %}
+
+  <a class="skip-link" href="#main">Lewati ke konten</a>
+  
+  {% include 'includes/navbar.html' %}
+
+  <main id="main" class="container page">
+    <section class="profile-head" aria-labelledby="profile-name">
+      <span class="avatar avatar--lg" aria-hidden="true">RY</span>
+      <div class="profile-head__text">
+        <p class="eyebrow desktop-only">Profil</p>
+        <h1 id="profile-name">{{ profile.full_name|default:user.username }}</h1>
+        <p class="profile-head__meta"><span>@{{ user.username }}</span><span><svg class="icon icon--xs" aria-hidden="true"><use href="#i-pin"/></svg>Depok, Jawa Barat</span><span class="desktop-only">Bergabung {{ user.date_joined|date:"F Y" }}</span></p>
+      </div>
+      <a class="btn btn--outline" href="#akun">Edit profil</a>
+    </section>
+
+    <section class="stats" aria-label="Ringkasan akun">
+      <div class="stat"><span class="stat__label">Barang di lemari</span><span class="stat__value">24</span><span class="stat__caption">3 lama tidak dipakai</span></div>
+      <div class="stat"><span class="stat__label">Sedang dijual</span><span class="stat__value">3</span><span class="stat__caption">1 terjual bulan ini</span></div>
+      <div class="stat"><span class="stat__label">Didonasikan</span><span class="stat__value">2</span><span class="stat__caption">ke 1 lembaga</span></div>
+      <div class="stat"><span class="stat__label">Pencapaian</span><span class="stat__value">3 / 5</span><span class="stat__caption">Selangkah lagi: Kind Closet</span></div>
+    </section>
+
+    <div class="two-col">
+      <div class="two-col__main">
+        <section class="impact-card" aria-labelledby="impact-title">
+          <div class="impact-card__head">
+            <div><p class="eyebrow">Dampakmu sejauh ini</p><h2 id="impact-title">Barang yang disayang, dipakai lebih lama.</h2></div>
+            <a class="btn btn--link" href="dampak.html">Lihat dampak <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          </div>
+          <div class="impact-card__metrics">
+            <div><strong>8</strong><span>barang dimanfaatkan kembali</span></div>
+            <div><strong>2</strong><span>barang didonasikan</span></div>
+            <div><strong>2</strong><span>kebutuhan lembaga terpenuhi</span></div>
+          </div>
+        </section>
+        <section class="card" aria-labelledby="activity-title">
+          <div class="card__head"><h2 id="activity-title">Aktivitas terbaru</h2><a class="btn btn--link" href="dampak.html">Semua <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+          <ul class="activity">
+              <li><span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg></span><span class="activity__text"><strong>Donasi selesai</strong><span>2 tas sekolah → Panti Asuhan Harapan</span></span><time>16 Sep 2026</time></li>
+              <li><span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-tag"/></svg></span><span class="activity__text"><strong>Barang terjual</strong><span>Jaket denim biru · Rp150.000</span></span><time>14 Sep 2026</time></li>
+              <li><span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-award"/></svg></span><span class="activity__text"><strong>Badge diperoleh</strong><span>First Giving</span></span><time>14 Sep 2026</time></li>
+              <li><span class="icon-tile"><svg class="icon" aria-hidden="true"><use href="#i-wardrobe"/></svg></span><span class="activity__text"><strong>Barang ditambahkan ke lemari</strong><span>Kemeja linen krem</span></span><time>10 Sep 2026</time></li>
+          </ul>
+        </section>
+      </div>
+
+      <aside class="two-col__side">
+        <section class="card" id="akun" aria-labelledby="info-title">
+          <div class="card__head"><h2 id="info-title">Informasi akun</h2><a class="text-link" href="#">Ubah</a></div>
+          <dl class="info-list">
+            <div><dt>Nama lengkap</dt><dd>{{ profile.full_name|default:"Belum diisi" }}</dd></div>
+            <div><dt>Username</dt><dd>@{{  user.username }}</dd></div>
+            <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+            <div><dt>Alamat pengiriman</dt><dd>{{ profile.address|default:"Belum diisi" }}</dd></div>
+            <div><dt>Tipe akun</dt><dd>{{ profile.get_role_display }}</dd></div>
+          </dl>
+        </section>
+        <nav class="card settings" aria-label="Pengaturan akun">
+          <a href="#"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg><span>Preferensi akun</span><svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-right"/></svg></a>
+          <a href="#"><svg class="icon" aria-hidden="true"><use href="#i-bell"/></svg><span>Pengingat lemari</span><svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-right"/></svg></a>
+          <a href="#"><svg class="icon" aria-hidden="true"><use href="#i-lock"/></svg><span>Ubah kata sandi</span><svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-right"/></svg></a>
+          <button type="button" class="is-danger" data-dialog-open="logout-dialog"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg><span>Keluar</span></button>
+        </nav>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__top">
+        <div class="site-footer__brand">
+          <a href="index.html" class="logo">sayangin</a>
+          <p class="caption-serif">Barang yang disayang tidak seharusnya berakhir di gudang.</p>
+        </div>
+        <div class="site-footer__cols">
+          <nav class="site-footer__col" aria-labelledby="f-donasi"><h2 id="f-donasi">Donasi</h2>
+            <ul><li><a href="donasi.html">Daftar Kebutuhan</a></li><li><a href="donasi.html#cara">Cara Donasi (FAQ)</a></li><li><a href="donasi.html#daftar">Daftar Lembaga</a></li></ul></nav>
+          <nav class="site-footer__col" aria-labelledby="f-jelajahi"><h2 id="f-jelajahi">Jelajahi</h2>
+            <ul><li><a href="index.html#etalase">Belanja</a></li><li><a href="lemari.html">Lemari Digital</a></li><li><a href="dampak.html">Dampak</a></li></ul></nav>
+          <nav class="site-footer__col" aria-labelledby="f-tentang"><h2 id="f-tentang">Tentang</h2>
+            <ul><li><a href="#">Tentang Kami</a></li><li><a href="#">Tim</a></li><li><a href="#">Kontak</a></li></ul></nav>
+        </div>
+      </div>
+      <div class="site-footer__bottom"><p>© 2026 Sayangin, Inc.</p><p>Dibuat untuk barang yang masih layak dipakai.</p></div>
+    </div>
+  </footer>
+  <nav class="bottom-nav" aria-label="Navigasi akun">
+    <a href="index.html"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Beranda</a>
+    <a href="index.html#etalase"><svg class="icon" aria-hidden="true"><use href="#i-tag"/></svg>Etalase</a>
+    <a href="lemari.html"><svg class="icon" aria-hidden="true"><use href="#i-wardrobe"/></svg>Lemari</a>
+    <a href="donasi.html"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg>Donasi</a>
+    <a href="dampak.html"><svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg>Dampak</a>
+  </nav>
+  <div class="toast-region" aria-live="polite" data-toast-region></div>
+  <script src="{% static 'js/data.js' %}" defer></script>
+  <script src="{% static 'js/main.js' %}" defer></script>
+</body>
+</html>
