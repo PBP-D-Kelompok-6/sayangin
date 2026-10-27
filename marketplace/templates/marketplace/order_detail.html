@@ -37,7 +37,7 @@
         <div class="note">
             {% for item in order.items.all %}
             <div class="line-item">
-                <div class="photo" style="background-image: url('{% static item.image %}'); width:56px; height:56px"></div>
+                <div class="photo" style="background-image: url('{{ item.photo }}'); width:56px; height:56px"></div>
                 <span>{{ item.name }}<br><span class="soft">{{ item.price|rupiah }}</span></span>
             </div>
             {% endfor %}

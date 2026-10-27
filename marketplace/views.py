@@ -4,11 +4,15 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views.decorators.http import require_POST
 
+from .forms import ProductForm
 from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product
+from .templatetags.rupiah import rupiah
 
 SORTS = {'terbaru': '-created_at', 'termurah': 'price', 'termahal': '-price'}
 ADDRESS_FIELDS = ('recipient', 'phone', 'address', 'city')
@@ -150,18 +154,80 @@ def product_detail(request, pk):
     })
 
 
+# ---------- CRUD barang milik penjual ----------
+
+@login_required
+def my_products(request):
+    items = Product.objects.filter(seller=request.user)
+    return render(request, 'marketplace/my_products.html', {
+        'available': items.filter(is_sold=False), 'sold': items.filter(is_sold=True),
+    })
+
+
+@login_required
+def product_create(request):
+    form = ProductForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        product = form.save(commit=False)
+        product.seller = request.user
+        product.save()
+        messages.success(request, f'{product.name} sudah tampil di marketplace.')
+        return redirect('marketplace:detail', pk=product.pk)
+    return render(request, 'marketplace/product_form.html', {'form': form, 'editing': False})
+
+
+def _own_product(request, pk):
+    """Hanya penjual pemilik yang boleh mengubah/menghapus, dan hanya selama belum terjual."""
+    return get_object_or_404(Product, pk=pk, seller=request.user, is_sold=False)
+
+
+@login_required
+def product_edit(request, pk):
+    product = _own_product(request, pk)
+    form = ProductForm(request.POST or None, instance=product)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Perubahan disimpan.')
+        return redirect('marketplace:detail', pk=pk)
+    return render(request, 'marketplace/product_form.html', {'form': form, 'editing': True, 'product': product})
+
+
+@login_required
+@require_POST
+def product_delete(request, pk):
+    product = _own_product(request, pk)
+    name = product.name
+    product.delete()
+    messages.success(request, f'{name} dihapus dari marketplace.')
+    return redirect('marketplace:my_products')
+
+
+# ---------- Keranjang (bisa lewat AJAX: balas JSON, tanpa memuat ulang halaman) ----------
+
+def _is_ajax(request):
+    return request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+
+def _cart_count(user):
+    return CartItem.objects.filter(user=user, product__is_sold=False).count()
+
 
 @login_required
 @require_POST
 def add_to_cart(request, pk):
     product = get_object_or_404(Product, pk=pk, is_sold=False)
     if product.seller == request.user:
+        if _is_ajax(request):
+            return JsonResponse({'ok': False, 'message': 'Ini barangmu sendiri.'}, status=400)
         messages.error(request, 'Ini barangmu sendiri.')
         return redirect('marketplace:detail', pk=pk)
     CartItem.objects.get_or_create(user=request.user, product=product)
     if request.POST.get('next') == 'checkout':
         return redirect('marketplace:checkout')
-    messages.success(request, f'{product.name} masuk keranjang.')
+    message = f'{product.name} masuk keranjang.'
+    if _is_ajax(request):
+        return JsonResponse({'ok': True, 'message': message, 'cart_count': _cart_count(request.user)})
+    messages.success(request, message)
     return redirect('marketplace:detail', pk=pk)
 
 
@@ -169,7 +235,28 @@ def add_to_cart(request, pk):
 @require_POST
 def remove_from_cart(request, pk):
     CartItem.objects.filter(user=request.user, product_id=pk).delete()
+    if _is_ajax(request):
+        groups = _cart_groups(request.user)
+        return JsonResponse({'ok': True, 'cart_count': _cart_count(request.user),
+                             'subtotal': rupiah(_subtotal(groups)), 'empty': not groups})
     return redirect('marketplace:cart')
+
+
+# ---------- JSON: daftar barang (Read lewat JSON) ----------
+
+def products_api(request):
+    """GET /marketplace/api/barang/?q=jaket&kategori=atasan → daftar barang tersedia dalam JSON."""
+    products = Product.objects.filter(is_sold=False).select_related('seller')
+    if q := request.GET.get('q', '').strip():
+        products = products.filter(name__icontains=q)
+    if categories := request.GET.getlist('kategori'):
+        products = products.filter(category__in=categories)
+    return JsonResponse({'count': products.count(), 'results': [{
+        'id': p.pk, 'name': p.name, 'price': p.price, 'price_label': rupiah(p.price),
+        'category': p.category, 'condition': p.get_condition_display(), 'city': p.city,
+        'seller': p.seller.username, 'photo': request.build_absolute_uri(p.photo),
+        'url': request.build_absolute_uri(reverse('marketplace:detail', args=[p.pk])),
+    } for p in products]})
 
 
 def _cart_groups(user):

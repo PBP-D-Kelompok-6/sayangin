@@ -89,3 +89,72 @@ class MarketplaceFlowTest(TestCase):
         self.assertContains(r, 'Belum ada versi')
         self.assertEqual(r.context['related'][0].name, 'Mantel camel')
         self.assertIn('mantel camel', r.context['other_keywords'])
+
+    # ---------- CRUD barang oleh penjual ----------
+
+    def product_data(self, **extra):
+        data = {'name': 'Kemeja flanel', 'price': '40000', 'category': 'atasan', 'condition': 'terawat',
+                'condition_note': '', 'size': 'L', 'city': 'Depok', 'weight_grams': '400',
+                'used_duration': '1 tahun', 'description': 'Masih tebal.', 'image': 'https://example.com/flanel.jpg'}
+        data.update(extra)
+        return data
+
+    def test_seller_can_create_edit_delete_product(self):
+        self.client.login(username='ira', password='x')
+        r = self.client.post(reverse('marketplace:product_create'), self.product_data())
+        product = Product.objects.get(name='Kemeja flanel')
+        self.assertRedirects(r, reverse('marketplace:detail', args=[product.pk]))
+        self.assertEqual(product.seller, self.buyer)
+        self.assertEqual(product.photo, 'https://example.com/flanel.jpg')
+        self.assertContains(self.client.get(reverse('marketplace:my_products')), 'Kemeja flanel')
+
+        self.client.post(reverse('marketplace:product_edit', args=[product.pk]), self.product_data(price='35000'))
+        product.refresh_from_db()
+        self.assertEqual(product.price, 35000)
+
+        r = self.client.post(reverse('marketplace:product_delete', args=[product.pk]))
+        self.assertRedirects(r, reverse('marketplace:my_products'))
+        self.assertFalse(Product.objects.filter(pk=product.pk).exists())
+
+    def test_product_form_validation(self):
+        self.client.login(username='ira', password='x')
+        r = self.client.post(reverse('marketplace:product_create'), self.product_data(price='500'))
+        self.assertContains(r, 'Harga minimal Rp1.000.')
+        r = self.client.post(reverse('marketplace:product_create'), self.product_data(condition='cacat'))
+        self.assertContains(r, 'Jelaskan cacatnya')
+        self.assertFalse(Product.objects.filter(name='Kemeja flanel').exists())
+
+    def test_only_owner_can_edit_or_delete(self):
+        self.client.login(username='ira', password='x')  # p1 milik nadia
+        self.assertEqual(self.client.get(reverse('marketplace:product_edit', args=[self.p1.pk])).status_code, 404)
+        self.assertEqual(self.client.post(reverse('marketplace:product_delete', args=[self.p1.pk])).status_code, 404)
+        self.assertTrue(Product.objects.filter(pk=self.p1.pk).exists())
+        # Barang yang sudah terjual tidak bisa dihapus, bahkan oleh pemiliknya.
+        Product.objects.filter(pk=self.p1.pk).update(is_sold=True)
+        self.client.login(username='nadia', password='x')
+        self.assertEqual(self.client.post(reverse('marketplace:product_delete', args=[self.p1.pk])).status_code, 404)
+
+    # ---------- AJAX + JSON ----------
+
+    def test_ajax_cart_returns_json(self):
+        self.client.login(username='ira', password='x')
+        ajax = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+        r = self.client.post(reverse('marketplace:add_to_cart', args=[self.p1.pk]), **ajax)
+        self.assertEqual(r.json(), {'ok': True, 'message': 'Blazer wol abu masuk keranjang.', 'cart_count': 1})
+        r = self.client.post(reverse('marketplace:add_to_cart', args=[self.p2.pk]), **ajax)
+        self.assertEqual(r.json()['cart_count'], 2)
+        r = self.client.post(reverse('marketplace:remove_from_cart', args=[self.p1.pk]), **ajax)
+        self.assertEqual(r.json(), {'ok': True, 'cart_count': 1, 'subtotal': 'Rp120.000', 'empty': False})
+        # Barang sendiri ditolak dengan JSON juga.
+        self.client.login(username='nadia', password='x')
+        r = self.client.post(reverse('marketplace:add_to_cart', args=[self.p1.pk]), **ajax)
+        self.assertEqual(r.status_code, 400)
+        self.assertFalse(r.json()['ok'])
+
+    def test_products_api_json(self):
+        r = self.client.get(reverse('marketplace:products_api'), {'kategori': 'tas'})
+        data = r.json()
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(data['results'][0]['name'], 'Tas mesh')
+        self.assertEqual(data['results'][0]['price_label'], 'Rp120.000')
+        self.assertEqual(self.client.get(reverse('marketplace:products_api'), {'q': 'blazer'}).json()['count'], 1)

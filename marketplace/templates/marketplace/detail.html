@@ -14,7 +14,7 @@
 <div class="detail">
     <div class="gallery">
         {# ponytail: satu foto per barang; tambah model ProductImage + thumbnail kalau penjual unggah banyak foto. #}
-        <div class="photo gallery-main" role="img" aria-label="{{ product.name }}" style="background-image: url('{% static product.image %}')"></div>
+        <div class="photo gallery-main" role="img" aria-label="{{ product.name }}" style="background-image: url('{{ product.photo }}')"></div>
         <div class="gallery-actions">
             <a class="btn btn-round" href="{% url 'marketplace:catalog' %}" aria-label="Kembali ke marketplace"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></a>
             <button type="button" class="btn btn-round" aria-label="Bagikan barang ini" data-share><svg class="icon" aria-hidden="true"><use href="#i-share"/></svg></button>
@@ -42,13 +42,21 @@
         {% if product.is_sold %}
             <button type="button" class="btn btn-lg" disabled>Sudah terjual</button>
         {% elif product.seller == user %}
-            <p class="note">Ini barangmu sendiri.</p>
+            {# Barang milik sendiri: penjual bisa mengubah atau menghapusnya. #}
+            <div class="owner-row">
+                <span class="soft">Ini barangmu.</span>
+                <a class="btn btn-lg btn-chrome" href="{% url 'marketplace:product_edit' product.pk %}">Edit barang</a>
+                <form method="post" action="{% url 'marketplace:product_delete' product.pk %}" data-confirm="Hapus {{ product.name }} dari marketplace? Tindakan ini tidak bisa dibatalkan.">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-lg btn-danger">Hapus</button>
+                </form>
+            </div>
         {% else %}
         <div class="buy-row">
             {% if in_cart %}
                 <a class="btn btn-lg btn-chrome" href="{% url 'marketplace:cart' %}">Di keranjang · lihat</a>
             {% else %}
-                <form method="post" action="{% url 'marketplace:add_to_cart' product.pk %}">
+                <form method="post" action="{% url 'marketplace:add_to_cart' product.pk %}" data-ajax-cart data-cart-url="{% url 'marketplace:cart' %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-lg btn-chrome"><span class="desk-only">Tambah ke keranjang</span><span class="m-only">+ Keranjang</span></button>
                 </form>

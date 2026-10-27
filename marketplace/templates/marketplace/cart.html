@@ -17,11 +17,11 @@
         <section class="block">
             <span class="soft">Dari <b style="color: var(--ink)">@{{ seller.username }}</b></span>
             {% for item in items %}
-            <div class="line-item">
-                <a class="photo" href="{% url 'marketplace:detail' item.product.pk %}" aria-label="{{ item.product.name }}" style="background-image: url('{% static item.product.image %}')"></a>
+            <div class="line-item" data-cart-item>
+                <a class="photo" href="{% url 'marketplace:detail' item.product.pk %}" aria-label="{{ item.product.name }}" style="background-image: url('{{ item.product.photo }}')"></a>
                 <span>{{ item.product.name }}{% if item.product.size %}, {{ item.product.size }}{% endif %}<br><span class="muted">{{ item.product.get_condition_display }} · {{ item.product.city }}</span></span>
                 <b>{{ item.product.price|rupiah }}</b>
-                <form method="post" action="{% url 'marketplace:remove_from_cart' item.product.pk %}">
+                <form method="post" action="{% url 'marketplace:remove_from_cart' item.product.pk %}" data-ajax-remove>
                     {% csrf_token %}
                     <button type="submit" class="link-btn" aria-label="Hapus {{ item.product.name }}">Hapus</button>
                 </form>
@@ -32,7 +32,7 @@
     </div>
     <aside class="summary" aria-label="Ringkasan">
         <span class="summary-title">Ringkasan</span>
-        <div class="row"><span>Subtotal</span><span>{{ subtotal|rupiah }}</span></div>
+        <div class="row"><span>Subtotal</span><span data-subtotal>{{ subtotal|rupiah }}</span></div>
         <small>Ongkir dipilih per penjual di langkah berikutnya.</small>
         <a class="btn btn-lg btn-chrome" href="{% url 'marketplace:checkout' %}">Checkout</a>
     </aside>

@@ -60,6 +60,8 @@ html { scroll-padding-top: 88px; }
 .btn-ink:hover, .btn.is-active:hover { color: #FFF; }
 .btn-chrome { background: var(--chrome); box-shadow: var(--chrome-shadow); border-color: rgba(0,0,0,.14); font-weight: 500; }
 .btn-ghost { background: transparent; border-color: rgba(26,18,16,.25); }
+.btn-danger { background: transparent; color: var(--danger); border-color: rgba(176,0,32,.35); }
+.btn-danger:hover { color: var(--danger); background: rgba(176,0,32,.06); }
 .btn-lg { height: 52px; font-size: 14px; padding: 0 24px; }
 .btn[disabled] { background: #ECEAE8; color: #8A817D; border-color: transparent; box-shadow: none; cursor: not-allowed; }
 .btn-round { width: 52px; height: 52px; padding: 0; border-radius: 50%; }
@@ -167,6 +169,16 @@ html { scroll-padding-top: 88px; }
 .input[aria-invalid="true"] { border-color: var(--danger); }
 textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 .err { font-size: 13px; color: var(--danger); font-weight: 400; }
+/* Form jual/edit barang: input dari Django Form diberi gaya sama dengan .input */
+.product-form { max-width: 760px; display: flex; flex-direction: column; gap: 20px; }
+.product-form :is(input, select, textarea) { height: 44px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); font: inherit; font-weight: 400; }
+.product-form textarea { height: auto; padding: 12px 14px; resize: vertical; }
+.product-form :is(input, select, textarea):focus { outline: 0; border-color: var(--ink); }
+.product-form small { font-weight: 400; font-size: 12px; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.owner-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.owner-row form { display: flex; }
+.row-actions { display: flex; gap: 8px; align-items: center; }
 .summary { width: 384px; flex: none; position: sticky; top: 96px; padding: 22px; border-radius: var(--radius-lg); color: #F4EEEB; background: radial-gradient(70% 60% at 100% 0%, rgba(122,30,42,.6), rgba(122,30,42,0) 70%), var(--dark); display: flex; flex-direction: column; gap: 12px; }
 .summary-title { font-family: var(--font-display); font-size: 28px; line-height: 1; }
 .summary .row { display: flex; justify-content: space-between; color: #CFC3BE; }

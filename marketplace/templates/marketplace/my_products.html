@@ -1,0 +1,50 @@
+{% extends 'marketplace/base.html' %}
+{% load rupiah %}
+{% block title %}Barang jualanku{% endblock %}
+{% block m_title %}Barang <em class="em">jualanku</em>{% endblock %}
+
+{% block content %}
+<div class="catalog-head">
+    <div>
+        <span class="eyebrow">{{ available|length }} tersedia · {{ sold|length }} terjual</span>
+        <h1>Barang <em>jualanku</em></h1>
+    </div>
+    <span class="catalog-tools"><a class="btn btn-chrome" href="{% url 'marketplace:product_create' %}">+ Jual barang</a></span>
+</div>
+
+{% if available %}
+<div class="order-list">
+    {% for p in available %}
+    <div class="order-row">
+        <a class="photo" href="{% url 'marketplace:detail' p.pk %}" aria-label="{{ p.name }}" style="background-image: url('{{ p.photo }}')"></a>
+        <span><a href="{% url 'marketplace:detail' p.pk %}"><b>{{ p.name }}</b></a><br><span class="muted">{{ p.price|rupiah }} · {{ p.get_condition_display }} · {{ p.city }}</span></span>
+        <span class="row-actions">
+            <a class="btn" href="{% url 'marketplace:product_edit' p.pk %}">Edit</a>
+            <form method="post" action="{% url 'marketplace:product_delete' p.pk %}" data-confirm="Hapus {{ p.name }} dari marketplace? Tindakan ini tidak bisa dibatalkan.">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Hapus</button>
+            </form>
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+    <h2>Belum ada barang <em>dijual</em></h2>
+    <p>Barang yang lama tak dipakai bisa jadi milik orang lain yang menyayanginya.</p>
+    <a class="btn btn-chrome" href="{% url 'marketplace:product_create' %}">+ Jual barang pertamamu</a>
+</div>
+{% endif %}
+
+{% if sold %}
+<h2 class="section-title">Sudah <em>terjual</em></h2>
+<div class="order-list">
+    {% for p in sold %}
+    <div class="order-row">
+        <span class="photo" style="background-image: url('{{ p.photo }}')"></span>
+        <span><b>{{ p.name }}</b><br><span class="muted">{{ p.price|rupiah }} · terjual</span></span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

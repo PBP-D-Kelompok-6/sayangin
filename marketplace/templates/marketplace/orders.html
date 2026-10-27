@@ -8,14 +8,14 @@
         <span class="eyebrow">Riwayat transaksi</span>
         <h1>Pesanan <em>saya</em></h1>
     </div>
-    <span class="catalog-tools"><span class="soft">Masuk sebagai @{{ user.username }}</span><a class="btn" href="{% url 'main:logout_user' %}">Keluar</a></span>
+    <span class="catalog-tools"><span class="soft">Masuk sebagai @{{ user.username }}</span><a class="btn btn-chrome" href="{% url 'marketplace:my_products' %}">Barang jualanku</a><a class="btn" href="{% url 'main:logout_user' %}">Keluar</a></span>
 </div>
 
 {% if orders %}
 <div class="order-list">
     {% for o in orders %}
     <a class="order-row" href="{% url 'marketplace:order_detail' o.pk %}">
-        <span class="photo" style="background-image: url('{% static o.items.all.0.image %}')"></span>
+        <span class="photo" style="background-image: url('{{ o.items.all.0.photo }}')"></span>
         <span><b>#{{ o.code }}</b> · {{ o.items.all|length }} barang dari @{{ o.seller.username }}<br><span class="muted">{{ o.created_at|date:"j M Y" }} · {{ o.total|rupiah }}</span></span>
         <span class="status-pill">{{ o.status_short }}</span>
     </a>
@@ -33,7 +33,7 @@
 <div class="order-list">
     {% for o in sales %}
     <a class="order-row" href="{% url 'marketplace:order_detail' o.pk %}">
-        <span class="photo" style="background-image: url('{% static o.items.all.0.image %}')"></span>
+        <span class="photo" style="background-image: url('{{ o.items.all.0.photo }}')"></span>
         <span><b>#{{ o.code }}</b> · untuk @{{ o.buyer.username }}<br><span class="muted">{{ o.created_at|date:"j M Y" }} · {{ o.get_courier_display }}</span></span>
         <span class="status-pill">{{ o.status_short }}</span>
     </a>

@@ -10,7 +10,7 @@
     <span class="soft">Dari <b style="color: var(--ink)">@{{ g.seller.username }}</b> · {{ g.items.0.product.city }}</span>
     {% for item in g.items %}
     <div class="line-item">
-        <div class="photo" style="background-image: url('{% static item.product.image %}')"></div>
+        <div class="photo" style="background-image: url('{{ item.product.photo }}')"></div>
         <span>{{ item.product.name }}{% if item.product.size %}, {{ item.product.size }}{% endif %}<br><span class="muted">{{ item.product.get_condition_display }}</span></span>
         <b>{{ item.product.price|rupiah }}</b>
     </div>

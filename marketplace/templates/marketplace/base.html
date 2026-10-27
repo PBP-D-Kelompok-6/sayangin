@@ -32,7 +32,7 @@
     <header class="topbar m-topbar">
         <a href="{% url 'marketplace:catalog' %}" class="m-title">{% block m_title %}Market<em class="em">place</em>{% endblock %}</a>
         <a href="{% url 'marketplace:cart' %}" class="icon-link" aria-label="Keranjang, {{ cart_count }} barang">
-            <svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg>{% if cart_count %}<span class="badge">{{ cart_count }}</span>{% endif %}
+            <svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg><span class="badge" data-cart-count{% if not cart_count %} hidden{% endif %}>{{ cart_count }}</span>
         </a>
         {% if user.is_authenticated %}
             <a href="{% url 'marketplace:orders' %}" class="avatar" aria-label="Pesanan saya"></a>
@@ -63,6 +63,53 @@
     </nav>
     {% endblock %}
 
+    <script>
+    (() => {
+        // AJAX keranjang: form dikirim di latar belakang, server membalas JSON, halaman tidak dimuat ulang.
+        // Kalau gagal (mis. belum login → server mengalihkan ke halaman login), form dikirim biasa.
+        const send = form => fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(form),  // ikut membawa csrfmiddlewaretoken
+        }).then(r => (r.headers.get('content-type') || '').includes('application/json') ? r.json() : Promise.reject(r));
+        const setCartCount = n => document.querySelectorAll('[data-cart-count]').forEach(b => { b.textContent = n; b.hidden = !n; });
+        const flash = (text, kind = 'success') => {
+            const p = Object.assign(document.createElement('p'), { className: `flash ${kind}`, textContent: text });
+            p.setAttribute('role', 'status');
+            document.querySelector('main.page').prepend(p);
+            setTimeout(() => p.remove(), 4000);
+        };
+
+        document.querySelectorAll('form[data-ajax-cart]').forEach(form => form.addEventListener('submit', e => {
+            e.preventDefault();
+            send(form).then(data => {
+                if (!data.ok) return flash(data.message, 'error');
+                setCartCount(data.cart_count);
+                flash(data.message);
+                const link = Object.assign(document.createElement('a'), { className: 'btn btn-lg btn-chrome', href: form.dataset.cartUrl, textContent: 'Di keranjang · lihat' });
+                form.replaceWith(link);
+            }).catch(() => form.submit());
+        }));
+
+        document.querySelectorAll('form[data-ajax-remove]').forEach(form => form.addEventListener('submit', e => {
+            e.preventDefault();
+            send(form).then(data => {
+                if (data.empty) return location.reload();  // tampilkan keadaan "keranjang kosong"
+                const row = form.closest('[data-cart-item]');
+                const group = row.closest('section');
+                row.remove();
+                if (!group.querySelector('[data-cart-item]')) group.remove();
+                document.querySelectorAll('[data-subtotal]').forEach(el => el.textContent = data.subtotal);
+                setCartCount(data.cart_count);
+            }).catch(() => form.submit());
+        }));
+
+        // Konfirmasi sebelum tindakan yang tidak bisa dibatalkan (golden rule 5: cegah kesalahan).
+        document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', e => {
+            if (!confirm(form.dataset.confirm)) e.preventDefault();
+        }));
+    })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

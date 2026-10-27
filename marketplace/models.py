@@ -3,12 +3,18 @@ from zoneinfo import ZoneInfo
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.templatetags.static import static
 from django.utils import timezone
 
 WIB = ZoneInfo('Asia/Jakarta')
 BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 BULAN_PANJANG = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
                  'Oktober', 'November', 'Desember']
+
+
+def photo_url(image):
+    """Link foto penjual dipakai apa adanya; path data contoh diubah jadi URL static."""
+    return image if image.startswith(('http://', 'https://')) else static(image)
 
 
 def tanggal(dt, with_time=True):
@@ -45,8 +51,9 @@ class Product(models.Model):
     city = models.CharField(max_length=60)
     weight_grams = models.PositiveIntegerField(default=500)
     used_duration = models.CharField(max_length=30, blank=True)  # mis. "2 tahun"
-    # Path relatif ke static/, mis. "marketplace/img/blazer-abu.jpg"
-    image = models.CharField(max_length=200)
+    # Foto: link http(s) dari penjual, atau path static untuk data contoh ("marketplace/img/blazer-abu.jpg").
+    # ponytail: link foto, bukan upload file (upload butuh Pillow + penyimpanan media di server).
+    image = models.CharField(max_length=500)
     is_sold = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -55,6 +62,10 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def photo(self):
+        return photo_url(self.image)
 
 
 class CartItem(models.Model):
@@ -176,4 +187,8 @@ class OrderItem(models.Model):
     # Salinan saat dibeli, supaya riwayat tidak berubah kalau produk diedit/dihapus.
     name = models.CharField(max_length=120)
     price = models.PositiveIntegerField()
-    image = models.CharField(max_length=200)
+    image = models.CharField(max_length=500)
+
+    @property
+    def photo(self):
+        return photo_url(self.image)
