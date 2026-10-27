@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.crypto import get_random_string
 from django.views.decorators.http import require_POST
 
-from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product, WaitItem
+from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product
 
 SORTS = {'terbaru': '-created_at', 'termurah': 'price', 'termahal': '-price'}
 ADDRESS_FIELDS = ('recipient', 'phone', 'address', 'city')
@@ -113,7 +113,7 @@ def catalog(request):
             rest.setlist(key, [v for v in rest.getlist(key) if v != value])
             active.append({'label': names.get(value, value), 'url': '?' + rest.urlencode()})
 
-    # C2b: pencarian tanpa hasil → tawarkan Tunda Beli + kata lain + barang yang mungkin cocok.
+    # C2b: pencarian tanpa hasil → bukan jalan buntu: tawarkan kata lain + barang yang mungkin cocok.
     nothing_found = bool(q) and not products.exists()
 
     return render(request, 'marketplace/catalog.html', {
@@ -121,7 +121,6 @@ def catalog(request):
         'nothing_found': nothing_found,
         'related': _related_products(q) if nothing_found else [],
         'other_keywords': _other_keywords(q) if nothing_found else [],
-        'wait_days': WaitItem.DAY_CHOICES,
         'total_available': Product.objects.filter(is_sold=False).count(),
         'q': q,
         'searching': bool(q or active),
@@ -150,32 +149,6 @@ def product_detail(request, pk):
         'shipping_from': min(Order.COURIER_COST.values()),
     })
 
-
-@login_required
-@require_POST
-def wait_add(request):
-    keyword = request.POST.get('keyword', '').strip()[:120]
-    days = _int_or_none(request.POST.get('days'))
-    if not keyword or days not in dict(WaitItem.DAY_CHOICES):
-        messages.error(request, 'Pilih lama tunda dulu.')
-        return redirect(request.META.get('HTTP_REFERER') or 'marketplace:catalog')
-    item = WaitItem.objects.create(user=request.user, keyword=keyword, days=days)
-    messages.success(request, f'“{keyword}” ditunda sampai {item.until_label}. Kami kabari kalau ada padanan preloved.')
-    return redirect('marketplace:wait_list')
-
-
-@login_required
-def wait_list(request):
-    rows = [{'item': item, 'matches': _similar_by_name(item.keyword)}
-            for item in WaitItem.objects.filter(user=request.user)]
-    return render(request, 'marketplace/wait_list.html', {'rows': rows, 'nav_active': 'tunda'})
-
-
-@login_required
-@require_POST
-def wait_remove(request, pk):
-    WaitItem.objects.filter(user=request.user, pk=pk).delete()
-    return redirect('marketplace:wait_list')
 
 
 @login_required

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .models import CartItem, Order, Product, WaitItem
+from .models import CartItem, Order, Product
 
 
 @override_settings(STORAGES={'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
@@ -80,22 +80,12 @@ class MarketplaceFlowTest(TestCase):
         self.client.post(reverse('marketplace:add_to_cart', args=[self.p1.pk]))
         self.assertFalse(CartItem.objects.exists())
 
-    def test_empty_search_offers_wait_and_related(self):
-        # C2b: "trench coat" tidak ada, tapi sinonim "mantel"/"blazer" tetap menawarkan barang serupa.
+    def test_empty_search_suggests_related(self):
+        # C2b: "trench coat" tidak ada, tapi sinonim "mantel" tetap menawarkan barang serupa.
         Product.objects.create(seller=self.seller, name='Mantel camel', price=120000, category='atasan',
                                condition='terawat', city='Bandung', image='marketplace/img/mantel-camel.jpg')
         r = self.client.get(reverse('marketplace:catalog'), {'q': 'trench coat krem'})
         self.assertTrue(r.context['nothing_found'])
-        self.assertContains(r, 'Tunda beli ini')
+        self.assertContains(r, 'Belum ada versi')
         self.assertEqual(r.context['related'][0].name, 'Mantel camel')
         self.assertIn('mantel camel', r.context['other_keywords'])
-
-        self.client.login(username='ira', password='x')
-        r = self.client.post(reverse('marketplace:wait_add'), {'keyword': 'trench coat krem', 'days': '14'})
-        self.assertRedirects(r, reverse('marketplace:wait_list'))
-        item = WaitItem.objects.get()
-        self.assertEqual((item.user, item.days), (self.buyer, 14))
-        r = self.client.get(reverse('marketplace:wait_list'))
-        self.assertContains(r, 'Mantel camel')
-        self.client.post(reverse('marketplace:wait_add'), {'keyword': 'x', 'days': '99'})
-        self.assertEqual(WaitItem.objects.count(), 1)

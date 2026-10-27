@@ -103,23 +103,7 @@ html { scroll-padding-top: 88px; }
 .card b { font-weight: 600; }
 .card small { font-size: 12px; color: var(--ink-faint); }
 .section-title { font-size: 28px; margin-top: 6px; }
-.wait-panel { position: relative; overflow: hidden; display: flex; gap: 36px; align-items: center; padding: 28px 32px; border-radius: var(--radius-lg); color: #F4EEEB; background: var(--dark-glow); }
-/* Foto produk berlatar putih, jadi diberi ubin terang supaya tidak jadi kotak putih di atas latar gelap. */
-.wait-photo { flex: none; width: 130px; height: 190px; border-radius: var(--radius); background: #F3F1EF center/auto 86% no-repeat; background-blend-mode: multiply; box-shadow: 0 18px 30px rgba(0,0,0,.45); }
-.wait-body { display: flex; flex-direction: column; gap: 10px; max-width: 560px; }
-.wait-body .eyebrow { color: #C9B8B0; }
-.wait-body h2 { font-size: 34px; }
-.wait-body h2 em { color: inherit; }
-.wait-body p { color: #CFC3BE; }
-.wait-actions { margin: 6px 0 0; padding: 0; border: 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.wait-chip { position: relative; display: inline-flex; }
-.wait-chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
-.wait-chip span { height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.3); display: inline-flex; align-items: center; font-size: 13px; }
-.wait-chip input:checked + span { background: #F4EEEB; color: var(--ink); border-color: #F4EEEB; }
-.wait-chip input:focus-visible + span { outline: 2px solid #F4EEEB; outline-offset: 2px; }
-.wait-submit { height: 40px; margin-left: 8px; padding: 0 22px; font-size: 14px; }
-.wait-row { display: flex; flex-direction: column; gap: 12px; padding: 18px 0; border-top: 1px solid var(--line); }
-.wait-row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.empty.empty--left { align-items: flex-start; text-align: left; padding: 8px 0 0; }
 .empty { padding: 48px 0; text-align: center; color: var(--ink-muted); display: flex; flex-direction: column; gap: 12px; align-items: center; }
 
 /* ---------- Detail (C3) ---------- */
@@ -308,13 +292,6 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .m-breakdown div { display: flex; justify-content: space-between; color: var(--ink-muted); }
   .page--checkout { padding-bottom: 110px; }
 
-  /* Tunda Beli (C2b) */
-  .wait-panel { flex-direction: column; align-items: stretch; gap: 16px; padding: 20px 18px; }
-  .wait-photo { align-self: center; height: 140px; }
-  .wait-body h2 { font-size: 28px; }
-  .wait-actions { display: grid; grid-template-columns: repeat(3, 1fr); }
-  .wait-chip span { width: 100%; justify-content: center; }
-  .wait-submit { grid-column: 1 / -1; margin: 6px 0 0; height: 50px; }
   .section-title { font-size: 24px; }
 
   /* Lacak */
