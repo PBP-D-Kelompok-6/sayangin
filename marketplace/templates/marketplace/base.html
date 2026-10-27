@@ -23,15 +23,16 @@
         <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
         <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
         <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+        <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M6 12v7h12v-7"/></symbol>
     </svg>
 
     {% block topbar %}
     {# Desktop: navbar bersama (sama persis dengan landing page). #}
-    {% include 'partials/site_header.html' with active='marketplace' search_open=True %}
+    {% include 'partials/site_header.html' with active=nav_active|default:'marketplace' %}
     {# HP: pola mobile dari desain marketplace (judul + ikon + cari, navigasi lewat tab bar bawah). #}
     <header class="topbar m-topbar">
         <a href="{% url 'marketplace:catalog' %}" class="m-title">{% block m_title %}Market<em class="em">place</em>{% endblock %}</a>
-        <a href="#" class="icon-link" aria-label="Tunda Beli"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></a>
+        <a href="{% url 'marketplace:wait_list' %}" class="icon-link" aria-label="Tunda Beli"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></a>
         <a href="{% url 'marketplace:cart' %}" class="icon-link" aria-label="Keranjang, {{ cart_count }} barang">
             <svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg>{% if cart_count %}<span class="badge">{{ cart_count }}</span>{% endif %}
         </a>
@@ -64,23 +65,6 @@
     </nav>
     {% endblock %}
 
-    <script>
-    (() => {
-        // Pintasan "/" untuk mencari ada di navbar bersama (partials/site_header.html).
-        // ponytail: "suka" hanya disimpan di browser; sambungkan ke modul Tunda Beli kalau sudah ada.
-        let liked = [];
-        try { liked = JSON.parse(localStorage.getItem('sayangin-suka') || '[]'); } catch (e) {}
-        document.querySelectorAll('[data-like]').forEach(btn => {
-            btn.setAttribute('aria-pressed', liked.includes(btn.dataset.like));
-            btn.addEventListener('click', () => {
-                const on = btn.getAttribute('aria-pressed') !== 'true';
-                liked = on ? [...liked, btn.dataset.like] : liked.filter(id => id !== btn.dataset.like);
-                document.querySelectorAll(`[data-like="${btn.dataset.like}"]`).forEach(b => b.setAttribute('aria-pressed', on));
-                try { localStorage.setItem('sayangin-suka', JSON.stringify(liked)); } catch (e) {}
-            });
-        });
-    })();
-    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

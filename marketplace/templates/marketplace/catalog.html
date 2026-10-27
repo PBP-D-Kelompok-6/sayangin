@@ -17,7 +17,7 @@
                 <h1><span class="desk-only">Market<em>place</em></span><span class="m-only">Baru <em>masuk</em></span></h1>
             {% endif %}
         </div>
-        <div class="catalog-tools">
+        <div class="catalog-tools"{% if nothing_found %} hidden{% endif %}>
             <button type="button" class="btn{% if active_filters %} is-active{% endif %}" id="filter-btn" aria-expanded="false" aria-controls="panel-filter">
                 <svg class="icon" aria-hidden="true"><use href="#i-filter"/></svg>
                 Filter{% if active_filters %} · {{ active_filters|length }}{% endif %}
@@ -105,8 +105,37 @@
 {% endif %}
 
 {% if products %}
-<div class="grid{% if searching %} grid--results{% endif %}">
+<div class="grid">
     {% for p in products %}{% include 'marketplace/_card.html' %}{% endfor %}
+</div>
+{% elif nothing_found %}
+{# C2b: belum ada versi preloved-nya → tawarkan Tunda Beli, bukan jalan buntu. #}
+<form class="wait-panel" method="post" action="{% url 'marketplace:wait_add' %}">
+    {% csrf_token %}
+    <input type="hidden" name="keyword" value="{{ q }}">
+    {% if related %}<span class="wait-photo" aria-hidden="true" style="background-image: url('{% static related.0.image %}')"></span>{% endif %}
+    <div class="wait-body">
+        <span class="eyebrow">Belum ada versi preloved-nya</span>
+        <h2>Tunda dulu, <em>jangan buru-buru beli baru</em></h2>
+        <p>Masukkan ke Tunda Beli. Selama masa tunggu, kami pantau barang yang baru masuk dan kabari kalau ada yang cocok. Setelah itu, kamu tetap bebas memutuskan.</p>
+        <fieldset class="wait-actions">
+            <legend class="visually-hidden">Lama tunda</legend>
+            {% for value, label in wait_days %}
+            <label class="wait-chip"><input type="radio" name="days" value="{{ value }}" {% if value == 14 %}checked{% endif %}><span>{{ label }}</span></label>
+            {% endfor %}
+            <button type="submit" class="btn btn-chrome wait-submit">Tunda beli ini</button>
+        </fieldset>
+    </div>
+</form>
+{% if other_keywords %}
+<div class="active-filters">
+    <span class="soft">Coba kata lain:</span>
+    {% for k in other_keywords %}<a class="btn" href="?q={{ k|urlencode }}">{{ k }}</a>{% endfor %}
+</div>
+{% endif %}
+<h2 class="section-title">Mungkin <em>cocok juga</em></h2>
+<div class="grid">
+    {% for p in related %}{% include 'marketplace/_card.html' %}{% endfor %}
 </div>
 {% else %}
 <div class="empty" role="status">

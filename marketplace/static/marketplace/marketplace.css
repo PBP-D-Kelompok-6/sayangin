@@ -73,9 +73,6 @@ html { scroll-padding-top: 88px; }
 .bubble .icon { width: 13px; height: 13px; }
 .field { height: 32px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); font: inherit; font-size: 13px; min-width: 0; }
 .select { height: 36px; border: 1px solid rgba(26,18,16,.15); border-radius: 999px; padding: 0 10px; background: var(--surface); font: inherit; }
-.heart { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; padding: 0; }
-.heart .icon { width: 16px; height: 16px; }
-[aria-pressed="true"] > .icon-heart { fill: var(--accent); stroke: var(--accent); }
 
 /* ---------- Catalog (C1/C2) ---------- */
 .catalog { display: flex; flex-direction: column; gap: 18px; }
@@ -99,15 +96,30 @@ html { scroll-padding-top: 88px; }
 .banner-cta { color: #CFC3BE; }
 .banner img { position: absolute; top: 12px; width: 120px; height: 116px; object-fit: contain; filter: drop-shadow(0 16px 20px rgba(0,0,0,.5)); }
 
-.grid { display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); gap: 18px; }
-.grid--results { --cols: 4; gap: 20px; }
-.card { position: relative; display: flex; flex-direction: column; gap: 3px; }
-.card a { text-decoration: none; }
+.grid { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 20px; }
+.card { position: relative; display: flex; flex-direction: column; gap: 3px; text-decoration: none; }
 .photo { display: block; border-radius: 10px; background-color: var(--photo); background-position: center; background-repeat: no-repeat; background-size: 74%; background-blend-mode: multiply; }
-.card .photo { height: 150px; margin-bottom: 4px; }
-.grid--results .card .photo { height: 200px; background-size: 76%; }
+.card .photo { height: 200px; margin-bottom: 4px; background-size: 76%; }
 .card b { font-weight: 600; }
 .card small { font-size: 12px; color: var(--ink-faint); }
+.section-title { font-size: 28px; margin-top: 6px; }
+.wait-panel { position: relative; overflow: hidden; display: flex; gap: 36px; align-items: center; padding: 28px 32px; border-radius: var(--radius-lg); color: #F4EEEB; background: var(--dark-glow); }
+/* Foto produk berlatar putih, jadi diberi ubin terang supaya tidak jadi kotak putih di atas latar gelap. */
+.wait-photo { flex: none; width: 130px; height: 190px; border-radius: var(--radius); background: #F3F1EF center/auto 86% no-repeat; background-blend-mode: multiply; box-shadow: 0 18px 30px rgba(0,0,0,.45); }
+.wait-body { display: flex; flex-direction: column; gap: 10px; max-width: 560px; }
+.wait-body .eyebrow { color: #C9B8B0; }
+.wait-body h2 { font-size: 34px; }
+.wait-body h2 em { color: inherit; }
+.wait-body p { color: #CFC3BE; }
+.wait-actions { margin: 6px 0 0; padding: 0; border: 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.wait-chip { position: relative; display: inline-flex; }
+.wait-chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.wait-chip span { height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.3); display: inline-flex; align-items: center; font-size: 13px; }
+.wait-chip input:checked + span { background: #F4EEEB; color: var(--ink); border-color: #F4EEEB; }
+.wait-chip input:focus-visible + span { outline: 2px solid #F4EEEB; outline-offset: 2px; }
+.wait-submit { height: 40px; margin-left: 8px; padding: 0 22px; font-size: 14px; }
+.wait-row { display: flex; flex-direction: column; gap: 12px; padding: 18px 0; border-top: 1px solid var(--line); }
+.wait-row-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .empty { padding: 48px 0; text-align: center; color: var(--ink-muted); display: flex; flex-direction: column; gap: 12px; align-items: center; }
 
 /* ---------- Detail (C3) ---------- */
@@ -132,7 +144,7 @@ html { scroll-padding-top: 88px; }
 .seller .avatar { width: 44px; height: 44px; }
 .seller > span { flex: 1; }
 .similar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
-.similar .photo { height: 90px; background-size: 76%; }
+.similar .card .photo { height: 170px; }
 .flash { padding: 12px 16px; border-radius: var(--radius); background: var(--accent-soft); }
 .flash.error { color: var(--danger); }
 
@@ -210,8 +222,7 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 /* ---------- Responsive ---------- */
 @media (max-width: 1100px) {
   .topbar { gap: 16px; padding: 0 24px; }
-  .grid { --cols: 4; }
-  .grid--results { --cols: 3; }
+  .grid { --cols: 3; }
   .gallery { width: 46%; }
   .filter-panel { grid-template-columns: 1fr 1fr; }
 }
@@ -246,8 +257,8 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .catalog-head h1 { font-size: 26px; margin: 0; }
   .catalog-head .eyebrow { display: none; }
   .catalog-tools label > span { display: none; }
-  .grid, .grid--results { --cols: 2; gap: 14px 10px; }
-  .card .photo, .grid--results .card .photo { height: 170px; }
+  .grid { --cols: 2; gap: 14px 10px; }
+  .card .photo { height: 170px; }
 
   /* Filter jadi bottom sheet */
   .filter-panel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-height: 85vh; overflow-y: auto; border-radius: 20px 20px 0 0; background: var(--bg); grid-template-columns: 1fr; gap: 18px; padding: 10px 16px 16px; }
@@ -274,7 +285,8 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .buy-row .btn-round { display: none; }
   .buy-row form:first-child { order: 2; }
   .similar { display: flex; overflow-x: auto; }
-  .similar .photo { flex: 0 0 120px; height: 120px; }
+  .similar .card { flex: 0 0 130px; }
+  .similar .card .photo { height: 130px; }
   .has-buy-bar .tabbar, .no-m-topbar .topbar { display: none; }
 
   /* Checkout */
@@ -295,6 +307,15 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .m-breakdown summary { font-weight: 600; cursor: pointer; margin-bottom: 8px; }
   .m-breakdown div { display: flex; justify-content: space-between; color: var(--ink-muted); }
   .page--checkout { padding-bottom: 110px; }
+
+  /* Tunda Beli (C2b) */
+  .wait-panel { flex-direction: column; align-items: stretch; gap: 16px; padding: 20px 18px; }
+  .wait-photo { align-self: center; height: 140px; }
+  .wait-body h2 { font-size: 28px; }
+  .wait-actions { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .wait-chip span { width: 100%; justify-content: center; }
+  .wait-submit { grid-column: 1 / -1; margin: 6px 0 0; height: 50px; }
+  .section-title { font-size: 24px; }
 
   /* Lacak */
   .track-head { flex-direction: column; align-items: flex-start; }

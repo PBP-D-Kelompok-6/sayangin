@@ -21,6 +21,20 @@ PRODUCTS = [
     ('ayu.p', 'Kacamata ring', 30000, 'aksesori', 'seperti_baru', '', 'Surabaya', 'kacamata-ring', ''),
     ('ayu.p', 'Atasan kerah bulu', 55000, 'atasan', 'terawat', 'S', 'Surabaya', 'atasan-bulu', ''),
     ('ayu.p', 'Tote metalik', 65000, 'tas', 'seperti_baru', '', 'Surabaya', 'tas-tote-metalik', ''),
+    ('nadia.r', 'Jeans lukis', 70000, 'bawahan', 'seperti_baru', '30', 'Jakarta', 'jeans-lukis', ''),
+    ('ayu.p', 'Loafer kulit marun', 85000, 'sepatu', 'terawat', '40', 'Surabaya', 'loafer-marun', 'Sol bawah sedikit aus.'),
+    ('raka.s', 'Tas kulit hitam', 110000, 'tas', 'terawat', '', 'Medan', 'tas-kulit', ''),
+    ('raka.s', 'Headphone kulit', 95000, 'aksesori', 'seperti_baru', '', 'Bekasi', 'headphone-kulit', ''),
+    ('tiara.n', 'Kemeja linen', 40000, 'atasan', 'seperti_baru', 'M', 'Yogyakarta', 'kemeja-linen', ''),
+    ('dimas.k', 'Sneakers suede', 80000, 'sepatu', 'terawat', '41', 'Malang', 'sneakers-suede', ''),
+    ('putri.a', 'Dress garis', 60000, 'atasan', 'seperti_baru', 'S', 'Denpasar', 'dress-garis', ''),
+    ('sekar.w', 'Celana korduroi', 50000, 'bawahan', 'terawat', '29', 'Bandung', 'celana-korduroi', ''),
+    ('ayu.p', 'Rok plisket', 45000, 'bawahan', 'seperti_baru', 'M', 'Tangerang', 'rok-plisket', ''),
+    ('bimapras', 'Kemeja kuning', 35000, 'atasan', 'terawat', 'L', 'Depok', 'kemeja-kuning', ''),
+    ('nadia.r', 'Halter rajut', 40000, 'atasan', 'seperti_baru', 'S', 'Jakarta', 'halter-rajut', ''),
+    ('tiara.n', 'Syal sutra', 30000, 'aksesori', 'seperti_baru', '', 'Solo', 'syal-sutra', ''),
+    ('gilang.m', 'Jam tangan batu', 120000, 'aksesori', 'terawat', '', 'Makassar', 'jam-batu', 'Tali perlu diganti.'),
+    ('dimas.k', 'Anting matahari', 25000, 'aksesori', 'seperti_baru', '', 'Bogor', 'anting-matahari', ''),
 ]
 
 

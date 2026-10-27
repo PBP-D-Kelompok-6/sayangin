@@ -8,6 +8,7 @@
         <span class="eyebrow">Riwayat transaksi</span>
         <h1>Pesanan <em>saya</em></h1>
     </div>
+    <span class="catalog-tools"><span class="soft">Masuk sebagai @{{ user.username }}</span><a class="btn" href="{% url 'main:logout_user' %}">Keluar</a></span>
 </div>
 
 {% if orders %}

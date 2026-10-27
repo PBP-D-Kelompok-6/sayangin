@@ -17,7 +17,7 @@
         <div class="photo gallery-main" role="img" aria-label="{{ product.name }}" style="background-image: url('{% static product.image %}')"></div>
         <div class="gallery-actions">
             <a class="btn btn-round" href="{% url 'marketplace:catalog' %}" aria-label="Kembali ke marketplace"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></a>
-            <button type="button" class="btn btn-round" data-like="{{ product.pk }}" aria-pressed="false" aria-label="Simpan ke favorit"><svg class="icon icon-heart" aria-hidden="true"><use href="#i-heart"/></svg></button>
+            <button type="button" class="btn btn-round" aria-label="Bagikan barang ini" data-share><svg class="icon" aria-hidden="true"><use href="#i-share"/></svg></button>
         </div>
     </div>
 
@@ -58,14 +58,13 @@
                 <input type="hidden" name="next" value="checkout">
                 <button type="submit" class="btn btn-lg btn-ghost">Beli sekarang</button>
             </form>
-            <button type="button" class="btn btn-round" data-like="{{ product.pk }}" aria-pressed="false" aria-label="Simpan ke favorit"><svg class="icon icon-heart" aria-hidden="true"><use href="#i-heart"/></svg></button>
         </div>
         {% endif %}
 
         <div class="seller">
             <span class="avatar" aria-hidden="true" style="flex:none"></span>
-            <span><b>@{{ product.seller.username }}</b><br><span class="soft">{{ product.city }} · {{ seller_listings }} barang dijual</span></span>
-            <a href="{% url 'marketplace:catalog' %}?penjual={{ product.seller.username|urlencode }}">Lihat toko</a>
+            <span><b>@{{ product.seller.username }}</b><br><span class="soft">{{ product.city }} · {{ seller_sold }} barang terjual<span class="desk-only"> · bergabung {{ seller_joined }}</span></span></span>
+            <a href="{% url 'marketplace:catalog' %}?penjual={{ product.seller.username|urlencode }}"><span class="desk-only">Barang lain dari @{{ product.seller.username }}</span><span class="m-only">Barang lain</span></a>
         </div>
     </div>
 </div>
@@ -74,10 +73,19 @@
 <section style="display:flex; flex-direction:column; gap:12px; margin-top:12px">
     <h2 style="font-size:26px">Barang <em>serupa</em></h2>
     <div class="similar">
-        {% for s in similar %}
-            <a class="photo" href="{% url 'marketplace:detail' s.pk %}" aria-label="{{ s.name }}" style="background-image: url('{% static s.image %}')"></a>
-        {% endfor %}
+        {% for p in similar %}{% include 'marketplace/_card.html' with hide_meta=True %}{% endfor %}
     </div>
 </section>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Bagikan (HP): pakai menu bagikan bawaan HP, kalau tidak ada salin link.
+document.querySelector('[data-share]')?.addEventListener('click', async e => {
+    const data = { title: document.title, url: location.href };
+    if (navigator.share) { try { await navigator.share(data); } catch (err) {} return; }
+    try { await navigator.clipboard.writeText(location.href); e.currentTarget.setAttribute('aria-label', 'Link tersalin'); } catch (err) {}
+});
+</script>
 {% endblock %}

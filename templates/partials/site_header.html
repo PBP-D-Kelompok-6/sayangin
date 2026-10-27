@@ -1,9 +1,8 @@
 {% comment %}
 Navbar bersama Sayangin: SATU komponen untuk semua halaman supaya bentuknya selalu sama (golden rule 1: konsisten).
 Pakai: {% include 'partials/site_header.html' with active='marketplace' %}
-  active        : 'marketplace' | 'lemari' | 'donasi' | 'dampak' | '' (beranda)
-  search_open   : True kalau kolom cari langsung terbuka (mis. di marketplace)
-  q             : kata kunci yang sedang dicari (opsional)
+  active : 'marketplace' | 'lemari' | 'donasi' | 'dampak' | '' (beranda)
+  q      : kata kunci yang sedang dicari; kalau ada, kolom cari langsung terbuka di navbar
 Gaya: static/css/site-header.css. Ikon & logo inline, jadi tidak butuh sprite lain.
 {% endcomment %}
 <header class="sg-header">
@@ -15,44 +14,44 @@ Gaya: static/css/site-header.css. Ikon & logo inline, jadi tidak butuh sprite la
         <a href="{% url 'main:show_main' %}#dampak"{% if active == 'dampak' %} aria-current="page"{% endif %}>Dampak</a>
     </nav>
     <div class="sg-actions">
-        <button type="button" class="sg-icon" aria-label="Cari barang preloved" aria-controls="sg-search" aria-expanded="{% if search_open %}true{% else %}false{% endif %}" data-search-toggle>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-        </button>
+        {# Kolom cari ada di navbar: tertutup jadi ikon, terbuka jadi kolom (C1 vs C2 di desain). #}
+        <form class="sg-search" role="search" action="{% url 'marketplace:catalog' %}" data-open="{% if q %}true{% else %}false{% endif %}">
+            <button type="button" class="sg-icon" aria-label="Cari barang preloved" aria-expanded="{% if q %}true{% else %}false{% endif %}" aria-controls="sg-search-input" data-search-toggle>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+            </button>
+            <label class="sg-search-field">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+                <input type="search" name="q" value="{{ q }}" placeholder="Cari barang preloved" aria-label="Cari barang preloved" id="sg-search-input">
+            </label>
+        </form>
+        <a href="{% url 'marketplace:wait_list' %}" class="sg-link"{% if active == 'tunda' %} aria-current="page"{% endif %}>Tunda Beli</a>
         {% if user.is_authenticated %}
             <a href="{% url 'marketplace:cart' %}" class="sg-icon" aria-label="Keranjang, {{ cart_count }} barang">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></svg>{% if cart_count %}<span class="sg-badge">{{ cart_count }}</span>{% endif %}
             </a>
-            <a href="{% url 'main:logout_user' %}" class="sg-link">Keluar</a>
-            <a href="{% url 'marketplace:orders' %}" class="sg-avatar" aria-label="Pesanan saya"></a>
+            <a href="{% url 'marketplace:orders' %}" class="sg-avatar" aria-label="Akun & pesanan saya"></a>
         {% else %}
             <a href="{% url 'main:show_login' %}" class="sg-link">Masuk</a>
             <a href="{% url 'main:show_register' %}" class="sg-btn">Mulai sekarang</a>
         {% endif %}
     </div>
 </header>
-<form class="sg-search" id="sg-search" role="search" action="{% url 'marketplace:catalog' %}"{% if not search_open %} hidden{% endif %}>
-    <label class="sg-search-field">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-        <input type="search" name="q" value="{{ q }}" placeholder="Cari barang preloved" aria-label="Cari barang preloved" id="sg-search-input">
-        <kbd title="Tekan / untuk mencari">/</kbd>
-    </label>
-</form>
 <script>
 (() => {
-    const form = document.getElementById('sg-search');
+    const form = document.querySelector('.sg-search');
     const input = document.getElementById('sg-search-input');
-    const toggle = document.querySelector('[data-search-toggle]');
-    const pinned = {{ search_open|yesno:"true,false" }};  // di marketplace kolom cari selalu terbuka
+    const toggle = form.querySelector('[data-search-toggle]');
     const open = show => {
-        form.hidden = !show;
+        form.dataset.open = show;
         toggle.setAttribute('aria-expanded', show);
         if (show) input.focus();
     };
-    toggle.addEventListener('click', () => open(pinned || form.hidden));
-    // Pintasan "/" untuk mencari (golden rule 2), Esc menutup kolom cari.
+    toggle.addEventListener('click', () => open(true));
+    // Pintasan "/" untuk mencari (golden rule 2); Esc menutup kolom yang masih kosong.
     document.addEventListener('keydown', e => {
         if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); open(true); }
     });
-    input.addEventListener('keydown', e => { if (e.key === 'Escape' && !pinned) { open(false); toggle.focus(); } });
+    input.addEventListener('keydown', e => { if (e.key === 'Escape' && !input.value) { open(false); toggle.focus(); } });
+    input.addEventListener('blur', () => { if (!input.value) open(false); });
 })();
 </script>

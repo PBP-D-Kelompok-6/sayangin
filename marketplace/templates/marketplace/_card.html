@@ -1,7 +1,6 @@
-{% load static rupiah %}<div class="card">
-    <a class="photo" href="{% url 'marketplace:detail' p.pk %}" style="background-image: url('{% static p.image %}')" aria-hidden="true" tabindex="-1"></a>
-    <button type="button" class="heart" data-like="{{ p.pk }}" aria-pressed="false" aria-label="Simpan {{ p.name }}"><svg class="icon icon-heart" aria-hidden="true"><use href="#i-heart"/></svg></button>
-    <a href="{% url 'marketplace:detail' p.pk %}">{{ p.name }}</a>
+{% load static rupiah %}<a class="card" href="{% url 'marketplace:detail' p.pk %}">
+    <span class="photo" style="background-image: url('{% static p.image %}')"></span>
+    <span>{{ p.name }}</span>
     <b>{{ p.price|rupiah }}</b>
-    <small>{{ p.get_condition_display }} · {{ p.city }}</small>
-</div>
+    {% if not hide_meta %}<small>{{ p.get_condition_display }} · {{ p.city }}</small>{% endif %}
+</a>

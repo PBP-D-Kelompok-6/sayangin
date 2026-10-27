@@ -1,0 +1,44 @@
+{% extends 'marketplace/base.html' %}
+{% load static %}
+{% block title %}Tunda Beli{% endblock %}
+{% block m_title %}Tunda <em class="em">Beli</em>{% endblock %}
+
+{% block content %}
+<div class="catalog-head">
+    <div>
+        <span class="eyebrow">Daftar tunggu</span>
+        <h1>Tunda <em>Beli</em></h1>
+    </div>
+</div>
+<p class="soft" style="max-width:560px">Barang baru yang ingin kamu beli, kami tahan dulu. Selama masa tunggu, padanan preloved-nya muncul di sini.</p>
+
+{% if rows %}
+<div class="order-list">
+    {% for row in rows %}
+    <section class="wait-row">
+        <div class="wait-row-head">
+            <span><b>{{ row.item.keyword }}</b><br><span class="muted">Ditunda {{ row.item.days }} hari · sampai {{ row.item.until_label }} · sisa {{ row.item.days_left }} hari</span></span>
+            <form method="post" action="{% url 'marketplace:wait_remove' row.item.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="link-btn" aria-label="Hapus {{ row.item.keyword }} dari Tunda Beli">Hapus</button>
+            </form>
+        </div>
+        {% if row.matches %}
+            <span class="soft"><b style="color: var(--ink)">{{ row.matches|length }} padanan preloved</b> sudah ada</span>
+            <div class="grid">
+                {% for p in row.matches %}{% include 'marketplace/_card.html' %}{% endfor %}
+            </div>
+        {% else %}
+            <span class="soft">Belum ada padanan. Kami cek lagi setiap ada barang baru masuk.</span>
+        {% endif %}
+    </section>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+    <h2>Belum ada yang <em>ditunda</em></h2>
+    <p>Cari barang di marketplace. Kalau belum ada versi preloved-nya, kamu bisa menundanya dari sana.</p>
+    <a class="btn" href="{% url 'marketplace:catalog' %}">Jelajahi marketplace</a>
+</div>
+{% endif %}
+{% endblock %}

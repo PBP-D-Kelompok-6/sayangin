@@ -3,18 +3,65 @@ from itertools import groupby
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.crypto import get_random_string
 from django.views.decorators.http import require_POST
 
-from .models import CartItem, Order, OrderItem, Product
+from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product, WaitItem
 
 SORTS = {'terbaru': '-created_at', 'termurah': 'price', 'termahal': '-price'}
 ADDRESS_FIELDS = ('recipient', 'phone', 'address', 'city')
 
+# ponytail: padanan kata sederhana (Inggris/sinonim → nama barang di katalog); ganti dengan pencarian
+# yang lebih pintar kalau katalog sudah besar.
+SINONIM = {
+    'coat': 'mantel', 'trench': 'mantel', 'outer': 'jaket', 'jacket': 'jaket', 'jaket': 'jaket',
+    'blazer': 'blazer', 'krem': 'camel', 'cream': 'camel', 'shirt': 'kemeja', 'kaos': 'kemeja',
+    'sweater': 'sweter', 'cardigan': 'kardigan', 'pants': 'celana', 'jeans': 'jeans', 'skirt': 'rok',
+    'shoes': 'sepatu', 'sneaker': 'sneakers', 'heels': 'heels', 'bag': 'tas', 'watch': 'jam',
+    'glasses': 'kacamata', 'earring': 'anting', 'scarf': 'syal',
+}
+
 
 def _int_or_none(value):
     return int(value) if value and value.isdigit() else None
+
+
+def _words(q):
+    return [w for w in q.lower().split() if len(w) >= 3]
+
+
+def _similar_by_name(q, limit=4):
+    """Barang tersedia yang namanya memuat salah satu kata pencarian atau sinonimnya."""
+    terms = {t for w in _words(q) for t in (w, SINONIM.get(w, w))}
+    if not terms:
+        return []
+    match = Q()
+    for t in terms:
+        match |= Q(name__icontains=t)
+    return list(Product.objects.filter(is_sold=False).filter(match)[:limit])
+
+
+def _related_products(q, limit=4):
+    """C2b "Mungkin cocok juga": padanan nama dulu, lalu barang sekategori, baru barang terbaru."""
+    base = Product.objects.filter(is_sold=False)
+    found = _similar_by_name(q, limit)
+    if found and len(found) < limit:
+        same_kind = base.filter(category__in={p.category for p in found}).exclude(pk__in=[p.pk for p in found])
+        found += list(same_kind.order_by('-created_at')[:limit - len(found)])
+    if len(found) < limit:
+        found += list(base.exclude(pk__in=[p.pk for p in found]).order_by('-created_at')[:limit - len(found)])
+    return found
+
+
+def _other_keywords(q):
+    """Saran "Coba kata lain": potong kata terakhir, dan versi dengan sinonim."""
+    words = _words(q)
+    synonym_phrase = ' '.join(dict.fromkeys(SINONIM.get(w, w) for w in words))
+    options = [' '.join(words[:-1]) if len(words) > 1 else '', synonym_phrase]
+    options += [SINONIM[w] for w in words if w in SINONIM]
+    return [o for o in dict.fromkeys(options) if o and o != q.lower()][:3]
 
 
 def catalog(request):
@@ -66,8 +113,15 @@ def catalog(request):
             rest.setlist(key, [v for v in rest.getlist(key) if v != value])
             active.append({'label': names.get(value, value), 'url': '?' + rest.urlencode()})
 
+    # C2b: pencarian tanpa hasil → tawarkan Tunda Beli + kata lain + barang yang mungkin cocok.
+    nothing_found = bool(q) and not products.exists()
+
     return render(request, 'marketplace/catalog.html', {
         'products': products,
+        'nothing_found': nothing_found,
+        'related': _related_products(q) if nothing_found else [],
+        'other_keywords': _other_keywords(q) if nothing_found else [],
+        'wait_days': WaitItem.DAY_CHOICES,
         'total_available': Product.objects.filter(is_sold=False).count(),
         'q': q,
         'searching': bool(q or active),
@@ -86,13 +140,42 @@ def product_detail(request, pk):
     product = get_object_or_404(Product.objects.select_related('seller'), pk=pk)
     similar = Product.objects.filter(category=product.category, is_sold=False).exclude(pk=pk)[:6]
     in_cart = request.user.is_authenticated and CartItem.objects.filter(user=request.user, product=product).exists()
+    joined = product.seller.date_joined
     return render(request, 'marketplace/detail.html', {
         'product': product,
         'similar': similar,
         'in_cart': in_cart,
-        'seller_listings': Product.objects.filter(seller=product.seller, is_sold=False).count(),
+        'seller_sold': Product.objects.filter(seller=product.seller, is_sold=True).count(),
+        'seller_joined': f'{BULAN_PANJANG[joined.month - 1]} {joined.year}',
         'shipping_from': min(Order.COURIER_COST.values()),
     })
+
+
+@login_required
+@require_POST
+def wait_add(request):
+    keyword = request.POST.get('keyword', '').strip()[:120]
+    days = _int_or_none(request.POST.get('days'))
+    if not keyword or days not in dict(WaitItem.DAY_CHOICES):
+        messages.error(request, 'Pilih lama tunda dulu.')
+        return redirect(request.META.get('HTTP_REFERER') or 'marketplace:catalog')
+    item = WaitItem.objects.create(user=request.user, keyword=keyword, days=days)
+    messages.success(request, f'“{keyword}” ditunda sampai {item.until_label}. Kami kabari kalau ada padanan preloved.')
+    return redirect('marketplace:wait_list')
+
+
+@login_required
+def wait_list(request):
+    rows = [{'item': item, 'matches': _similar_by_name(item.keyword)}
+            for item in WaitItem.objects.filter(user=request.user)]
+    return render(request, 'marketplace/wait_list.html', {'rows': rows, 'nav_active': 'tunda'})
+
+
+@login_required
+@require_POST
+def wait_remove(request, pk):
+    WaitItem.objects.filter(user=request.user, pk=pk).delete()
+    return redirect('marketplace:wait_list')
 
 
 @login_required

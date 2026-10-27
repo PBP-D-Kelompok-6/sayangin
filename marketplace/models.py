@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -7,6 +8,8 @@ from django.utils import timezone
 
 WIB = ZoneInfo('Asia/Jakarta')
 BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+BULAN_PANJANG = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
+                 'Oktober', 'November', 'Desember']
 
 
 def tanggal(dt, with_time=True):
@@ -175,3 +178,33 @@ class OrderItem(models.Model):
     name = models.CharField(max_length=120)
     price = models.PositiveIntegerField()
     image = models.CharField(max_length=200)
+
+
+class WaitItem(models.Model):
+    """Tunda Beli (versi sederhana): barang baru yang ingin dibeli, ditahan dulu beberapa hari.
+    ponytail: belum ada notifikasi otomatis; padanan dihitung saat halaman dibuka. Lanjutkan di modul Tunda Beli."""
+    DAY_CHOICES = [(7, '7 hari'), (14, '14 hari'), (30, '30 hari')]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wait_items')
+    keyword = models.CharField(max_length=120)
+    days = models.PositiveSmallIntegerField(choices=DAY_CHOICES, default=14)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.keyword
+
+    @property
+    def until(self):
+        return self.created_at + timedelta(days=self.days)
+
+    @property
+    def until_label(self):
+        return tanggal(self.until, with_time=False)
+
+    @property
+    def days_left(self):
+        # Dibulatkan ke atas: tunda 7 hari yang baru dibuat tetap "sisa 7 hari".
+        return max(math.ceil((self.until - timezone.now()).total_seconds() / 86400), 0)
