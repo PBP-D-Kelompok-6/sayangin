@@ -6,13 +6,13 @@
 {% include 'marketplace/_address_row.html' %}
 
 {% for g in groups %}
-<div class="block block-row">
+<div class="co-block co-block-row">
     <span>Dari <b>@{{ g.seller.username }}</b> · {{ g.items|length }} barang<br><span class="soft">{{ g.courier }} · {{ g.cost|rupiah }}</span></span>
     <a href="{% url 'marketplace:checkout_shipping' %}">Ubah</a>
 </div>
 {% endfor %}
 
-<section class="block">
+<section class="co-block">
     <fieldset class="options-list" {% if error %}aria-describedby="err-payment"{% endif %}>
         <legend>Metode pembayaran</legend>
         {% for key, label in payments %}

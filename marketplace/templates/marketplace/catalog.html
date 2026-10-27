@@ -105,7 +105,7 @@
 {% endif %}
 
 {% if products %}
-<div class="grid">
+<div class="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2.5 gap-y-3.5 md:gap-5">
     {% for p in products %}{% include 'marketplace/_card.html' %}{% endfor %}
 </div>
 {% elif nothing_found %}
@@ -121,7 +121,7 @@
 </div>
 {% endif %}
 <h2 class="section-title">Mungkin <em>cocok juga</em></h2>
-<div class="grid">
+<div class="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2.5 gap-y-3.5 md:gap-5">
     {% for p in related %}{% include 'marketplace/_card.html' %}{% endfor %}
 </div>
 {% else %}

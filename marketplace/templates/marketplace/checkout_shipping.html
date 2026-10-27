@@ -6,7 +6,7 @@
 {% include 'marketplace/_address_row.html' %}
 
 {% for g in groups %}
-<section class="block">
+<section class="co-block">
     <span class="soft">Dari <b style="color: var(--ink)">@{{ g.seller.username }}</b> · {{ g.items.0.product.city }}</span>
     {% for item in g.items %}
     <div class="line-item">

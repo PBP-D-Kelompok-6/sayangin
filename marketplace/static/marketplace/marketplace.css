@@ -98,7 +98,6 @@ html { scroll-padding-top: 88px; }
 .banner-cta { color: #CFC3BE; }
 .banner img { position: absolute; top: 12px; width: 120px; height: 116px; object-fit: contain; filter: drop-shadow(0 16px 20px rgba(0,0,0,.5)); }
 
-.grid { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 20px; }
 .card { position: relative; display: flex; flex-direction: column; gap: 3px; text-decoration: none; }
 .photo { display: block; border-radius: 10px; background-color: var(--photo); background-position: center; background-repeat: no-repeat; background-size: 74%; background-blend-mode: multiply; }
 .card .photo { height: 200px; margin-bottom: 4px; background-size: 76%; }
@@ -149,8 +148,8 @@ html { scroll-padding-top: 88px; }
 .m-progress { display: none; }
 .two-col { display: flex; gap: 32px; align-items: flex-start; }
 .two-col > :first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.block { padding: 18px 0; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); }
-.block-row { flex-direction: row; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 0; }
+.co-block { padding: 18px 0; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); }
+.co-block-row { flex-direction: row; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 0; }
 .line-item { display: flex; gap: 12px; align-items: center; }
 .line-item .photo { width: 64px; height: 64px; flex: none; border-radius: var(--radius-sm); background-size: auto 84%; }
 .line-item > span { flex: 1; }
@@ -161,9 +160,7 @@ html { scroll-padding-top: 88px; }
 .option:has(input:checked) { background: var(--selected); }
 .option input { accent-color: var(--ink); margin: 0; }
 .option > span { flex: 1; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-grid label { display: flex; flex-direction: column; gap: 6px; font-weight: 500; }
-.form-grid .wide { grid-column: 1 / -1; }
 .input { height: 44px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); font: inherit; font-weight: 400; }
 .input:focus { outline: 0; border-color: var(--ink); }
 .input[aria-invalid="true"] { border-color: var(--danger); }
@@ -215,10 +212,33 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 .order-row .photo { width: 56px; height: 56px; flex: none; border-radius: var(--radius-sm); background-size: auto 84%; }
 .order-row > span:nth-child(2) { flex: 1; }
 
+/* ---------- Footer (includes/footer.html) ----------
+   Salinan aturan footer dari static/css/umum.css di branch Ghazi (authentication).
+   Hapus blok ini setelah marketplace memakai templates/base.html milik Ghazi. */
+.site-footer { margin-top: 48px; background: radial-gradient(60% 90% at 30% 120%, rgba(122,30,42,.5), rgba(122,30,42,0) 70%), #1E1411; color: #E9E1DD; padding: 48px 40px 20px; display: flex; flex-direction: column; overflow: hidden; }
+.site-footer .eyebrow { color: #BFB2AC; letter-spacing: .12em; }
+.site-footer__top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; }
+.site-footer nav { display: flex; flex-direction: column; gap: 8px; }
+.site-footer nav a { color: #E9E1DD; text-decoration: none; }
+.site-footer nav a:hover { color: #FFFFFF; }
+.newsletter { display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
+.newsletter .row { display: flex; gap: 8px; }
+.newsletter input { flex: 1; min-width: 0; height: 44px; padding: 0 2px; border: 0; border-bottom: 1px solid rgba(255,255,255,.4); background: transparent; color: #F4EEEB; font: inherit; }
+.newsletter input::placeholder { color: #BFB2AC; }
+.site-footer .btn--primary { height: var(--btn-h, 44px); padding: 0 18px; border-radius: 999px; border: 1px solid rgba(0,0,0,.14); background: var(--chrome); box-shadow: var(--chrome-shadow); color: var(--ink); font: inherit; font-weight: 500; cursor: pointer; }
+.site-footer__wordmark { display: block; margin: 56px 0 0 -8px; font-family: var(--font-display); font-size: clamp(104px, 25vw, 330px); line-height: .95; letter-spacing: -.035em; padding-bottom: .12em; background: linear-gradient(180deg, #F4EFEC 0%, #A8998F 50%, #4A2E28 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.site-footer__bottom { display: flex; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.14); font-family: var(--font-label); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #BFB2AC; }
+@media (max-width: 767px) {
+  .site-footer { padding: 40px 20px 20px; }
+  .site-footer__top { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .newsletter { grid-column: 1 / -1; max-width: none; }
+  .site-footer__wordmark { margin-top: 28px; }
+  .only-desktop { display: none !important; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1100px) {
   .topbar { gap: 16px; padding: 0 24px; }
-  .grid { --cols: 3; }
   .gallery { width: 46%; }
   .filter-panel { grid-template-columns: 1fr 1fr; }
 }
@@ -253,7 +273,6 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .catalog-head h1 { font-size: 26px; margin: 0; }
   .catalog-head .eyebrow { display: none; }
   .catalog-tools label > span { display: none; }
-  .grid { --cols: 2; gap: 14px 10px; }
   .card .photo { height: 170px; }
 
   /* Filter jadi bottom sheet */
@@ -293,7 +312,6 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .m-progress span { display: block; height: 100%; background: linear-gradient(90deg, #3E2723, var(--accent), #C8B4AC); }
   .steps { display: none; }
   .two-col { flex-direction: column; gap: 16px; }
-  .form-grid { grid-template-columns: 1fr; }
   .summary { position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 30; width: auto; border-radius: 0; flex-direction: row; align-items: center; justify-content: space-between; padding: 16px; }
   .summary > :not(.m-total):not(.btn) { display: none; }
   .summary .btn-lg { width: auto; height: 50px; }

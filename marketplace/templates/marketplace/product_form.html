@@ -16,9 +16,9 @@
 <form method="post" class="product-form" novalidate>
     {% csrf_token %}
     {% if form.non_field_errors %}<p class="flash error" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
-    <div class="form-grid">
+    <div class="form-grid grid grid-cols-1 md:grid-cols-2 gap-3">
         {% for field in form %}
-        <label class="{% if field.name == 'description' or field.name == 'image' or field.name == 'name' %}wide{% endif %}">
+        <label class="{% if field.name == 'description' or field.name == 'image' or field.name == 'name' %}md:col-span-2{% endif %}">
             {{ field.label }}
             {{ field }}
             {% if field.help_text %}<small class="muted" id="{{ field.auto_id }}_help">{{ field.help_text }}</small>{% endif %}

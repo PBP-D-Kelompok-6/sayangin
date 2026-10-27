@@ -7,10 +7,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    {% include 'includes/tailwind.html' %}
     <link rel="stylesheet" href="{% static 'css/site-header.css' %}">
     <link rel="stylesheet" href="{% static 'marketplace/marketplace.css' %}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
+    <div class="min-h-screen flex flex-col">
     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
         <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
         <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5s-7-4.3-7-9.6A3.9 3.9 0 0 1 12 7.6a3.9 3.9 0 0 1 7 2.3c0 5.3-7 9.6-7 9.6z"/></symbol>
@@ -46,12 +48,15 @@
     </header>
     {% endblock %}
 
-    <main class="page {% block page_class %}{% endblock %}">
+    <main class="page w-full flex-1 {% block page_class %}{% endblock %}">
         {% for message in messages %}
             <p class="flash {{ message.tags }}" role="status">{{ message }}</p>
         {% endfor %}
         {% block content %}{% endblock %}
     </main>
+
+    {% block footer %}{% include 'includes/footer.html' %}{% endblock %}
+    </div>
 
     {% block tabbar %}
     <nav class="tabbar" aria-label="Menu utama">
