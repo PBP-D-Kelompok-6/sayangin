@@ -209,3 +209,43 @@ class ProfileAndLogoutTests(TestCase):
         self.assertRedirects(response, reverse('main:show_main'))
         self.assertNotIn('_auth_user_id', self.client.session)
 
+    def test_lembaga_pipeline_requires_data_lembaga_before_dashboard(self):
+        lembaga_user = User.objects.create_user(
+            username='panti.harapan',
+            email='panti@email.com',
+            password='password123',
+        )
+        lembaga_user.profile.role = 'LEMBAGA' # type: ignore
+        lembaga_user.profile.save() # type: ignore
+
+        # Logging in without InstitutionProfile redirects to Step 2 (edit_institution_profile)
+        login_res = self.client.post(reverse('main:show_login'), {
+            'identity': 'panti@email.com',
+            'password': 'password123',
+        })
+        self.assertRedirects(login_res, reverse('main:edit_institution_profile'))
+
+        # Direct access to show_lembaga_profile also redirects to edit_institution_profile
+        dash_res = self.client.get(reverse('main:show_lembaga_profile'))
+        self.assertRedirects(dash_res, reverse('main:edit_institution_profile'))
+
+        # Completing Step 2 (Data lembaga) redirects to show_lembaga_profile and renders new design
+        post_res = self.client.post(reverse('main:edit_institution_profile'), {
+            'name': 'Panti Asuhan Harapan',
+            'institution_type': 'PANTI_ASUHAN',
+            'address': 'Jl. Kenanga No. 12, Depok',
+            'person_in_charge': 'Siti Aminah',
+            'contact_phone': '081298765432',
+        })
+        self.assertRedirects(post_res, reverse('main:show_lembaga_profile'))
+
+        final_res = self.client.get(reverse('main:show_lembaga_profile'))
+        self.assertEqual(final_res.status_code, 200)
+        self.assertTemplateUsed(final_res, 'lembaga.html')
+        self.assertContains(final_res, 'org-dash')
+        self.assertContains(final_res, 'Halo, <em>Panti Asuhan Harapan</em>')
+        self.assertContains(final_res, 'Siti Aminah')
+        self.assertContains(final_res, 'Jl. Kenanga No. 12, Depok')
+        self.assertContains(final_res, 'id="keluar"')
+
+

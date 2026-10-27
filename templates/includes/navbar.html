@@ -8,12 +8,13 @@
       </a>
       <nav class="primary-nav flex items-center" aria-label="Utama">
         <a href="{% url 'main:show_lembaga_profile' %}" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}>Dashboard</a>
+        <a href="{% url 'main:show_lembaga_profile' %}#kebutuhan-aktif">Kebutuhan</a>
+        <a href="{% url 'main:show_lembaga_profile' %}#tawaran">Tawaran masuk (4)</a>
         <a href="{% url 'main:edit_institution_profile' %}" {% if request.resolver_match.url_name == 'edit_institution_profile' %}aria-current="page"{% endif %}>Data lembaga</a>
-        <a href="{% url 'main:show_main' %}#kebutuhan">Donasi</a>
       </nav>
       <div class="site-header__actions flex items-center">
         <span class="text-soft">{{ user.institution_profile.name|default:user.username }}</span>
-        <a class="avatar" href="{% url 'main:show_lembaga_profile' %}" aria-label="Profil lembaga" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}></a>
+        <a class="avatar" href="{% url 'main:show_lembaga_profile' %}#profil-lembaga" aria-label="Profil lembaga" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}></a>
       </div>
     </div>
   </header>

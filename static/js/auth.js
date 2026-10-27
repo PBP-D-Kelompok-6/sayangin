@@ -121,4 +121,16 @@
       }
     });
   });
+
+  /* ---------- Umpan balik unggah dokumen (.dropzone) ---------- */
+  document.querySelectorAll('[data-file-input]').forEach(fileInput => {
+    const labelSpan = fileInput.closest('.dropzone')?.querySelector('[data-file-label]');
+    if (!labelSpan) return;
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (file) {
+        labelSpan.textContent = `Terpilih: ${file.name}`;
+      }
+    });
+  });
 })();

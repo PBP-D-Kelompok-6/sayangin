@@ -16,8 +16,17 @@ def show_main(request):
 def show_menu(request):
     return render(request, 'menu.html')
 
+def _is_institution_profile_complete(user) -> bool:
+    institution = InstitutionProfile.objects.filter(user=user).first()
+    return bool(institution and institution.name.strip() and institution.address.strip())
+
 def show_login(request):
     if request.user.is_authenticated:
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        if profile.role == 'LEMBAGA':
+            if not _is_institution_profile_complete(request.user):
+                return redirect('main:edit_institution_profile')
+            return redirect('main:show_lembaga_profile')
         return redirect("main:show_main")
 
     if request.method == 'POST':
@@ -32,8 +41,7 @@ def show_login(request):
             login(request, user)
             profile, _ = UserProfile.objects.get_or_create(user=user)
             if profile.role == 'LEMBAGA':
-                institution = InstitutionProfile.objects.filter(user=user).first()
-                if not institution:
+                if not _is_institution_profile_complete(user):
                     messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
                     return redirect('main:edit_institution_profile')
                 return redirect('main:show_lembaga_profile')
@@ -205,8 +213,8 @@ def logout_user(request):
 @lembaga_required
 def show_lembaga_profile(request):
     institution = InstitutionProfile.objects.filter(user=request.user).first()
-    if not institution:
-        messages.warning(request, "Silakan lengkapi profil lembaga anda terlebih dahulu.")
+    if not institution or not institution.name.strip() or not institution.address.strip():
+        messages.info(request, "Silakan lengkapi profil lembaga Anda terlebih dahulu.")
         return redirect("main:edit_institution_profile")
     context = {
         "lembaga": institution,
@@ -216,6 +224,7 @@ def show_lembaga_profile(request):
     return render(request, 'lembaga.html', context)
 
 @login_required(login_url='main:show_login')
+@lembaga_required
 def edit_institution_profile(request):
     institution = InstitutionProfile.objects.filter(user=request.user).first()
     if request.method == "POST":

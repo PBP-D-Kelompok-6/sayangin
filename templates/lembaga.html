@@ -1,268 +1,238 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ lembaga.name }} — Sayangin{% endblock %}
-{% block meta_description %}Profil lembaga {{ lembaga.name }} dan daftar kebutuhan donasinya.{% endblock %}
+{% block title %}{{ lembaga.name }} — Sayangin Mitra{% endblock %}
+{% block meta_description %}Dashboard dan profil lembaga {{ lembaga.name }} di Sayangin.{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+  <link rel="stylesheet" href="{% static 'css/donasi.css' %}">
 {% endblock %}
 
-{% block body_class %}has-bottom-nav has-sticky-bar{% endblock %}
-{% block main_class %}container{% endblock %}
+{% block body_class %}has-bottom-nav{% endblock %}
+
+{% block app_bar %}
+  <header class="app-bar only-mobile flex md:hidden items-center">
+    <a class="logo" href="{% url 'main:show_lembaga_profile' %}">
+      <img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span>
+    </a>
+    <span class="spacer"></span>
+    <a class="avatar avatar--sm" href="#profil-lembaga" aria-label="Profil lembaga"></a>
+  </header>
+{% endblock %}
 
 {% block content %}
-<!-- ================= LEMBAGA HERO ================= -->
-<section class="org-hero" aria-labelledby="org-name">
-  <figure class="org-hero__media" data-org="media" style="--tint: var(--tint-sage)">
-    <span class="photo-ph" data-org="photo">[Foto: {{ lembaga.name }}]</span>
-  </figure>
-  
-  <div class="org-hero__info">
-    <div class="org-hero__tags">
-      <span class="badge" data-org="type">{{ lembaga.get_institution_type_display|default:lembaga.institution_type|default:"Lembaga" }}</span>
-      {% if lembaga.is_verified %}
-        <span class="chip chip--success" data-org="verified">Terverifikasi</span>
-      {% else %}
-        <span class="chip chip--warning" data-org="verified">Menunggu Verifikasi</span>
-      {% endif %}
-    </div>
-
-    <h1 id="org-name" data-org="name">{{ lembaga.name }}</h1>
-    
-    <p class="org-hero__loc">
-      <svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>
-      <span data-org="address">{{ lembaga.address }}</span>
-    </p>
-    
-    <p class="org-hero__desc" data-org="about">
-      {{ lembaga.description|default:"Belum ada deskripsi yang ditambahkan." }}
-    </p>
-
-    <div class="facts" data-org="facts">
-      <div>
-        <strong>{{ lembaga.beneficiaries_count|default:"0" }} orang</strong>
-        <span>penerima manfaat</span>
-      </div>
-      <div>
-        <strong>Sejak {{ lembaga.founded_year|default:"-" }}</strong>
-        <span>berdiri</span>
-      </div>
-      <div>
-        <strong>{{ lembaga.contact_phone|default:"-" }}</strong>
-        <span>kontak lembaga</span>
-      </div>
-    </div>
-
-    {% if is_owner %}
-    <div style="margin-top: var(--space-4); display: flex; gap: var(--space-3); flex-wrap: wrap;">
-      <a class="btn btn--outline" href="{% url 'main:edit_institution_profile' %}">
-        <svg class="icon icon--sm" aria-hidden="true"><use href="#i-edit"/></svg>
-        Edit Profil Lembaga
-      </a>
-      <span class="chip chip--info">Mode Tampilan Pemilik</span>
-    </div>
+  <main class="page__main container org-dash flex-1 flex flex-col" id="konten">
+    {% if messages %}
+      {% for message in messages %}
+        {% if 'error' in message.tags %}
+          <div class="alert" role="alert">
+            <span class="alert-icon" aria-hidden="true">!</span>
+            <div>{{ message }}</div>
+          </div>
+        {% else %}
+          <div class="notice text-sm" role="status">{{ message }}</div>
+        {% endif %}
+      {% endfor %}
     {% endif %}
-  </div>
-</section>
 
-<!-- ================= DONATION / NEEDS FLOW ================= -->
-<div class="donate-flow">
-  <section aria-labelledby="needs-title">
-    <div class="needs__head">
-      <div>
-        <p class="eyebrow">Langkah 1 · Pilih kebutuhan</p>
-        <h2 id="needs-title">Kebutuhan aktif</h2>
-      </div>
-      <div class="filters" role="group" aria-label="Filter kebutuhan" data-need-filters>
-        <button class="filter-chip" type="button" data-filter="all" aria-pressed="true">Semua <small>4</small></button>
-        <button class="filter-chip" type="button" data-filter="Pakaian" aria-pressed="false">Pakaian <small>2</small></button>
-        <button class="filter-chip" type="button" data-filter="Sekolah" aria-pressed="false">Sekolah <small>2</small></button>
+    <div class="org-dash__head flex flex-col md:flex-row justify-between md:items-end">
+      <h1 class="page-title">
+        <span class="eyebrow">{{ lembaga.get_institution_type_display|default:"Lembaga mitra" }} · {% if lembaga.is_verified %}Terverifikasi{% else %}Menunggu verifikasi{% endif %}</span>
+        Halo, <em>{{ lembaga.name }}</em>
+      </h1>
+      <div class="org-dash__actions">
+        <a class="btn btn--outline" href="{% url 'main:edit_institution_profile' %}">Ubah data lembaga</a>
+        <a class="btn btn--primary" href="#kebutuhan-aktif">+ Buat kebutuhan</a>
       </div>
     </div>
 
-    <div class="needs-list" data-needs>
-      <article class="need is-selected" data-need="tas" data-group="Sekolah">
-        <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-backpack"/></svg></span>
-        <div>
-          <div class="need__title">
-            <h3>Tas sekolah</h3>
-            <span class="chip chip--success">2 cocok di lemarimu</span>
-          </div>
-          <p class="need__meta">Untuk SD–SMP · Layak pakai · Tenggat 30 Okt 2026</p>
-          <div class="need__progress">
-            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="4" aria-label="4 dari 10">
-              <span class="progress__track"><span class="progress__fill" style="--value:40%"></span></span>
-            </div>
-            <span>4 dari 10 terpenuhi</span>
-          </div>
-        </div>
-        <button class="btn btn--primary" type="button" aria-pressed="true" data-pick-need="tas">Dipilih</button>
-      </article>
-
-      <article class="need" data-need="seragam" data-group="Pakaian">
-        <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-shirt"/></svg></span>
-        <div>
-          <div class="need__title">
-            <h3>Seragam SD (putih–merah)</h3>
-            <span class="chip chip--success">1 cocok di lemarimu</span>
-          </div>
-          <p class="need__meta">Ukuran 8–12 tahun · 5 stel · Tenggat 15 Nov 2026</p>
-          <div class="need__progress">
-            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1" aria-label="1 dari 5">
-              <span class="progress__track"><span class="progress__fill" style="--value:20%"></span></span>
-            </div>
-            <span>1 dari 5 terpenuhi</span>
-          </div>
-        </div>
-        <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="seragam">Penuhi</button>
-      </article>
-
-      <article class="need" data-need="sepatu" data-group="Pakaian">
-        <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-shoe"/></svg></span>
-        <div>
-          <div class="need__title">
-            <h3>Sepatu sekolah anak</h3>
-          </div>
-          <p class="need__meta">Ukuran 30–34 · Hitam · 3 pasang</p>
-          <div class="need__progress">
-            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" aria-label="0 dari 3">
-              <span class="progress__track"><span class="progress__fill" style="--value:0%"></span></span>
-            </div>
-            <span>0 dari 3 terpenuhi</span>
-          </div>
-        </div>
-        <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="sepatu">Penuhi</button>
-      </article>
-
-      <article class="need" data-need="buku" data-group="Sekolah">
-        <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg></span>
-        <div>
-          <div class="need__title">
-            <h3>Buku pelajaran kelas 4–6</h3>
-            <span class="chip chip--success">1 cocok di lemarimu</span>
-          </div>
-          <p class="need__meta">Kurikulum Merdeka · 20 buku</p>
-          <div class="need__progress">
-            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="12" aria-label="12 dari 20">
-              <span class="progress__track"><span class="progress__fill" style="--value:60%"></span></span>
-            </div>
-            <span>12 dari 20 terpenuhi</span>
-          </div>
-        </div>
-        <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="buku">Penuhi</button>
-      </article>
-    </div>
-  </section>
-
-  <!-- MATCH PANEL -->
-  <aside class="card match-panel" aria-labelledby="match-title" id="cocok">
-    <p class="eyebrow">Langkah 2 · Pilih barang</p>
-    <h2 id="match-title">Cocok untuk: <span data-need-title>Tas sekolah</span></h2>
-    <p>Dari Lemari Digital-mu. Barang yang lama tidak dipakai ditampilkan lebih dulu.</p>
-    
-    <div class="match-list" data-matches>
-      <label class="match">
-        <input type="checkbox" name="item" value="ransel-kanvas" checked>
-        <span class="match__thumb" style="--tint: var(--tint-stone)"></span>
-        <span class="match__text">
-          <strong>Ransel kanvas abu</strong>
-          Tas · Lama tidak dipakai
-          <span class="match__why">Cocok dengan kebutuhan ini</span>
-        </span>
-        <span class="match__box"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
-      </label>
-
-      <label class="match">
-        <input type="checkbox" name="item" value="tas-punggung">
-        <span class="match__thumb" style="--tint: var(--tint-mint)"></span>
-        <span class="match__text">
-          <strong>Tas punggung biru tua</strong>
-          Tas · Jarang dipakai
-          <span class="match__why">Cocok dengan kebutuhan ini</span>
-        </span>
-        <span class="match__box"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
-      </label>
+    <div class="stats grid grid-cols-3">
+      <div class="stat stat--dark dark-panel">
+        <span class="eyebrow only-desktop hidden md:block">Tawaran menunggu keputusan</span>
+        <span class="stat__value serif">4</span>
+        <span class="text-sm only-mobile md:hidden">Tawaran menunggu</span>
+      </div>
+      <div class="stat">
+        <span class="eyebrow only-desktop hidden md:block">Kebutuhan aktif</span>
+        <span class="stat__value serif">3</span>
+        <span class="text-sm only-mobile md:hidden">Kebutuhan aktif</span>
+      </div>
+      <div class="stat">
+        <span class="eyebrow only-desktop hidden md:block">Barang diterima bulan ini</span>
+        <span class="stat__value serif">12</span>
+        <span class="text-sm only-mobile md:hidden">Diterima bln ini</span>
+      </div>
     </div>
 
-    <a class="btn btn--link" href="{% url 'main:show_main' %}#cara-kerja">
-      Pilih dari seluruh lemari <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>
-    </a>
-    
-    <div class="match-panel__sum">
-      <span>Barang dipilih</span>
-      <strong data-selected-count>1 barang</strong>
-    </div>
-
-    <button class="btn btn--primary btn--block" type="button" data-donate>
-      Donasikan 1 barang
-    </button>
-    <p class="match-panel__note">Langkah 3: kirim barangnya. Status selesai setelah lembaga mengonfirmasi penerimaan.</p>
-  </aside>
-</div>
-
-<!-- ================= STICKY BAR ================= -->
-<div class="sticky-bar">
-  <div class="sticky-bar__text">
-    <strong data-selected-count>1 barang</strong>
-    <span>untuk <span data-need-title>Tas sekolah</span></span>
-  </div>
-  <button class="btn btn--primary" type="button" data-donate>Donasikan</button>
-</div>
-
-<!-- ================= CONFIRM DIALOG ================= -->
-<dialog class="dialog dialog--wide" id="confirm-dialog" aria-labelledby="confirm-title">
-  <form method="dialog" data-confirm-form>
-    <div data-step="confirm">
-      <p class="eyebrow">Langkah 3 · Konfirmasi</p>
-      <h2 id="confirm-title">Donasikan ke <span data-org="name">{{ lembaga.name }}</span></h2>
-      <div data-summary></div>
-      
-      <p class="field__label" style="margin-top:var(--space-4)">Cara pengiriman</p>
-      <div class="options">
-        <label class="option">
-          <input type="radio" name="ship" value="antar" checked>
-          <span class="option__body">
-            <strong>Antar langsung</strong>
-            <span>Ke titik antar: <span data-org="address">{{ lembaga.address }}</span>. Gratis.</span>
+    <div class="org-dash__grid grid grid-cols-1 md:grid-cols-2">
+      <section id="tawaran">
+        <div class="section-head flex justify-between items-baseline">
+          <h2 class="section-title">Tawaran <em>masuk</em></h2>
+          <a class="text-sm" href="#tawaran">Lihat semua</a>
+        </div>
+        <div class="offer">
+          <span class="offer__img offer__img--jaket-zaitun"></span>
+          <span class="spacer">
+            <b>3 jaket anak, ukuran 8</b><br>
+            <span class="text-sm text-soft">
+              <span class="only-desktop hidden md:inline">dari @sekar_ay · untuk kebutuhan "12 jaket anak" · kondisi baik</span>
+              <span class="only-mobile md:hidden">@sekar_ay · untuk "12 jaket anak"</span>
+            </span>
           </span>
-          <span class="option__radio"></span>
-        </label>
-        <label class="option">
-          <input type="radio" name="ship" value="kirim">
-          <span class="option__body">
-            <strong>Kirim lewat ekspedisi</strong>
-            <span>Estimasi ongkir dihitung saat konfirmasi (JNE / J&amp;T / SiCepat).</span>
+          <span class="offer__actions"><a class="btn btn--outline btn--sm" href="#tawaran">Tolak</a><a class="btn btn--primary btn--sm" href="#tawaran">Terima</a></span>
+        </div>
+        <div class="offer">
+          <span class="offer__img offer__img--jaket-kulit"></span>
+          <span class="spacer">
+            <b>2 jaket anak, ukuran 6</b><br>
+            <span class="text-sm text-soft">
+              <span class="only-desktop hidden md:inline">dari @bimapras · untuk kebutuhan "12 jaket anak" · ada noda kecil</span>
+              <span class="only-mobile md:hidden">@bimapras · ada noda kecil</span>
+            </span>
           </span>
-          <span class="option__radio"></span>
-        </label>
-      </div>
+          <span class="offer__actions"><a class="btn btn--outline btn--sm" href="#tawaran">Tolak</a><a class="btn btn--primary btn--sm" href="#tawaran">Terima</a></span>
+        </div>
+        <div class="offer only-desktop hidden md:flex">
+          <span class="offer__img offer__img--sweter-krem"></span>
+          <span class="spacer">
+            <b>Sweter rajut krem</b><br>
+            <span class="text-sm text-soft">dari @nadia.r · tidak ada kebutuhan yang cocok</span>
+          </span>
+          <span class="offer__actions"><a class="btn btn--outline btn--sm" href="#tawaran">Tolak</a><a class="btn btn--primary btn--sm" href="#tawaran">Terima</a></span>
+        </div>
+      </section>
 
-      <div class="field" style="margin-top:var(--space-4)">
-        <label class="field__label" for="note">Catatan untuk lembaga (opsional)</label>
-        <input class="field__input" id="note" name="note" placeholder="mis. warna atau kondisi barang">
-      </div>
-
-      <div class="dialog__actions">
-        <button class="btn btn--outline" type="button" data-dialog-close>Kembali</button>
-        <button class="btn btn--primary" type="button" data-confirm>Konfirmasi donasi</button>
-      </div>
+      <section id="kebutuhan-aktif">
+        <div class="section-head flex justify-between items-baseline">
+          <h2 class="section-title">Kebutuhan <em>aktif</em></h2>
+          <a class="text-sm" href="#kebutuhan-aktif">Kelola</a>
+        </div>
+        <div class="need-row">
+          <div class="row"><b class="spacer">Jaket anak 6–10 tahun</b><span class="mono">8 / 12</span></div>
+          <div class="progress progress--thin progress--67"><span></span></div>
+          <span class="text-sm text-soft only-desktop hidden md:inline">Tenggat 30 Nov</span>
+        </div>
+        <div class="need-row">
+          <div class="row"><b class="spacer">Buku pelajaran SD</b><span class="mono">15 / 40</span></div>
+          <div class="progress progress--thin progress--38"><span></span></div>
+          <span class="text-sm text-soft only-desktop hidden md:inline">Tenggat 15 Des</span>
+        </div>
+        <div class="need-row">
+          <div class="row"><b class="spacer">Sepatu sekolah</b><span class="mono">0 / 20</span></div>
+          <div class="progress progress--thin progress--0"><span></span></div>
+          <span class="text-sm text-soft only-desktop hidden md:inline">Tenggat 10 Jan</span>
+        </div>
+      </section>
     </div>
 
-    <div class="success" data-step="done" hidden>
-      <span class="success__icon"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
-      <h2>Donasimu tercatat.</h2>
-      <p data-done-text>Antar barangmu ke lembaga. Status berubah menjadi Selesai setelah lembaga mengonfirmasi barangnya diterima.</p>
-      <span class="chip chip--warning">Menunggu pengiriman</span>
-      <div class="dialog__actions" style="width:100%">
-        <button class="btn btn--outline" type="button" data-dialog-close>Kembali ke lembaga</button>
-        <a class="btn btn--primary" href="{% url 'main:show_main' %}#cara-kerja">Lihat dampak</a>
+    <section class="profile org-profile-section" id="profil-lembaga" aria-labelledby="profil-lembaga-judul">
+      <h2 class="section-title" id="profil-lembaga-judul">Profil &amp; data <em>lembaga</em></h2>
+      <div class="profile__grid flex flex-col md:flex-row items-start">
+        <aside class="profile__summary w-full md:w-[300px] flex flex-col">
+          <span class="avatar avatar--lg" aria-hidden="true"></span>
+          <div class="profile__who flex flex-col">
+            <span class="serif profile__name">{{ lembaga.name }}</span>
+            <span class="text-soft">@{{ user.username }} · {{ lembaga.get_institution_type_display|default:"Lembaga mitra" }}</span>
+            <span class="text-sm text-soft only-desktop hidden md:inline">Bergabung sejak {{ lembaga.created_at|date:"F Y" }}</span>
+          </div>
+          <a class="text-sm only-mobile md:hidden" href="{% url 'main:edit_institution_profile' %}">Ubah</a>
+          <div>
+            {% if lembaga.is_verified %}
+              <span class="pill">Terverifikasi</span>
+            {% else %}
+              <span class="pill pill--soft">Menunggu verifikasi</span>
+            {% endif %}
+          </div>
+          <nav class="only-desktop profile__help hidden md:block" aria-label="Bantuan dan kebijakan">
+            <h3 class="eyebrow">Bantuan &amp; kebijakan</h3>
+            <a class="list-row list-row--link" href="{% url 'main:show_main' %}#faq">
+              <span class="spacer">Pusat bantuan &amp; FAQ</span>
+              <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </a>
+            <a class="list-row list-row--link" href="#">
+              <span class="spacer">Hubungi kami</span>
+              <span class="text-sm text-muted">Balas &lt; 1 hari kerja</span>
+              <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </a>
+          </nav>
+          <a class="btn btn--danger btn--sm only-desktop hidden md:inline-flex" href="#keluar" data-dialog-open="keluar">
+            <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Keluar
+          </a>
+        </aside>
+
+        <div class="profile__settings flex-1 flex flex-col w-full">
+          <section>
+            <h3 class="eyebrow">Data lembaga</h3>
+            <div class="list-row">
+              <span class="profile__key">Nama lembaga</span>
+              <span class="spacer">{{ lembaga.name }}</span>
+              <a class="text-sm" href="{% url 'main:edit_institution_profile' %}">Ubah</a>
+            </div>
+            <div class="list-row">
+              <span class="profile__key">Jenis lembaga</span>
+              <span class="spacer">{{ lembaga.get_institution_type_display|default:lembaga.institution_type }}</span>
+              <a class="text-sm" href="{% url 'main:edit_institution_profile' %}">Ubah</a>
+            </div>
+            <div class="list-row">
+              <span class="profile__key">Alamat lembaga</span>
+              <span class="spacer">{{ lembaga.address }}</span>
+              <a class="text-sm" href="{% url 'main:edit_institution_profile' %}">Ubah</a>
+            </div>
+            <div class="list-row">
+              <span class="profile__key">Penanggung jawab</span>
+              <span class="spacer">{{ lembaga.person_in_charge|default:"Belum diisi" }}</span>
+              <a class="text-sm" href="{% url 'main:edit_institution_profile' %}">Ubah</a>
+            </div>
+            <div class="list-row">
+              <span class="profile__key">Nomor HP</span>
+              <span class="spacer">{{ lembaga.contact_phone|default:"Belum diisi" }}</span>
+              <a class="text-sm" href="{% url 'main:edit_institution_profile' %}">Ubah</a>
+            </div>
+            <div class="list-row">
+              <span class="profile__key">Dokumen legalitas</span>
+              <span class="spacer">{{ lembaga.legal_document_name|default:"Belum diunggah" }}</span>
+              <a class="text-sm" href="{% url 'main:edit_institution_profile' %}">Ubah</a>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="eyebrow">Akun mitra</h3>
+            <div class="list-row">
+              <span class="profile__key">Email</span>
+              <span class="spacer">{{ user.email|default:"Belum diisi" }}</span>
+              <a class="text-sm" href="{% url 'main:edit_institution_profile' %}">Ubah</a>
+            </div>
+            <div class="list-row">
+              <span class="profile__key">Status verifikasi</span>
+              <span class="spacer">{% if lembaga.is_verified %}Terverifikasi{% else %}Menunggu pemeriksaan admin (1–3 hari kerja){% endif %}</span>
+            </div>
+          </section>
+
+          <a class="btn btn--danger btn--block only-mobile md:hidden" href="#keluar" data-dialog-open="keluar">
+            <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Keluar
+          </a>
+        </div>
       </div>
-    </div>
-  </form>
-</dialog>
+    </section>
+  </main>
 {% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'js/data.js' %}" defer></script>
+{% block footer %}{% endblock %}
+
+{% block bottom_nav %}
+  <nav class="bottom-nav bottom-nav--4" aria-label="Utama">
+    <a href="{% url 'main:show_lembaga_profile' %}" aria-current="page">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Dashboard
+    </a>
+    <a href="#kebutuhan-aktif">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="4.5" width="13" height="16" rx="2"/><path d="M9 4.5h6v2.5H9z"/><path d="M8.5 11h7M8.5 15h5"/></svg>Kebutuhan
+    </a>
+    <a href="#tawaran">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13.5 6.5 6h11L20 13.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 13.5h4.5l1.2 2h4.6l1.2-2H20"/></svg>Tawaran (4)
+    </a>
+    <a href="#profil-lembaga">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1.6-3.2 4-4.5 7-4.5s5.4 1.3 7 4.5"/></svg>Profil
+    </a>
+  </nav>
 {% endblock %}
