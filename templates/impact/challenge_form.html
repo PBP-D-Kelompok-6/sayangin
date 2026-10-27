@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Ubah{% else %}Tambah{% endif %} tantangan — Sayangin{% endblock %}
+{% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
+
+{% block app_bar %}
+<header class="app-bar app-bar--back only-mobile">
+  <a class="icon-btn" href="{% url 'impact:show_impact_challenges' %}" aria-label="Kembali">←</a>
+  <span class="app-bar__label">{% if is_edit %}Ubah{% else %}Tambah{% endif %} tantangan</span>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="page__main container dampak dampak--narrow" id="konten">
+  <nav class="breadcrumb"><a href="{% url 'impact:show_impact_challenges' %}">Tantangan pribadi</a> / {% if is_edit %}Ubah{% else %}Tambah{% endif %}</nav>
+  <h1 class="page-title">{% if is_edit %}Ubah{% else %}Tambah{% endif %} <em>tantangan</em></h1>
+
+  <form class="dampak-card" method="post" novalidate>
+    {% csrf_token %}
+    <div class="tw-grid sm:tw-grid-cols-2 tw-gap-4">
+      {% for field in form %}
+      <label class="field {% if field.name == 'title' %}sm:tw-col-span-2{% endif %}">
+        <span class="field__label">{{ field.label }}</span>
+        {{ field }}
+        {% for error in field.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+      </label>
+      {% endfor %}
+    </div>
+    <div class="tw-flex tw-gap-3">
+      <button class="btn btn--primary" type="submit">Simpan</button>
+      <a class="btn btn--outline" href="{% url 'impact:show_impact_challenges' %}">Batal</a>
+    </div>
+  </form>
+</main>
+{% endblock %}

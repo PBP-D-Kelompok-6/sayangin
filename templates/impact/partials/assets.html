@@ -1,0 +1,9 @@
+{% load static %}
+{% comment %}CSS & JS khusus Modul E. Dipasang di {% block extra_css %} milik base.html tim.{% endcomment %}
+<!-- Tailwind (framework CSS responsif). prefix "tw-" supaya tidak bentrok dengan class tim -->
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config = { prefix: "tw-", corePlugins: { preflight: false } }</script>
+<!-- HTMX: atribut hx-* bisa meminta potongan halaman tanpa reload -->
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js" defer></script>
+<link rel="stylesheet" href="{% static 'css/umum.css' %}">  {# CSS tim untuk footer #}
+<link rel="stylesheet" href="{% static 'css/impact.css' %}">

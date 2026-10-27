@@ -1,0 +1,27 @@
+/* Modul E — Dampak. Warna, font, tombol, form, progress memakai CSS tim
+   (tokens.css, base.css, components.css). Di sini hanya tambahan kecil. */
+
+.dampak { display: flex; flex-direction: column; gap: 20px; padding-block: 24px 64px; }
+.dampak--narrow { max-width: 760px; }
+.dampak em { color: var(--maroon); }
+.dampak h2, .dampak h3 { margin: 0; font-size: 26px; }
+.dampak h3 { font-size: 22px; }
+.dampak p { margin: 0; }
+.dampak-list { margin: 0; padding: 0; list-style: none; }
+
+.dampak-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.dampak-switch { display: flex; gap: 8px; }
+#summary.htmx-request, #challenge-list.htmx-request { opacity: .5; }
+
+.dampak-card {
+  display: flex; flex-direction: column; gap: 10px; padding: 20px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--white);
+}
+.dampak-card strong.serif { font-size: 44px; line-height: 1; }
+.dampak-points { background: var(--silver); }
+.dampak-next { background: var(--grey-50); }
+.dampak-next .btn { align-self: flex-start; }
+
+.dampak-badge { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); }
+.dampak-badge.is-earned { border-style: solid; background: var(--grey-50); }
+.dampak-badge .pill { align-self: flex-start; }

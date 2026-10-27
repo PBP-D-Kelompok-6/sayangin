@@ -1,32 +1,20 @@
 {% if user.is_authenticated %}
-<dialog class="logout-modal" id="logout-dialog" aria-labelledby="logout-dialog-title" aria-describedby="logout-dialog-description">
-    <!-- Logout icon -->
-    <div class="logout-modal__icon" aria-hidden="true">
-        <svg class="icon">
-            <use href="#i-logout"></use>
-        </svg>
-    </div>
-
-    <!-- Confirmation text -->
-    <h2 class="logout-modal__title" id="logout-dialog-title">
-        Yakin ingin keluar?
-    </h2>
-
-    <p class="logout-modal__description" id="logout-dialog-description">
-        Lemari dan progres dampakmu tetap tersimpan.
-        Kamu bisa masuk lagi kapan saja.
-    </p>
-
-    <!-- Logout confirmation -->
-    <form class="logout-modal__actions" method="POST" action="{% url 'main:logout_user' %}">
-        {% csrf_token %}
-        <button class="btn btn--outline" type="button" data-dialog-close autofocus>
-            Batal
+<!-- A7 · Konfirmasi keluar -->
+<div class="overlay" id="keluar">
+  <section class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="keluar-judul" aria-describedby="keluar-deskripsi">
+    <span class="eyebrow">Keluar</span>
+    <h2 class="dialog__title" id="keluar-judul">Keluar dari <em>Sayangin</em>?</h2>
+    <p class="text-soft" id="keluar-deskripsi">Isi lemari, keranjang, dan daftar Tunda Beli tetap tersimpan. Kamu bisa masuk lagi kapan saja.</p>
+    <form class="dialog__form" method="POST" action="{% url 'main:logout_user' %}">
+      {% csrf_token %}
+      <label class="row text-sm text-soft"><input type="checkbox" name="logout_all"> Keluar dari semua perangkat</label>
+      <div class="dialog__actions">
+        <a class="btn btn--outline" href="#" data-dialog-close>Batal</a>
+        <button class="btn btn--dark" type="submit">
+          <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Ya, keluar
         </button>
-
-        <button class="btn btn--primary" type="submit">
-            Keluar
-        </button>
+      </div>
     </form>
-</dialog>
+  </section>
+</div>
 {% endif %}

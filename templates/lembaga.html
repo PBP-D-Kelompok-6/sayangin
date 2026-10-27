@@ -1,275 +1,268 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!doctype html>
-<html lang="id">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Detail lembaga — Sayangin</title>
-  <meta name="description" content="Detail lembaga mitra dan daftar kebutuhan donasinya.">
-  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-  <link rel="stylesheet" href="{% static 'css/base.css' %}">
-  <link rel="stylesheet" href="{% static 'css/components.css' %}">
-  <link rel="stylesheet" href="{% static 'css/app.css' %}">
-  {% include 'includes/fonts.html' %}
-</head>
-<body class="has-bottom-nav has-sticky-bar">
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></symbol>
-    <symbol id="i-cart" viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></symbol>
-    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></symbol>
-    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2"/></symbol>
-    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></symbol>
-    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
-    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
-    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></symbol>
-    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
-    <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
-    <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
-    <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
-    <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M8.5 4L3.5 7l2 4 2.5-1v10h8V10l2.5 1 2-4-5-3a3.5 3.5 0 0 1-7 0z"/></symbol>
-    <symbol id="i-dress" viewBox="0 0 24 24"><path d="M9.5 3h5l-1 5 4.5 13H6L10.5 8l-1-5z"/><path d="M10.5 8h3"/></symbol>
-    <symbol id="i-chair" viewBox="0 0 24 24"><path d="M7 3h10v8H7z"/><path d="M5 11h14v3H5zM7 14v7M17 14v7"/></symbol>
-    <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M4 16v-4a8 8 0 0 1 16 0v4"/><rect x="3" y="14" width="4" height="6" rx="1.2"/><rect x="17" y="14" width="4" height="6" rx="1.2"/></symbol>
-    <symbol id="i-watch" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 10v2l1.5 1.2M9.5 7.5L10 3h4l.5 4.5M9.5 16.5L10 21h4l.5-4.5"/></symbol>
-    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/></symbol>
-    <symbol id="i-wardrobe" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M12 3v18M10 11v2M14 11v2"/></symbol>
-    <symbol id="i-gift" viewBox="0 0 24 24"><path d="M3.5 8h17v4h-17zM5 12v9h14v-9M12 8v13"/><path d="M12 8C10.5 4.5 6.5 4.5 7.2 7c.3 1 2.3 1 4.8 1zM12 8c1.5-3.5 5.5-3.5 4.8-1-.3 1-2.3 1-4.8 1z"/></symbol>
-    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19C5 10.5 11 5 19.5 4.5 19 13 13.5 19 5 19z"/><path d="M5 19l8.5-8.5"/></symbol>
-    <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M7 3h10M7 21h10M8 3c0 5 8 5.5 8 9s-8 4-8 9M16 3c0 5-8 5.5-8 9s8 4 8 9"/></symbol>
-    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
-    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="1.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
-    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
-    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
-    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></symbol>
-    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.5V4h8.5l8.5 8.5-8 8z"/><circle cx="8" cy="8.5" r="1.4"/></symbol>
-    <symbol id="i-verified" viewBox="0 0 24 24"><path d="M12 3l2.2 1.6 2.7-.1.8 2.6 2.2 1.6-.8 2.6.8 2.6-2.2 1.6-.8 2.6-2.7-.1L12 21l-2.2-1.6-2.7.1-.8-2.6-2.2-1.6.8-2.6-.8-2.6 2.2-1.6.8-2.6 2.7.1z"/><path d="M9 12l2 2 4-4"/></symbol>
-    <symbol id="i-backpack" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0v11H6z"/><path d="M9 5V3.5h6V5M6 13h12M10 13v2"/></symbol>
-    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2 2 0 0 1 6 4h14v14H6a2 2 0 0 0-2 2z"/><path d="M4 20V5.5M8 8h8"/></symbol>
-    <symbol id="i-shoe" viewBox="0 0 24 24"><path d="M3 17v-6l4-1 3 3 6 1.5 4.5 1V18H3z"/><path d="M3 15h17.5"/></symbol>
-    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5v16h5"/><path d="M14 8l4 4-4 4M18 12H9"/></symbol>
-    <symbol id="i-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.3 10.8l7.4-3.6M8.3 13.2l7.4 3.6"/></symbol>
-    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
-    <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5"/></symbol>
-    <symbol id="i-recycle" viewBox="0 0 24 24"><path d="M7 9l3-5h4l2 3.5"/><path d="M14.5 6.5l1.5.9.4-1.8"/><path d="M19 13l1.5 3-2 3.5H14"/><path d="M15.5 17.8L14 19.5l1.6 1"/><path d="M8 19.5H5L3.5 16l2-3.5"/><path d="M4.2 14.2L5.5 12.5l1.7.6"/></symbol>
-    <symbol id="i-hand" viewBox="0 0 24 24"><path d="M3 13l4-3h5l3 2h3l3 3-3 1h-6"/><path d="M3 18h4l5 2 8-4"/></symbol>
-    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M4.2 7.5l2.2 1.3M17.6 15.2l2.2 1.3M4.2 16.5l2.2-1.3M17.6 8.8l2.2-1.3"/></symbol>
-    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="1.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></symbol>
-  </svg>
-  <a class="skip-link" href="#main">Lewati ke konten</a>
-  <header class="site-header" data-auth="member">
-    <div class="container">
-      <div class="site-header__bar">
-        <div class="site-header__left">
-          <button class="icon-btn site-header__menu-btn" type="button" aria-label="Buka menu" aria-controls="drawer" aria-expanded="false" data-drawer-open><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
-          <a href="index.html" class="logo" aria-label="Sayangin — beranda">sayangin</a>
-          <nav class="primary-nav" aria-label="Navigasi utama">
-            <ul>
-              <li class="has-dropdown">
-                <button class="primary-nav__link primary-nav__link--categories" type="button" aria-expanded="false" aria-controls="cat-menu" data-dropdown><svg class="icon icon--sm" aria-hidden="true"><use href="#i-grid"/></svg> Kategori <svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-down"/></svg></button>
-                <div class="dropdown" id="cat-menu">
-                  <a href="index.html#etalase"><svg class="icon" aria-hidden="true"><use href="#i-shirt"/></svg>Pakaian Pria</a>
-                  <a href="index.html#etalase"><svg class="icon" aria-hidden="true"><use href="#i-dress"/></svg>Pakaian Wanita</a>
-                  <a href="index.html#etalase"><svg class="icon" aria-hidden="true"><use href="#i-chair"/></svg>Furnitur</a>
-                  <a href="index.html#etalase"><svg class="icon" aria-hidden="true"><use href="#i-headphones"/></svg>Hiburan</a>
-                  <a href="index.html#etalase"><svg class="icon" aria-hidden="true"><use href="#i-watch"/></svg>Aksesori</a>
-                </div>
-              </li>
-              <li><a class="primary-nav__link" href="lemari.html">Lemari Digital</a></li>
-              <li><a class="primary-nav__link" href="donasi.html" aria-current="page">Donasi</a></li>
-              <li><a class="primary-nav__link" href="dampak.html">Dampak</a></li>
-            </ul>
-          </nav>
-        </div>
-        <div class="site-header__actions">
-          <a class="btn btn--primary btn--sm desktop-only" href="jual.html">Jual barang</a>
-          <a class="icon-btn" href="index.html#etalase" aria-label="Keranjang (0 barang)"><svg class="icon" aria-hidden="true"><use href="#i-cart"/></svg></a>
-          <a class="icon-btn desktop-only" href="#" aria-label="Wishlist &amp; tunda beli"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg></a>
-          <div class="account-menu">
-            <button class="avatar" type="button" aria-label="Menu akun Rania Yasin" aria-expanded="false" aria-controls="account-menu" data-dropdown>RY</button>
-            <div class="dropdown" id="account-menu">
-              <a href="profil.html"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg>Profil saya</a>
-              <a href="lemari.html"><svg class="icon" aria-hidden="true"><use href="#i-wardrobe"/></svg>Lemari saya</a>
-              <a href="jual.html"><svg class="icon" aria-hidden="true"><use href="#i-tag"/></svg>Jual barang</a>
-              <hr>
-              <button type="button" class="is-danger" data-dialog-open="logout-dialog"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>Keluar</button>
+{% block title %}{{ lembaga.name }} — Sayangin{% endblock %}
+{% block meta_description %}Profil lembaga {{ lembaga.name }} dan daftar kebutuhan donasinya.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+{% endblock %}
+
+{% block body_class %}has-bottom-nav has-sticky-bar{% endblock %}
+{% block main_class %}container{% endblock %}
+
+{% block content %}
+<!-- ================= LEMBAGA HERO ================= -->
+<section class="org-hero" aria-labelledby="org-name">
+  <figure class="org-hero__media" data-org="media" style="--tint: var(--tint-sage)">
+    <span class="photo-ph" data-org="photo">[Foto: {{ lembaga.name }}]</span>
+  </figure>
+  
+  <div class="org-hero__info">
+    <div class="org-hero__tags">
+      <span class="badge" data-org="type">{{ lembaga.get_institution_type_display|default:lembaga.institution_type|default:"Lembaga" }}</span>
+      {% if lembaga.is_verified %}
+        <span class="chip chip--success" data-org="verified">Terverifikasi</span>
+      {% else %}
+        <span class="chip chip--warning" data-org="verified">Menunggu Verifikasi</span>
+      {% endif %}
+    </div>
+
+    <h1 id="org-name" data-org="name">{{ lembaga.name }}</h1>
+    
+    <p class="org-hero__loc">
+      <svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>
+      <span data-org="address">{{ lembaga.address }}</span>
+    </p>
+    
+    <p class="org-hero__desc" data-org="about">
+      {{ lembaga.description|default:"Belum ada deskripsi yang ditambahkan." }}
+    </p>
+
+    <div class="facts" data-org="facts">
+      <div>
+        <strong>{{ lembaga.beneficiaries_count|default:"0" }} orang</strong>
+        <span>penerima manfaat</span>
+      </div>
+      <div>
+        <strong>Sejak {{ lembaga.founded_year|default:"-" }}</strong>
+        <span>berdiri</span>
+      </div>
+      <div>
+        <strong>{{ lembaga.contact_phone|default:"-" }}</strong>
+        <span>kontak lembaga</span>
+      </div>
+    </div>
+
+    {% if is_owner %}
+    <div style="margin-top: var(--space-4); display: flex; gap: var(--space-3); flex-wrap: wrap;">
+      <a class="btn btn--outline" href="{% url 'main:edit_institution_profile' %}">
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#i-edit"/></svg>
+        Edit Profil Lembaga
+      </a>
+      <span class="chip chip--info">Mode Tampilan Pemilik</span>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ================= DONATION / NEEDS FLOW ================= -->
+<div class="donate-flow">
+  <section aria-labelledby="needs-title">
+    <div class="needs__head">
+      <div>
+        <p class="eyebrow">Langkah 1 · Pilih kebutuhan</p>
+        <h2 id="needs-title">Kebutuhan aktif</h2>
+      </div>
+      <div class="filters" role="group" aria-label="Filter kebutuhan" data-need-filters>
+        <button class="filter-chip" type="button" data-filter="all" aria-pressed="true">Semua <small>4</small></button>
+        <button class="filter-chip" type="button" data-filter="Pakaian" aria-pressed="false">Pakaian <small>2</small></button>
+        <button class="filter-chip" type="button" data-filter="Sekolah" aria-pressed="false">Sekolah <small>2</small></button>
+      </div>
+    </div>
+
+    <div class="needs-list" data-needs>
+      <article class="need is-selected" data-need="tas" data-group="Sekolah">
+        <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-backpack"/></svg></span>
+        <div>
+          <div class="need__title">
+            <h3>Tas sekolah</h3>
+            <span class="chip chip--success">2 cocok di lemarimu</span>
+          </div>
+          <p class="need__meta">Untuk SD–SMP · Layak pakai · Tenggat 30 Okt 2026</p>
+          <div class="need__progress">
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="4" aria-label="4 dari 10">
+              <span class="progress__track"><span class="progress__fill" style="--value:40%"></span></span>
             </div>
+            <span>4 dari 10 terpenuhi</span>
           </div>
         </div>
-      </div>
-      <form class="site-header__search" role="search" action="index.html#etalase">
-        <label class="search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span class="visually-hidden">Cari barang</span><input type="search" name="q" placeholder="Cari kemeja, kursi rotan, buku…" autocomplete="off"></label>
-      </form>
-    </div>
-  </header>
+        <button class="btn btn--primary" type="button" aria-pressed="true" data-pick-need="tas">Dipilih</button>
+      </article>
 
-  <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Menu" hidden>
-    <div class="drawer__head">
-      <a href="index.html" class="logo">sayangin</a>
-      <button class="icon-btn" type="button" aria-label="Tutup menu" data-drawer-close><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+      <article class="need" data-need="seragam" data-group="Pakaian">
+        <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-shirt"/></svg></span>
+        <div>
+          <div class="need__title">
+            <h3>Seragam SD (putih–merah)</h3>
+            <span class="chip chip--success">1 cocok di lemarimu</span>
+          </div>
+          <p class="need__meta">Ukuran 8–12 tahun · 5 stel · Tenggat 15 Nov 2026</p>
+          <div class="need__progress">
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1" aria-label="1 dari 5">
+              <span class="progress__track"><span class="progress__fill" style="--value:20%"></span></span>
+            </div>
+            <span>1 dari 5 terpenuhi</span>
+          </div>
+        </div>
+        <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="seragam">Penuhi</button>
+      </article>
+
+      <article class="need" data-need="sepatu" data-group="Pakaian">
+        <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-shoe"/></svg></span>
+        <div>
+          <div class="need__title">
+            <h3>Sepatu sekolah anak</h3>
+          </div>
+          <p class="need__meta">Ukuran 30–34 · Hitam · 3 pasang</p>
+          <div class="need__progress">
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" aria-label="0 dari 3">
+              <span class="progress__track"><span class="progress__fill" style="--value:0%"></span></span>
+            </div>
+            <span>0 dari 3 terpenuhi</span>
+          </div>
+        </div>
+        <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="sepatu">Penuhi</button>
+      </article>
+
+      <article class="need" data-need="buku" data-group="Sekolah">
+        <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg></span>
+        <div>
+          <div class="need__title">
+            <h3>Buku pelajaran kelas 4–6</h3>
+            <span class="chip chip--success">1 cocok di lemarimu</span>
+          </div>
+          <p class="need__meta">Kurikulum Merdeka · 20 buku</p>
+          <div class="need__progress">
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="12" aria-label="12 dari 20">
+              <span class="progress__track"><span class="progress__fill" style="--value:60%"></span></span>
+            </div>
+            <span>12 dari 20 terpenuhi</span>
+          </div>
+        </div>
+        <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="buku">Penuhi</button>
+      </article>
     </div>
-    <nav class="drawer__nav" aria-label="Navigasi mobile">
-      <a href="index.html#explore"><svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg><span>Kategori</span><svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-right"/></svg></a>
-      <a href="lemari.html"><svg class="icon" aria-hidden="true"><use href="#i-wardrobe"/></svg><span>Lemari Digital</span><svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-right"/></svg></a>
-      <a href="donasi.html"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg><span>Donasi</span><svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-right"/></svg></a>
-      <a href="dampak.html"><svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg><span>Dampak</span><svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-right"/></svg></a>
-      <a href="profil.html"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg><span>Profil saya</span><svg class="icon icon--sm" aria-hidden="true"><use href="#i-chev-right"/></svg></a>
-    </nav>
-    <div class="drawer__actions">
-      <a class="btn btn--primary btn--block" href="jual.html">Jual barang</a>
-      <button class="btn btn--outline btn--block" type="button" data-dialog-open="logout-dialog">Keluar</button>
+  </section>
+
+  <!-- MATCH PANEL -->
+  <aside class="card match-panel" aria-labelledby="match-title" id="cocok">
+    <p class="eyebrow">Langkah 2 · Pilih barang</p>
+    <h2 id="match-title">Cocok untuk: <span data-need-title>Tas sekolah</span></h2>
+    <p>Dari Lemari Digital-mu. Barang yang lama tidak dipakai ditampilkan lebih dulu.</p>
+    
+    <div class="match-list" data-matches>
+      <label class="match">
+        <input type="checkbox" name="item" value="ransel-kanvas" checked>
+        <span class="match__thumb" style="--tint: var(--tint-stone)"></span>
+        <span class="match__text">
+          <strong>Ransel kanvas abu</strong>
+          Tas · Lama tidak dipakai
+          <span class="match__why">Cocok dengan kebutuhan ini</span>
+        </span>
+        <span class="match__box"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+      </label>
+
+      <label class="match">
+        <input type="checkbox" name="item" value="tas-punggung">
+        <span class="match__thumb" style="--tint: var(--tint-mint)"></span>
+        <span class="match__text">
+          <strong>Tas punggung biru tua</strong>
+          Tas · Jarang dipakai
+          <span class="match__why">Cocok dengan kebutuhan ini</span>
+        </span>
+        <span class="match__box"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+      </label>
     </div>
+
+    <a class="btn btn--link" href="{% url 'main:show_main' %}#cara-kerja">
+      Pilih dari seluruh lemari <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg>
+    </a>
+    
+    <div class="match-panel__sum">
+      <span>Barang dipilih</span>
+      <strong data-selected-count>1 barang</strong>
+    </div>
+
+    <button class="btn btn--primary btn--block" type="button" data-donate>
+      Donasikan 1 barang
+    </button>
+    <p class="match-panel__note">Langkah 3: kirim barangnya. Status selesai setelah lembaga mengonfirmasi penerimaan.</p>
+  </aside>
+</div>
+
+<!-- ================= STICKY BAR ================= -->
+<div class="sticky-bar">
+  <div class="sticky-bar__text">
+    <strong data-selected-count>1 barang</strong>
+    <span>untuk <span data-need-title>Tas sekolah</span></span>
   </div>
+  <button class="btn btn--primary" type="button" data-donate>Donasikan</button>
+</div>
 
-  <nav class="container breadcrumb" aria-label="Breadcrumb">
-    <ol><li><a href="donasi.html">Donasi</a></li><li><a href="donasi.html#daftar">Daftar lembaga</a></li><li aria-current="page" data-org="crumb">Panti Asuhan Harapan</li></ol>
-  </nav>
-  <main id="main" class="container">
-    <section class="org-hero" aria-labelledby="org-name">
-      <figure class="org-hero__media" data-org="media" style="--tint: var(--tint-sage)"><span class="photo-ph" data-org="photo">[Foto: anak-anak di halaman panti]</span></figure>
-      <div class="org-hero__info">
-        <div class="org-hero__tags"><span class="badge" data-org="type">Panti Asuhan</span><span class="chip chip--success" data-org="verified">Terverifikasi</span></div>
-        <h1 id="org-name" data-org="name">Panti Asuhan Harapan</h1>
-        <p class="org-hero__loc"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg><span data-org="address">Jl. Raya Sawangan No. 8, Depok, Jawa Barat</span></p>
-        <p class="org-hero__desc" data-org="about">Rumah bagi 42 anak usia 5–17 tahun sejak 2009. Anak-anak bersekolah di SD dan SMP sekitar panti, jadi kebutuhan terbesar kami adalah perlengkapan sekolah dan pakaian harian yang layak.</p>
-        <div class="facts" data-org="facts"><div><strong>42 anak</strong><span>penerima manfaat</span></div><div><strong>Sejak 2009</strong><span>berdiri</span></div><div><strong>18 donasi</strong><span>diterima lewat Sayangin</span></div></div>
+<!-- ================= CONFIRM DIALOG ================= -->
+<dialog class="dialog dialog--wide" id="confirm-dialog" aria-labelledby="confirm-title">
+  <form method="dialog" data-confirm-form>
+    <div data-step="confirm">
+      <p class="eyebrow">Langkah 3 · Konfirmasi</p>
+      <h2 id="confirm-title">Donasikan ke <span data-org="name">{{ lembaga.name }}</span></h2>
+      <div data-summary></div>
+      
+      <p class="field__label" style="margin-top:var(--space-4)">Cara pengiriman</p>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="ship" value="antar" checked>
+          <span class="option__body">
+            <strong>Antar langsung</strong>
+            <span>Ke titik antar: <span data-org="address">{{ lembaga.address }}</span>. Gratis.</span>
+          </span>
+          <span class="option__radio"></span>
+        </label>
+        <label class="option">
+          <input type="radio" name="ship" value="kirim">
+          <span class="option__body">
+            <strong>Kirim lewat ekspedisi</strong>
+            <span>Estimasi ongkir dihitung saat konfirmasi (JNE / J&amp;T / SiCepat).</span>
+          </span>
+          <span class="option__radio"></span>
+        </label>
       </div>
-    </section>
 
-    <div class="donate-flow">
-      <section aria-labelledby="needs-title">
-        <div class="needs__head">
-          <div><p class="eyebrow">Langkah 1 · Pilih kebutuhan</p><h2 id="needs-title">Kebutuhan aktif</h2></div>
-          <div class="filters" role="group" aria-label="Filter kebutuhan" data-need-filters><button class="filter-chip" type="button" data-filter="all" aria-pressed="true">Semua <small>4</small></button><button class="filter-chip" type="button" data-filter="Pakaian" aria-pressed="false">Pakaian <small>2</small></button><button class="filter-chip" type="button" data-filter="Sekolah" aria-pressed="false">Sekolah <small>2</small></button></div>
-        </div>
-        <div class="needs-list" data-needs>
-          <article class="need is-selected" data-need="tas" data-group="Sekolah">
-            <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-backpack"/></svg></span>
-            <div>
-              <div class="need__title"><h3>Tas sekolah</h3><span class="chip chip--success">2 cocok di lemarimu</span></div>
-              <p class="need__meta">Untuk SD–SMP · Layak pakai · Tenggat 30 Okt 2026</p>
-              <div class="need__progress"><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="4" aria-label="4 dari 10"><span class="progress__track"><span class="progress__fill" style="--value:40%"></span></span></div><span>4 dari 10 terpenuhi</span></div>
-            </div>
-            <button class="btn btn--primary" type="button" aria-pressed="true" data-pick-need="tas">Dipilih</button>
-          </article>
-          <article class="need" data-need="seragam" data-group="Pakaian">
-            <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-shirt"/></svg></span>
-            <div>
-              <div class="need__title"><h3>Seragam SD (putih–merah)</h3><span class="chip chip--success">1 cocok di lemarimu</span></div>
-              <p class="need__meta">Ukuran 8–12 tahun · 5 stel · Tenggat 15 Nov 2026</p>
-              <div class="need__progress"><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1" aria-label="1 dari 5"><span class="progress__track"><span class="progress__fill" style="--value:20%"></span></span></div><span>1 dari 5 terpenuhi</span></div>
-            </div>
-            <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="seragam">Penuhi</button>
-          </article>
-          <article class="need" data-need="sepatu" data-group="Pakaian">
-            <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-shoe"/></svg></span>
-            <div>
-              <div class="need__title"><h3>Sepatu sekolah anak</h3></div>
-              <p class="need__meta">Ukuran 30–34 · Hitam · 3 pasang</p>
-              <div class="need__progress"><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" aria-label="0 dari 3"><span class="progress__track"><span class="progress__fill" style="--value:0%"></span></span></div><span>0 dari 3 terpenuhi</span></div>
-            </div>
-            <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="sepatu">Penuhi</button>
-          </article>
-          <article class="need" data-need="buku" data-group="Sekolah">
-            <span class="icon-tile icon-tile--square"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg></span>
-            <div>
-              <div class="need__title"><h3>Buku pelajaran kelas 4–6</h3><span class="chip chip--success">1 cocok di lemarimu</span></div>
-              <p class="need__meta">Kurikulum Merdeka · 20 buku</p>
-              <div class="need__progress"><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="12" aria-label="12 dari 20"><span class="progress__track"><span class="progress__fill" style="--value:60%"></span></span></div><span>12 dari 20 terpenuhi</span></div>
-            </div>
-            <button class="btn btn--outline" type="button" aria-pressed="false" data-pick-need="buku">Penuhi</button>
-          </article>
-        </div>
-      </section>
+      <div class="field" style="margin-top:var(--space-4)">
+        <label class="field__label" for="note">Catatan untuk lembaga (opsional)</label>
+        <input class="field__input" id="note" name="note" placeholder="mis. warna atau kondisi barang">
+      </div>
 
-      <aside class="card match-panel" aria-labelledby="match-title" id="cocok">
-        <p class="eyebrow">Langkah 2 · Pilih barang</p>
-        <h2 id="match-title">Cocok untuk: <span data-need-title>Tas sekolah</span></h2>
-        <p>Dari Lemari Digital-mu. Barang yang lama tidak dipakai kami tampilkan lebih dulu.</p>
-        <div class="match-list" data-matches>
-            <label class="match"><input type="checkbox" name="item" value="ransel-kanvas" checked><span class="match__thumb" style="--tint: var(--tint-stone)"></span><span class="match__text"><strong>Ransel kanvas abu</strong>Tas · Lama tidak dipakai<span class="match__why">Cocok dengan kebutuhan ini</span></span><span class="match__box"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span></label>
-            <label class="match"><input type="checkbox" name="item" value="tas-punggung"><span class="match__thumb" style="--tint: var(--tint-mint)"></span><span class="match__text"><strong>Tas punggung biru tua</strong>Tas · Jarang dipakai<span class="match__why">Cocok dengan kebutuhan ini</span></span><span class="match__box"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span></label>
-        </div>
-        <a class="btn btn--link" href="lemari.html">Pilih dari seluruh lemari <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-        <div class="match-panel__sum"><span>Barang dipilih</span><strong data-selected-count>1 barang</strong></div>
-        <button class="btn btn--primary btn--block" type="button" data-donate>Donasikan 1 barang</button>
-        <p class="match-panel__note">Langkah 3: kirim barangnya. Status selesai setelah lembaga mengonfirmasi penerimaan.</p>
-      </aside>
+      <div class="dialog__actions">
+        <button class="btn btn--outline" type="button" data-dialog-close>Kembali</button>
+        <button class="btn btn--primary" type="button" data-confirm>Konfirmasi donasi</button>
+      </div>
     </div>
-  </main>
-  <div class="sticky-bar">
-    <div class="sticky-bar__text"><strong data-selected-count>1 barang</strong><span>untuk <span data-need-title>Tas sekolah</span></span></div>
-    <button class="btn btn--primary" type="button" data-donate>Donasikan</button>
-  </div>
 
-  <dialog class="dialog dialog--wide" id="confirm-dialog" aria-labelledby="confirm-title">
-    <form method="dialog" data-confirm-form>
-      <div data-step="confirm">
-        <p class="eyebrow">Langkah 3 · Konfirmasi</p>
-        <h2 id="confirm-title">Donasikan ke <span data-org="name">Panti Asuhan Harapan</span></h2>
-        <div data-summary></div>
-        <p class="field__label" style="margin-top:var(--space-4)">Cara pengiriman</p>
-        <div class="options">
-          <label class="option"><input type="radio" name="ship" value="antar" checked><span class="option__body"><strong>Antar langsung</strong><span>Ke titik antar: <span data-org="address">Jl. Raya Sawangan No. 8, Depok, Jawa Barat</span>. Gratis.</span></span><span class="option__radio"></span></label>
-          <label class="option"><input type="radio" name="ship" value="kirim"><span class="option__body"><strong>Kirim lewat ekspedisi</strong><span>Estimasi ongkir dihitung saat konfirmasi (JNE / J&amp;T / SiCepat).</span></span><span class="option__radio"></span></label>
-        </div>
-        <div class="field" style="margin-top:var(--space-4)"><label class="field__label" for="note">Catatan untuk lembaga (opsional)</label><input class="field__input" id="note" name="note" placeholder="mis. warna atau kondisi barang"></div>
-        <div class="dialog__actions">
-          <button class="btn btn--outline" type="button" data-dialog-close>Kembali</button>
-          <button class="btn btn--primary" type="button" data-confirm>Konfirmasi donasi</button>
-        </div>
+    <div class="success" data-step="done" hidden>
+      <span class="success__icon"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+      <h2>Donasimu tercatat.</h2>
+      <p data-done-text>Antar barangmu ke lembaga. Status berubah menjadi Selesai setelah lembaga mengonfirmasi barangnya diterima.</p>
+      <span class="chip chip--warning">Menunggu pengiriman</span>
+      <div class="dialog__actions" style="width:100%">
+        <button class="btn btn--outline" type="button" data-dialog-close>Kembali ke lembaga</button>
+        <a class="btn btn--primary" href="{% url 'main:show_main' %}#cara-kerja">Lihat dampak</a>
       </div>
-      <div class="success" data-step="done" hidden>
-        <span class="success__icon"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
-        <h2>Donasimu tercatat.</h2>
-        <p data-done-text>Antar barangmu ke lembaga. Status berubah menjadi Selesai setelah lembaga mengonfirmasi barangnya diterima.</p>
-        <span class="chip chip--warning">Menunggu pengiriman</span>
-        <div class="dialog__actions" style="width:100%">
-          <button class="btn btn--outline" type="button" data-dialog-close>Kembali ke lembaga</button>
-          <a class="btn btn--primary" href="dampak.html">Lihat dampak</a>
-        </div>
-      </div>
-    </form>
-  </dialog>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
 
-  <footer class="site-footer">
-    <div class="container">
-      <div class="site-footer__top">
-        <div class="site-footer__brand">
-          <a href="index.html" class="logo">sayangin</a>
-          <p class="caption-serif">Barang yang disayang tidak seharusnya berakhir di gudang.</p>
-        </div>
-        <div class="site-footer__cols">
-          <nav class="site-footer__col" aria-labelledby="f-donasi"><h2 id="f-donasi">Donasi</h2>
-            <ul><li><a href="donasi.html">Daftar Kebutuhan</a></li><li><a href="donasi.html#cara">Cara Donasi (FAQ)</a></li><li><a href="donasi.html#daftar">Daftar Lembaga</a></li></ul></nav>
-          <nav class="site-footer__col" aria-labelledby="f-jelajahi"><h2 id="f-jelajahi">Jelajahi</h2>
-            <ul><li><a href="index.html#etalase">Belanja</a></li><li><a href="lemari.html">Lemari Digital</a></li><li><a href="dampak.html">Dampak</a></li></ul></nav>
-          <nav class="site-footer__col" aria-labelledby="f-tentang"><h2 id="f-tentang">Tentang</h2>
-            <ul><li><a href="#">Tentang Kami</a></li><li><a href="#">Tim</a></li><li><a href="#">Kontak</a></li></ul></nav>
-        </div>
-      </div>
-      <div class="site-footer__bottom"><p>© 2026 Sayangin, Inc.</p><p>Dibuat untuk barang yang masih layak dipakai.</p></div>
-    </div>
-  </footer>
-  <nav class="bottom-nav" aria-label="Navigasi akun">
-    <a href="index.html"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Beranda</a>
-    <a href="index.html#etalase"><svg class="icon" aria-hidden="true"><use href="#i-tag"/></svg>Etalase</a>
-    <a href="lemari.html"><svg class="icon" aria-hidden="true"><use href="#i-wardrobe"/></svg>Lemari</a>
-    <a href="donasi.html" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-gift"/></svg>Donasi</a>
-    <a href="dampak.html"><svg class="icon" aria-hidden="true"><use href="#i-leaf"/></svg>Dampak</a>
-  </nav>
-  <dialog class="dialog" id="logout-dialog" aria-labelledby="logout-title">
-    <div class="dialog__icon"><svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg></div>
-    <h2 id="logout-title">Yakin ingin keluar?</h2>
-    <p>Lemari dan progres dampakmu tetap tersimpan. Kamu bisa masuk lagi kapan saja.</p>
-    <div class="dialog__actions">
-      <button class="btn btn--outline" type="button" data-dialog-close>Batal</button>
-      <a class="btn btn--primary" href="index.html?keluar=1" data-logout>Keluar</a>
-    </div>
-  </dialog>
-  <div class="toast-region" aria-live="polite" data-toast-region></div>
-  <script src="{% static 'js/data.js' %}" defer></script>
-  <script src="{% static 'js/main.js' %}" defer></script>
-</body>
-</html>
+{% block extra_js %}
+<script src="{% static 'js/data.js' %}" defer></script>
+{% endblock %}

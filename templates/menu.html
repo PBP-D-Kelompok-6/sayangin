@@ -1,0 +1,75 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menu — Sayangin</title>
+  {% include 'includes/fonts.html' %}
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/umum.css' %}">
+</head>
+<body class="">
+  <a class="skip-link" href="#konten">Lewati ke konten</a>
+
+  <div class="menu" role="dialog" aria-modal="true" aria-label="Menu utama">
+    <header class="menu__head">
+      <a class="logo" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
+      <span class="spacer"></span>
+      <a class="icon-btn" href="{% url 'main:show_main' %}" aria-label="Tutup menu">✕</a>
+    </header>
+    <nav class="menu__nav" id="konten" aria-label="Utama">
+      <span class="eyebrow">Menu</span>
+      <a class="menu__row" href="{% url 'main:show_main' %}#baru-masuk">
+        <span class="eyebrow">01</span>
+        <span class="menu__text"><span class="serif menu__title">Marketplace</span><span class="text-sm text-muted">Belanja barang preloved</span></span>
+        <span class="chevron" aria-hidden="true">→</span>
+      </a>
+      <a class="menu__row" href="{% url 'main:show_main' %}#lemari">
+        <span class="eyebrow">02</span>
+        <span class="menu__text"><span class="serif menu__title">Lemari Digital</span><span class="text-sm text-muted">Catat &amp; rawat isi lemarimu</span></span>
+        <span class="chevron" aria-hidden="true">→</span>
+      </a>
+      <a class="menu__row" href="{% url 'main:show_main' %}#kebutuhan">
+        <span class="eyebrow">03</span>
+        <span class="menu__text"><span class="serif menu__title">Donasi</span><span class="text-sm text-muted">Salurkan ke lembaga yang butuh</span></span>
+        <span class="chevron" aria-hidden="true">→</span>
+      </a>
+      <a class="menu__row" href="{% url 'impact:show_impact_dashboard' %}#dampak">
+        <span class="eyebrow">04</span>
+        <span class="menu__text"><span class="serif menu__title">Dampak</span><span class="text-sm text-muted">Lihat jejak barangmu</span></span>
+        <span class="chevron" aria-hidden="true">→</span>
+      </a>
+      <a class="menu__row" href="{% url 'main:show_main' %}#pilihan">
+        <span class="eyebrow">05</span>
+        <span class="menu__text"><span class="serif menu__title">Tunda Beli</span><span class="text-sm text-muted">Pikir dulu sebelum membeli</span></span>
+        <span class="chevron" aria-hidden="true">→</span>
+      </a>
+    </nav>
+    <div class="menu__links text-sm">
+      <a href="{% url 'main:show_main' %}#faq">Pertanyaan umum</a>
+      <a href="{% url 'main:show_register' %}?tipe=lembaga">Jadi lembaga mitra</a>
+      <a href="#">Kontak</a>
+    </div>
+    <div class="menu__actions">
+      {% if user.is_authenticated %}
+        {% if user.profile.role == 'LEMBAGA' %}
+          <a class="btn btn--primary btn--lg btn--block" href="{% url 'main:show_lembaga_profile' %}">Dashboard lembaga</a>
+        {% else %}
+          <a class="btn btn--primary btn--lg btn--block" href="{% url 'main:show_profile' %}">Akun saya</a>
+        {% endif %}
+        <form method="POST" action="{% url 'main:logout_user' %}">
+          {% csrf_token %}
+          <button class="btn btn--outline btn--lg btn--block" type="submit">Keluar</button>
+        </form>
+      {% else %}
+        <a class="btn btn--primary btn--lg btn--block" href="{% url 'main:show_register' %}">Mulai sekarang</a>
+        <a class="btn btn--outline btn--lg btn--block" href="{% url 'main:show_login' %}">Masuk</a>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
+

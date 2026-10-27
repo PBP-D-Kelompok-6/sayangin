@@ -1,8 +1,65 @@
 /* ==========================================================
-   Sayangin — interaksi homepage
+   Sayangin — interaksi halaman utama & komponen global
    ========================================================== */
 (() => {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Landing: Empat pilihan (JUAL / DONASI / SIMPAN / TUNDA BELI) ---------- */
+  const choiceWords = [...document.querySelectorAll('[data-choice-word]')];
+  const choicePreview = document.querySelector('[data-choice-preview]');
+  const choiceCaption = document.querySelector('[data-choice-caption]');
+  if (choiceWords.length && choicePreview) {
+    choiceWords.forEach(word => {
+      word.style.cursor = 'pointer';
+      word.setAttribute('tabindex', '0');
+      const activate = () => {
+        choiceWords.forEach(w => w.classList.toggle('is-active', w === word));
+        if (word.dataset.choiceImg) {
+          choicePreview.style.backgroundImage = `url(${word.dataset.choiceImg})`;
+        }
+        if (choiceCaption && word.dataset.choiceDesc) {
+          choiceCaption.textContent = word.dataset.choiceDesc;
+        }
+      };
+      word.addEventListener('click', activate);
+      word.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activate();
+        }
+      });
+    });
+  }
+
+  /* ---------- Landing (mobile): Fase cara kerja ---------- */
+  const phaseTabs = [...document.querySelectorAll('[data-phase-tab]')];
+  const phasePhoto = document.querySelector('[data-phase-photo]');
+  const phaseText = document.querySelector('[data-phase-text]');
+  const phaseData = [
+    { img: '/static/img/jaket-kulit.jpg', text: 'Foto barangmu dan masukkan ke Lemari Digital. Satu menit per barang.' },
+    { img: '/static/img/heels-chrome.jpg', text: 'Saat lama tak dipakai, sistem memberi pengingat: jual, donasi, atau simpan.' },
+    { img: '/static/img/tas-kulit.jpg', text: 'Salurkan ke pembeli baru atau lembaga mitra yang benar-benar membutuhkan.' },
+  ];
+  if (phaseTabs.length) {
+    phaseTabs.forEach((tab, idx) => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        phaseTabs.forEach((t, i) => {
+          const active = i === idx;
+          t.setAttribute('aria-selected', String(active));
+          t.classList.toggle('btn--dark', active);
+          t.classList.toggle('btn--outline', !active);
+        });
+        const item = phaseData[idx];
+        if (item && phasePhoto) {
+          phasePhoto.style.setProperty('--img', `url(${item.img})`);
+        }
+        if (item && phaseText) {
+          phaseText.textContent = item.text;
+        }
+      });
+    });
+  }
 
   /* ---------- Drawer menu (mobile) ---------- */
   const drawer = document.getElementById('drawer');
@@ -27,135 +84,63 @@
   closeBtn?.addEventListener('click', () => setDrawer(false));
   drawer?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setDrawer(false)));
 
-  /* logout confirmation modal */
-  const logoutDialog = document.getElementById('logout-dialog');
-  if (logoutDialog) {
-    const logoutTriggers = document.querySelectorAll('[data-dialog-open="logout-dialog"]');
-    logoutTriggers.forEach((button) => {
-      button.addEventListener('click', () => {
-        if (drawer && !drawer.hidden) {
-          setDrawer(false);
-        }
-
-        if (!logoutDialog.open) {
-          logoutDialog.showModal();
-        }
-      });
-    });
-
-    const closeButtons = logoutDialog.querySelectorAll('[data-dialog-close]');
-    closeButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        logoutDialog.close();
-      });
-    });
-
-    logoutDialog.addEventListener('click', (event) => {
-      if (event.target !== logoutDialog) {
-        return;
-      }
-
-      const rect = logoutDialog.getBoundingClientRect();
-      const outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
-
-      if (outside) {
-        logoutDialog.close();
-      }
-    });
-  }
-
-  /* ---------- Dropdown kategori ---------- */
-  document.querySelectorAll('[data-dropdown]').forEach(btn => {
-    const menu = document.getElementById(btn.getAttribute('aria-controls'));
-    const toggle = (open) => {
-      btn.setAttribute('aria-expanded', String(open));
-      menu.classList.toggle('is-open', open);
-    };
-    btn.addEventListener('click', (e) => { e.stopPropagation(); toggle(btn.getAttribute('aria-expanded') !== 'true'); });
-    document.addEventListener('click', (e) => { if (!menu.contains(e.target)) toggle(false); });
-    menu.addEventListener('click', () => toggle(false));
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    if (drawer && !drawer.hidden) setDrawer(false);
-    document.querySelectorAll('[data-dropdown][aria-expanded="true"]').forEach(b => b.click());
-  });
-
-  /* ---------- Hero slider ---------- */
-  const slides = [...document.querySelectorAll('.hero__slide')];
-  const dots = [...document.querySelectorAll('.hero__dots button')];
-  let current = 0;
-  let timer;
-
-  const show = (i) => {
-    current = (i + slides.length) % slides.length;
-    slides.forEach((s, n) => {
-      const active = n === current;
-      s.classList.toggle('is-active', active);
-      s.setAttribute('aria-hidden', String(!active));
-      s.querySelectorAll('a, button').forEach(el => active ? el.removeAttribute('tabindex') : el.setAttribute('tabindex', '-1'));
-    });
-    dots.forEach((d, n) => d.setAttribute('aria-selected', String(n === current)));
-  };
-  const play = () => {
-    if (reduceMotion || slides.length < 2) return;
-    clearInterval(timer);
-    timer = setInterval(() => show(current + 1), 6500);
-  };
-  dots.forEach((d, n) => d.addEventListener('click', () => { show(n); play(); }));
-  const hero = document.querySelector('.hero');
-  hero?.addEventListener('mouseenter', () => clearInterval(timer));
-  hero?.addEventListener('mouseleave', play);
-  hero?.addEventListener('focusin', () => clearInterval(timer));
-  play();
-
-  /* ---------- Favorit (♥) ---------- */
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.fav-btn');
-    if (!btn) return;
-    e.preventDefault();
-    const on = btn.getAttribute('aria-pressed') !== 'true';
-    btn.setAttribute('aria-pressed', String(on));
-    btn.classList.remove('pop');
-    void btn.offsetWidth; // restart animasi
-    if (!reduceMotion) btn.classList.add('pop');
-  });
-
-  /* ---------- (Opsional) isi etalase dari DummyJSON ----------
-     Tambahkan atribut data-source="dummyjson" pada <ul data-product-grid>
-     untuk mengganti kartu statis dengan data API. */
-  const grid = document.querySelector('[data-product-grid][data-source="dummyjson"]');
-  if (grid) loadProducts(grid);
-
-  async function loadProducts(target) {
-    const tints = ['wheat', 'blush', 'straw', 'stone', 'mint', 'sage'];
-    const cities = ['Jakarta Selatan', 'Bandung', 'Yogyakarta', 'Surabaya', 'Depok', 'Bekasi', 'Bogor', 'Malang'];
-    const conditions = ['Seperti baru', 'Jarang dipakai', 'Bekas pakai'];
-    const rupiah = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 });
-    try {
-      const res = await fetch('https://dummyjson.com/products?limit=12&select=title,price,category,thumbnail');
-      const { products } = await res.json();
-      target.innerHTML = products.map((p, i) => `
-        <li class="product-card">
-          <div class="product-card__media" style="--tint: var(--tint-${tints[i % tints.length]})">
-            <span class="badge">${escapeHtml(p.category)}</span>
-            <img src="${p.thumbnail}" alt="${escapeHtml(p.title)}" loading="lazy">
-            <button class="fav-btn" type="button" aria-pressed="false" aria-label="Simpan ${escapeHtml(p.title)}"><svg class="icon"><use href="#i-heart"/></svg></button>
-          </div>
-          <h3 class="product-card__title"><a href="#">${escapeHtml(p.title)}</a></h3>
-          <p class="product-card__price">${rupiah.format(Math.round(p.price * 16000 / 1000) * 1000)}</p>
-          <p class="product-card__meta">
-            <span class="product-card__loc"><svg class="icon icon--xs"><use href="#i-pin"/></svg>${cities[i % cities.length]}</span>
-            <span class="product-card__cond">${conditions[i % conditions.length]}</span>
-          </p>
-        </li>`).join('');
-    } catch (err) {
-      console.warn('Gagal memuat produk, kartu statis tetap dipakai.', err);
+  /* ---------- A7 · Konfirmasi keluar (#keluar overlay / <dialog>) ---------- */
+  const keluarOverlay = document.getElementById('keluar');
+  const closeKeluar = () => {
+    if (!keluarOverlay) return;
+    keluarOverlay.classList.remove('is-open');
+    if (window.location.hash === '#keluar') {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
     }
+  };
+  const openKeluar = (e) => {
+    if (!keluarOverlay) return;
+    if (e) e.preventDefault();
+    if (drawer && !drawer.hidden) {
+      setDrawer(false);
+    }
+    keluarOverlay.classList.add('is-open');
+    const closeBtnEl = keluarOverlay.querySelector('[data-dialog-close]');
+    closeBtnEl?.focus();
+  };
+
+  if (keluarOverlay) {
+    const logoutTriggers = document.querySelectorAll('[href="#keluar"], [data-dialog-open="keluar"], [data-dialog-open="logout-dialog"]');
+    logoutTriggers.forEach((trigger) => {
+      trigger.addEventListener('click', openKeluar);
+    });
+
+    const closeButtons = keluarOverlay.querySelectorAll('[data-dialog-close]');
+    closeButtons.forEach((button) => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeKeluar();
+      });
+    });
+
+    keluarOverlay.addEventListener('click', (event) => {
+      if (event.target === keluarOverlay) {
+        closeKeluar();
+      }
+    });
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
+  /* ---------- Keyboard shortcut "/" untuk fokus ke kolom pencarian & Escape ---------- */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+      const searchInput = document.querySelector('.search input[type="search"]');
+      if (searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    }
+    if (e.key === 'Escape') {
+      if (drawer && !drawer.hidden) {
+        setDrawer(false);
+      }
+      if (keluarOverlay && (keluarOverlay.classList.contains('is-open') || window.location.hash === '#keluar')) {
+        closeKeluar();
+      }
+    }
+  });
 })();

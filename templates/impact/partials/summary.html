@@ -1,0 +1,24 @@
+{% comment %}Bagian dashboard yang bergantung periode. Dikirim ulang oleh view saat request HTMX.{% endcomment %}
+<div class="dampak-head">
+  <h1 class="page-title"><span class="eyebrow">Dampak · @{{ user.username }}</span>Dampak kecil, <em>nyata</em>.</h1>
+  <div class="dampak-switch" role="group" aria-label="Pilih periode">
+    <a href="?periode=bulan" class="chip {% if period == 'bulan' %}chip--on{% endif %}"
+       hx-get="?periode=bulan" hx-target="#summary" hx-push-url="true">Bulan ini</a>
+    <a href="?periode=semua" class="chip {% if period == 'semua' %}chip--on{% endif %}"
+       hx-get="?periode=semua" hx-target="#summary" hx-push-url="true">Sepanjang waktu</a>
+  </div>
+</div>
+
+<div class="tw-grid tw-grid-cols-2 md:tw-grid-cols-5 tw-gap-3">
+  <div class="dampak-card dampak-points tw-col-span-2 md:tw-col-span-1">
+    <span class="eyebrow">Poin dampak</span>
+    <strong class="serif">{{ points }}</strong>
+  </div>
+  {% for stat in stats %}
+  <div class="dampak-card">
+    <span class="eyebrow">{{ stat.label }}</span>
+    <strong class="serif">{{ stat.value }}</strong>
+    <span class="mono">+{{ stat.points }} poin / aksi</span>
+  </div>
+  {% endfor %}
+</div>

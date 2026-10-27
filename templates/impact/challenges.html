@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Tantangan pribadi — Sayangin{% endblock %}
+{% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
+
+{% block app_bar %}
+<header class="app-bar app-bar--back only-mobile">
+  <a class="icon-btn" href="{% url 'impact:show_impact_dashboard' %}" aria-label="Kembali">←</a>
+  <span class="app-bar__label">Tantangan pribadi</span>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="page__main container dampak" id="konten" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <nav class="breadcrumb"><a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a> / Tantangan pribadi</nav>
+
+  <div class="dampak-head">
+    <h1 class="page-title"><span class="eyebrow">Buat targetmu sendiri</span>Tantangan <em>pribadi</em></h1>
+    <a class="btn btn--primary" href="{% url 'impact:create_impact_challenge' %}">+ Tambah tantangan</a>
+  </div>
+
+  # Filter
+  <form class="tw-flex tw-flex-wrap tw-gap-3" method="get"
+        hx-get="{% url 'impact:show_impact_challenges' %}" hx-target="#challenge-list" hx-trigger="change" hx-push-url="true">
+    <select class="select select--pill" name="jenis" aria-label="Jenis">
+      <option value="">Semua jenis</option>
+      {% for value, label in kinds %}
+      <option value="{{ value }}" {% if kind == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select class="select select--pill" name="status" aria-label="Status">
+      <option value="">Semua status</option>
+      <option value="berjalan" {% if status == 'berjalan' %}selected{% endif %}>Masih berjalan</option>
+      <option value="berakhir" {% if status == 'berakhir' %}selected{% endif %}>Sudah berakhir</option>
+    </select>
+    <noscript><button class="btn btn--sm btn--outline" type="submit">Terapkan</button></noscript>
+  </form>
+
+  <div id="challenge-list">
+    {% include 'impact/partials/challenge_list.html' %}
+  </div>
+</main>
+{% endblock %}
