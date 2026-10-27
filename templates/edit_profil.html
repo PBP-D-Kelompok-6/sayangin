@@ -55,6 +55,10 @@
       <main class="onboard__main flex-1" id="konten">
         <form class="stack auth-stack auth-form auth-form--wide" method="POST" action="{% url 'main:edit_profile' %}" novalidate>
           {% csrf_token %}
+          <input type="hidden" name="mode" value="{{ mode|default:'' }}">
+          {% if target_address %}
+            <input type="hidden" name="address_id" value="{{ target_address.pk }}">
+          {% endif %}
 
           <div class="stack auth-heading-stack">
             <h1 class="page-title"><span class="eyebrow"><span class="only-desktop hidden md:inline">Langkah 2 dari 3 · </span>Profil</span>Kenalan <em>dulu</em>, yuk</h1>
@@ -130,6 +134,10 @@
               <label>
                 <input class="visually-hidden" type="radio" name="address_label" value="KOS" {% if form.address_label.value == 'KOS' %}checked{% endif %}>
                 <span class="chip chip--lg">Kos</span>
+              </label>
+              <label>
+                <input class="visually-hidden" type="radio" name="address_label" value="APARTEMEN" {% if form.address_label.value == 'APARTEMEN' %}checked{% endif %}>
+                <span class="chip chip--lg">Apartemen</span>
               </label>
               <label>
                 <input class="visually-hidden" type="radio" name="address_label" value="KANTOR" {% if form.address_label.value == 'KANTOR' %}checked{% endif %}>

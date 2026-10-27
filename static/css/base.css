@@ -82,8 +82,15 @@ h1 em, h2 em, h3 em, .serif em { color: var(--color-accent); }
 
 /* ---------- Dialog form & JS overlay helper ---------- */
 .overlay.is-open { display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
+.dialog--wide { width: min(540px, 100%); max-height: 90vh; overflow-y: auto; }
 .dialog__form { display: flex; flex-direction: column; gap: 14px; }
+.toast-region { position: fixed; right: 24px; bottom: 24px; z-index: 60; display: flex; flex-direction: column; gap: 10px; pointer-events: none; max-width: min(380px, calc(100vw - 32px)); }
+.toast-region .toast { pointer-events: auto; }
+.link-btn { padding: 0; border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }
+.link-btn:hover { color: var(--color-accent); }
 @media (max-width: 767px) {
   .overlay.is-open { align-items: flex-end; padding: 0; }
+  .dialog--wide { width: 100%; max-height: 88vh; }
   .dialog__form { gap: 12px; }
+  .toast-region { left: 16px; right: 16px; bottom: 16px; max-width: none; }
 }

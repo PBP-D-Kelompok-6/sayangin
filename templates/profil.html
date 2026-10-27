@@ -17,7 +17,12 @@
 {% endblock %}
 
 {% block content %}
-  <main class="page__main container profile flex-1 flex flex-col" id="konten">
+  <main class="page__main container profile flex-1 flex flex-col" id="konten"
+        data-api-profile-url="{% url 'main:api_profile_data' %}"
+        data-api-profile-update-url="{% url 'main:api_update_profile' %}"
+        data-api-preferences-url="{% url 'main:api_update_preferences' %}"
+        data-api-address-add-url="{% url 'main:api_add_address' %}"
+        data-edit-profile-url="{% url 'main:edit_profile' %}">
     {% if messages %}
       {% for message in messages %}
         {% if 'error' in message.tags %}
@@ -31,17 +36,17 @@
       {% endfor %}
     {% endif %}
 
-    <h1 class="page-title only-desktop hidden md:block"><span class="eyebrow">Akun saya</span>Halo, <em>{{ first_name }}</em></h1>
+    <h1 class="page-title only-desktop hidden md:block"><span class="eyebrow">Akun saya</span>Halo, <em data-user-firstname>{{ first_name }}</em></h1>
 
     <div class="profile__grid flex flex-col md:flex-row items-start">
       <aside class="profile__summary w-full md:w-[300px] flex flex-col">
         <span class="avatar avatar--lg" aria-hidden="true"></span>
         <div class="profile__who flex flex-col">
-          <span class="serif profile__name">{{ profile.full_name|default:user.username }}</span>
+          <span class="serif profile__name" data-user-fullname>{{ profile.full_name|default:user.username }}</span>
           <span class="text-soft">@{{ user.username }} · {% if profile.role == 'LEMBAGA' %}Akun lembaga{% else %}Akun pribadi{% endif %}</span>
           <span class="text-sm text-soft only-desktop hidden md:inline">Bergabung sejak {{ user.date_joined|date:"F Y" }}</span>
         </div>
-        <a class="text-sm only-mobile md:hidden" href="{% url 'main:edit_profile' %}">Ubah</a>
+        <a class="text-sm only-mobile md:hidden" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
         <div class="profile__stats">
           <span><b class="serif">410</b><span>poin dampak</span></span>
           <span><b class="serif">2</b><span>lencana</span></span>
@@ -102,29 +107,59 @@
           <h2 class="eyebrow">Data diri</h2>
           <div class="list-row">
             <span class="profile__key">Nama lengkap</span>
-            <span class="spacer">{{ profile.full_name|default:user.username }}</span>
-            <a class="text-sm" href="{% url 'main:edit_profile' %}">Ubah</a>
+            <span class="spacer" data-user-fullname>{{ profile.full_name|default:user.username }}</span>
+            <a class="text-sm" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
           </div>
           <div class="list-row">
             <span class="profile__key">Email</span>
-            <span class="spacer">{{ user.email|default:"Belum diisi" }}</span>
-            <a class="text-sm" href="{% url 'main:edit_profile' %}">Ubah</a>
+            <span class="spacer" data-user-email>{{ user.email|default:"Belum diisi" }}</span>
+            <a class="text-sm" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
           </div>
           <div class="list-row">
             <span class="profile__key">Nomor HP</span>
-            <span class="spacer">{{ profile.phone_number|default:"Belum diisi" }}</span>
-            <a class="text-sm" href="{% url 'main:edit_profile' %}">Ubah</a>
+            <span class="spacer" data-user-phone>{{ profile.phone_number|default:"Belum diisi" }}</span>
+            <a class="text-sm" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
           </div>
         </section>
 
         <section>
           <h2 class="eyebrow">Alamat</h2>
-          <div class="list-row">
-            <span class="profile__key">{{ profile.get_address_label_display|default:"Rumah" }}{% if profile.is_primary_address %} · utama{% endif %}</span>
-            <span class="spacer">{{ formatted_address|default:"Alamat belum diisi" }}</span>
-            <a class="text-sm" href="{% url 'main:edit_profile' %}">Ubah</a>
+          <div id="profile-address-list" data-address-list>
+            {% for addr in addresses %}
+              <div class="list-row" data-address-row="{{ addr.pk }}">
+                <span class="profile__key">{{ addr.get_label_display }}{% if addr.is_primary %} · utama{% endif %}</span>
+                <span class="spacer">
+                  <span data-address-text>{{ addr.formatted_address }}</span>
+                  {% if addr.rajaongkir_city_id %}
+                    <span class="mono" title="ID Kota RajaOngkir"> · #{{ addr.rajaongkir_city_id }}</span>
+                  {% endif %}
+                </span>
+                <span class="row">
+                  {% if not addr.is_primary %}
+                    <button class="link-btn text-sm text-soft" type="button" data-address-set-primary="{{ addr.pk }}">Utama</button>
+                  {% endif %}
+                  <a class="text-sm"
+                     href="{% url 'main:edit_profile' %}?address_id={{ addr.pk }}"
+                     data-address-edit="{{ addr.pk }}"
+                     data-label="{{ addr.label }}"
+                     data-recipient-name="{{ addr.recipient_name }}"
+                     data-phone-number="{{ addr.phone_number }}"
+                     data-address="{{ addr.address }}"
+                     data-city="{{ addr.city }}"
+                     data-postal-code="{{ addr.postal_code }}"
+                     data-is-primary="{{ addr.is_primary|yesno:'true,false' }}">Ubah</a>
+                  <button class="link-btn text-sm text-muted" type="button" data-address-delete="{{ addr.pk }}">Hapus</button>
+                </span>
+              </div>
+            {% empty %}
+              <div class="list-row" data-address-empty>
+                <span class="profile__key">{{ profile.get_address_label_display|default:"Rumah" }}{% if profile.is_primary_address %} · utama{% endif %}</span>
+                <span class="spacer">{{ formatted_address|default:"Alamat belum diisi" }}</span>
+                <a class="text-sm" href="{% url 'main:edit_profile' %}" data-address-add>Ubah</a>
+              </div>
+            {% endfor %}
           </div>
-          <a class="profile__add text-sm" href="{% url 'main:edit_profile' %}">+ Tambah alamat</a>
+          <a class="profile__add text-sm" href="{% url 'main:edit_profile' %}?mode=add" data-address-add>+ Tambah alamat</a>
         </section>
 
         <section>
@@ -132,27 +167,27 @@
           <div class="list-row">
             <span class="profile__key">Ukuran pakaian</span>
             <span class="chips flex flex-wrap">
-              <label><input class="visually-hidden" type="checkbox"><span class="chip">S</span></label>
-              <label><input class="visually-hidden" type="checkbox" checked><span class="chip">M</span></label>
-              <label><input class="visually-hidden" type="checkbox"><span class="chip">L</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="S" data-pref-size {% if 'S' in preferences.sizes %}checked{% endif %}><span class="chip">S</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="M" data-pref-size {% if 'M' in preferences.sizes %}checked{% endif %}><span class="chip">M</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="L" data-pref-size {% if 'L' in preferences.sizes %}checked{% endif %}><span class="chip">L</span></label>
             </span>
           </div>
           <div class="list-row">
             <span class="profile__key">Kategori favorit</span>
             <span class="chips flex flex-wrap">
-              <label><input class="visually-hidden" type="checkbox" checked><span class="chip">Atasan</span></label>
-              <label><input class="visually-hidden" type="checkbox" checked><span class="chip">Tas</span></label>
-              <label><input class="visually-hidden" type="checkbox"><span class="chip">Buku</span></label>
-              <label><input class="visually-hidden" type="checkbox"><span class="chip">Aksesori</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="Atasan" data-pref-category {% if 'Atasan' in preferences.categories %}checked{% endif %}><span class="chip">Atasan</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="Tas" data-pref-category {% if 'Tas' in preferences.categories %}checked{% endif %}><span class="chip">Tas</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="Buku" data-pref-category {% if 'Buku' in preferences.categories %}checked{% endif %}><span class="chip">Buku</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="Aksesori" data-pref-category {% if 'Aksesori' in preferences.categories %}checked{% endif %}><span class="chip">Aksesori</span></label>
             </span>
           </div>
           <label class="list-row">
             <span class="spacer"><b>Ingatkan barang yang jarang dipakai</b><br><span class="text-sm text-muted">Setelah 6 bulan tidak dipakai</span></span>
-            <span class="toggle"><input type="checkbox" name="pengingat" checked><span></span></span>
+            <span class="toggle"><input type="checkbox" name="pengingat" data-pref-reminder {% if preferences.reminder %}checked{% endif %}><span></span></span>
           </label>
           <label class="list-row">
             <span class="spacer"><b>Kabar barang baru lewat email</b><br><span class="text-sm text-muted">Maksimal satu email per minggu</span></span>
-            <span class="toggle"><input type="checkbox" name="email_kabar"><span></span></span>
+            <span class="toggle"><input type="checkbox" name="email_kabar" data-pref-email {% if preferences.email_newsletter %}checked{% endif %}><span></span></span>
           </label>
         </section>
 
@@ -199,14 +234,14 @@
 
         <section>
           <h2 class="eyebrow">Akun</h2>
-          <a class="list-row list-row--link" href="{% url 'main:edit_profile' %}">
+          <a class="list-row list-row--link" href="{% url 'main:edit_profile' %}" data-profile-edit>
             <span class="spacer">Data diri</span>
-            <span class="text-sm text-muted">{{ profile.full_name|default:user.username }}</span>
+            <span class="text-sm text-muted" data-user-fullname>{{ profile.full_name|default:user.username }}</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
-          <a class="list-row list-row--link" href="{% url 'main:edit_profile' %}">
+          <a class="list-row list-row--link" href="{% url 'main:edit_profile' %}?mode=add" data-address-add>
             <span class="spacer">Alamat</span>
-            <span class="text-sm text-muted">{% if formatted_address %}1 alamat{% else %}Belum diisi{% endif %}</span>
+            <span class="text-sm text-muted" data-address-count>{% if addresses %}{{ addresses|length }} alamat{% elif formatted_address %}1 alamat{% else %}Belum diisi{% endif %}</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
           <a class="list-row list-row--link" href="#">
@@ -220,16 +255,16 @@
           <h2 class="eyebrow">Preferensi</h2>
           <a class="list-row list-row--link" href="#">
             <span class="spacer">Ukuran &amp; kategori favorit</span>
-            <span class="text-sm text-muted">M · Atasan, Tas</span>
+            <span class="text-sm text-muted" data-pref-summary>{{ preferences.sizes|join:", "|default:"M" }} · {{ preferences.categories|join:", "|default:"Atasan, Tas" }}</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
           <label class="list-row">
             <span class="spacer"><b>Ingatkan barang jarang dipakai</b><br><span class="text-sm text-muted">Setelah 6 bulan</span></span>
-            <span class="toggle"><input type="checkbox" name="pengingat_m" checked><span></span></span>
+            <span class="toggle"><input type="checkbox" name="pengingat_m" data-pref-reminder-mobile {% if preferences.reminder %}checked{% endif %}><span></span></span>
           </label>
           <label class="list-row">
             <span class="spacer"><b>Kabar barang baru lewat email</b></span>
-            <span class="toggle"><input type="checkbox" name="email_m"><span></span></span>
+            <span class="toggle"><input type="checkbox" name="email_m" data-pref-email-mobile {% if preferences.email_newsletter %}checked{% endif %}><span></span></span>
           </label>
         </section>
 
@@ -264,6 +299,108 @@
       </div>
     </div>
   </main>
+
+  <!-- Modal AJAX: Ubah Data Diri -->
+  <div class="overlay" id="modal-profil" role="dialog" aria-modal="true" aria-labelledby="modal-profil-title">
+    <div class="dialog dialog--wide">
+      <h2 class="dialog__title" id="modal-profil-title">Ubah <em>data diri</em></h2>
+      <p class="text-soft text-sm">Perubahan langsung disimpan ke akunmu.</p>
+      <div class="alert" data-profile-modal-error hidden role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span data-profile-modal-error-text></span>
+      </div>
+      <form class="dialog__form" id="form-ajax-profil" novalidate>
+        {% csrf_token %}
+        <label class="field">
+          <span class="field__label">Nama lengkap</span>
+          <input class="input" type="text" name="full_name" value="{{ profile.full_name|default:user.username }}" required>
+        </label>
+        <div class="form-row grid grid-cols-1 md:grid-cols-2">
+          <label class="field">
+            <span class="field__label">Email</span>
+            <input class="input" type="email" name="email" value="{{ user.email|default:'' }}" required>
+          </label>
+          <label class="field">
+            <span class="field__label">Nomor HP</span>
+            <input class="input" type="tel" name="phone_number" value="{{ profile.phone_number|default:'' }}" placeholder="08…">
+          </label>
+        </div>
+        <div class="dialog__actions">
+          <button class="btn btn--outline" type="button" data-modal-close="modal-profil">Batal</button>
+          <button class="btn btn--primary" type="submit" data-profile-submit>Simpan perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal AJAX: Tambah / Ubah Alamat (RajaOngkir-ready) -->
+  <div class="overlay" id="modal-alamat" role="dialog" aria-modal="true" aria-labelledby="modal-alamat-title">
+    <div class="dialog dialog--wide">
+      <h2 class="dialog__title" id="modal-alamat-title" data-address-modal-title>Tambah <em>alamat</em></h2>
+      <p class="text-soft text-sm">Kota otomatis dipetakan ke ID kota RajaOngkir untuk perhitungan ongkir instan.</p>
+      <div class="alert" data-address-modal-error hidden role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span data-address-modal-error-text></span>
+      </div>
+      <form class="dialog__form" id="form-ajax-alamat" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="address_id" value="">
+
+        <fieldset class="field">
+          <legend class="field__label">Label alamat</legend>
+          <div class="chips flex flex-wrap gap-2">
+            {% for val, lbl in address_label_choices %}
+              <label>
+                <input class="visually-hidden" type="radio" name="label" value="{{ val }}" {% if val == 'RUMAH' %}checked{% endif %}>
+                <span class="chip chip--lg">{{ lbl }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <div class="form-row grid grid-cols-1 md:grid-cols-2">
+          <label class="field">
+            <span class="field__label">Nama penerima</span>
+            <input class="input" type="text" name="recipient_name" value="{{ profile.full_name|default:user.username }}" placeholder="Nama penerima paket">
+          </label>
+          <label class="field">
+            <span class="field__label">Nomor HP penerima</span>
+            <input class="input" type="tel" name="phone_number" value="{{ profile.phone_number|default:'' }}" placeholder="08…">
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Alamat lengkap</span>
+          <textarea class="textarea" name="address" rows="2" placeholder="Nama jalan, nomor rumah/unit, RT/RW, kelurahan, kecamatan" required></textarea>
+        </label>
+
+        <div class="form-row form-row--2-1 grid grid-cols-1 md:grid-cols-3">
+          <label class="field md:col-span-2">
+            <span class="field__label">Kota / kabupaten (RajaOngkir)</span>
+            <select class="select" name="city" required>
+              <option value="">Pilih kota / kabupaten</option>
+              {% for city_val, city_label in city_choices %}
+                <option value="{{ city_val }}">{{ city_label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">Kode pos</span>
+            <input class="input" type="text" name="postal_code" inputmode="numeric" placeholder="12345">
+          </label>
+        </div>
+
+        <label class="row">
+          <input type="checkbox" name="is_primary" checked> Jadikan alamat utama
+        </label>
+
+        <div class="dialog__actions">
+          <button class="btn btn--outline" type="button" data-modal-close="modal-alamat">Batal</button>
+          <button class="btn btn--primary" type="submit" data-address-submit>Simpan alamat</button>
+        </div>
+      </form>
+    </div>
+  </div>
 {% endblock %}
 
 {% block footer %}{% endblock %}

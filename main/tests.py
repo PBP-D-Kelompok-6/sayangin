@@ -1,7 +1,8 @@
+import json
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
-from main.models import UserProfile, InstitutionProfile
+from main.models import UserProfile, InstitutionProfile, UserAddress
 
 
 class LandingAndMenuViewTests(TestCase):
@@ -193,7 +194,7 @@ class ProfileAndLogoutTests(TestCase):
         response = self.client.get(reverse('main:show_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'profil.html')
-        self.assertContains(response, 'Halo, <em>Nadia</em>')
+        self.assertContains(response, 'Halo, <em data-user-firstname>Nadia</em>')
         self.assertContains(response, 'profile__grid')
         self.assertContains(response, 'Rumah · utama')
         self.assertContains(response, 'Jl. Margonda Raya No. 10, Depok 16424')
@@ -247,5 +248,140 @@ class ProfileAndLogoutTests(TestCase):
         self.assertContains(final_res, 'Siti Aminah')
         self.assertContains(final_res, 'Jl. Kenanga No. 12, Depok')
         self.assertContains(final_res, 'id="keluar"')
+
+
+class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='nadia.r',
+            email='nadia@email.com',
+            password='password123',
+        )
+        profile = self.user.profile # type: ignore
+        profile.full_name = 'Nadia Rahma'
+        profile.phone_number = '081234564410'
+        profile.save()
+        self.client.login(username='nadia.r', password='password123')
+
+    def test_add_multiple_addresses_rumah_kos_apartemen_with_rajaongkir_ids(self):
+        # 1. Add Rumah in Depok via AJAX
+        res1 = self.client.post(reverse('main:api_add_address'), {
+            'label': 'RUMAH',
+            'recipient_name': 'Nadia Rahma',
+            'phone_number': '081234564410',
+            'address': 'Jl. Margonda Raya No. 10',
+            'city': 'Depok',
+            'postal_code': '16424',
+            'is_primary': 'on',
+        })
+        self.assertEqual(res1.status_code, 201)
+        data1 = res1.json()
+        self.assertEqual(data1['status'], 'ok')
+        self.assertEqual(data1['address']['rajaongkir_city_id'], '115')
+        self.assertEqual(data1['address']['province'], 'Jawa Barat')
+        self.assertTrue(data1['address']['is_primary'])
+
+        # 2. Add Kos in Bandung (not primary)
+        res2 = self.client.post(reverse('main:api_add_address'), {
+            'label': 'KOS',
+            'recipient_name': 'Nadia Rahma',
+            'phone_number': '081234564410',
+            'address': 'Jl. Cisitu Indah No. 4',
+            'city': 'Bandung',
+            'postal_code': '40135',
+        })
+        self.assertEqual(res2.status_code, 201)
+        data2 = res2.json()
+        self.assertEqual(data2['address']['rajaongkir_city_id'], '23')
+        self.assertFalse(data2['address']['is_primary'])
+
+        # 3. Add Apartemen in Jakarta Selatan as new primary
+        res3 = self.client.post(reverse('main:api_add_address'), {
+            'label': 'APARTEMEN',
+            'recipient_name': 'Nadia Rahma',
+            'phone_number': '081234564410',
+            'address': 'Apartemen Kalibata City Tower Ebony Lt. 12',
+            'city': 'Jakarta Selatan',
+            'postal_code': '12750',
+            'is_primary': 'on',
+        })
+        self.assertEqual(res3.status_code, 201)
+        data3 = res3.json()
+        self.assertEqual(data3['address']['label'], 'APARTEMEN')
+        self.assertEqual(data3['address']['label_display'], 'Apartemen')
+        self.assertEqual(data3['address']['rajaongkir_city_id'], '153')
+        self.assertTrue(data3['address']['is_primary'])
+        self.assertEqual(len(data3['addresses']), 3)
+
+        # Verify UserProfile synced to the primary address (Apartemen in Jakarta Selatan)
+        self.user.profile.refresh_from_db() # type: ignore
+        self.assertEqual(self.user.profile.address_label, 'APARTEMEN') # type: ignore
+        self.assertEqual(self.user.profile.city, 'Jakarta Selatan') # type: ignore
+
+        # 4. Set Kos (Bandung) as primary via AJAX
+        kos_id = data2['address']['id']
+        res_primary = self.client.post(reverse('main:api_set_primary_address', args=[kos_id]))
+        self.assertEqual(res_primary.status_code, 200)
+        self.user.profile.refresh_from_db() # type: ignore
+        self.assertEqual(self.user.profile.address_label, 'KOS') # type: ignore
+        self.assertEqual(self.user.profile.city, 'Bandung') # type: ignore
+
+        # 5. Delete Apartemen address via AJAX
+        apt_id = data3['address']['id']
+        res_del = self.client.post(reverse('main:api_delete_address', args=[apt_id]))
+        self.assertEqual(res_del.status_code, 200)
+        self.assertEqual(UserAddress.objects.filter(user=self.user).count(), 2)
+
+    def test_django_serializers_json_endpoints_and_profile_ajax(self):
+        UserAddress.objects.create(
+            user=self.user,
+            label='RUMAH',
+            recipient_name='Nadia Rahma',
+            phone_number='081234564410',
+            address='Jl. Margonda Raya No. 10',
+            city='Depok',
+            postal_code='16424',
+            is_primary=True,
+        )
+
+        # Test Django core serializers endpoints
+        json_addr_res = self.client.get(reverse('main:show_addresses_json'))
+        self.assertEqual(json_addr_res.status_code, 200)
+        serialized_addrs = json.loads(json_addr_res.content)
+        self.assertEqual(len(serialized_addrs), 1)
+        self.assertEqual(serialized_addrs[0]['model'], 'main.useraddress')
+        self.assertEqual(serialized_addrs[0]['fields']['rajaongkir_city_id'], '115')
+
+        json_prof_res = self.client.get(reverse('main:show_profile_json'))
+        self.assertEqual(json_prof_res.status_code, 200)
+        serialized_prof = json.loads(json_prof_res.content)
+        self.assertEqual(serialized_prof[0]['model'], 'main.userprofile')
+
+        # Test AJAX profile update & preferences update
+        upd_res = self.client.post(reverse('main:api_update_profile'), {
+            'full_name': 'Nadia Rahmawati',
+            'email': 'nadia.baru@email.com',
+            'phone_number': '081299998888',
+        })
+        self.assertEqual(upd_res.status_code, 200)
+        self.assertEqual(upd_res.json()['user']['full_name'], 'Nadia Rahmawati')
+
+        pref_res = self.client.post(
+            reverse('main:api_update_preferences'),
+            data=json.dumps({
+                'sizes': ['S', 'M'],
+                'categories': ['Atasan', 'Buku'],
+                'reminder': False,
+                'email_newsletter': True,
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(pref_res.status_code, 200)
+        pref_data = pref_res.json()['preferences']
+        self.assertEqual(pref_data['sizes'], ['S', 'M'])
+        self.assertEqual(pref_data['categories'], ['Atasan', 'Buku'])
+        self.assertFalse(pref_data['reminder'])
+        self.assertTrue(pref_data['email_newsletter'])
+
 
 
