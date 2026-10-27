@@ -1,0 +1,56 @@
+{% load static %}
+
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lemari Digital — Sayangin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="{% static 'css/tokens.css'%}">
+  <link rel="stylesheet" href="{% static 'css/base.css'%}">
+  <link rel="stylesheet" href="{% static 'css/components.css'%}">
+  <link rel="stylesheet" href="{% static 'lemari/css/style.css' %}">
+
+</head>
+<body class="">
+  <a class="skip-link" href="#konten">Lewati ke konten</a>
+
+<div class="page has-bottom-nav">
+  <header class="site-header only-desktop">
+    <div class="site-header__bar">
+      <a class="logo" href="../00-umum/index.html"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
+      <nav class="primary-nav" aria-label="Utama"><a href="../02-marketplace/index.html">Marketplace</a><a href="../03-lemari/index.html" aria-current="page">Lemari Digital</a><a href="../04-donasi/kebutuhan.html">Donasi</a><a href="../05-dampak/index.html">Dampak</a></nav>
+      <div class="site-header__actions">
+        <a class="icon-btn" href="../02-marketplace/hasil.html" aria-label="Cari"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></a>
+        <a class="header-link" href="../06-tunda-beli/index.html">Tunda Beli</a>
+        <a class="icon-btn" href="../02-marketplace/checkout.html" aria-label="Keranjang, 2 barang"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5h14l-1.1 11.5H6.1z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg><span class="icon-btn__count" aria-hidden="true">2</span></a>
+        <a class="avatar" href="../01-auth-profil/profil.html" aria-label="Profil"></a>
+      </div>
+    </div>
+  </header>
+  <header class="app-bar only-mobile"><h1 class="app-bar__title">Lemari <em>kamu</em></h1><button class="icon-btn" type="button" aria-label="Cari di lemari"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button><a class="btn btn--primary btn--round" href="lemari-awal.html" aria-label="Tambah barang">+</a><a class="avatar-link" href="../01-auth-profil/profil.html" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
+  <main class="page__main container wardrobe" id="konten">
+    <div class="wardrobe__head">
+      <div class="stack" style="--stack-gap: 6px"><span class="eyebrow">Lemari digital<span class="only-mobile"> · 24 barang · 3 butuh keputusan</span></span><h1 class="page-title only-desktop">Lemari <em>kamu</em></h1><span class="text-soft only-desktop">24 barang · 3 butuh keputusan</span></div>
+      <a class="btn btn--primary only-desktop" href="lemari-awal.html">+ Tambah barang</a>
+    </div>
+    <section class="reminder dark-panel" aria-label="Pengingat">
+      <span class="reminder__img" style="--img: url(../shared/img/blazer-abu.jpg)"></span>
+      <div class="reminder__copy"><span class="eyebrow">Pengingat · 1 dari 3</span><b class="serif reminder__title">Blazer wol abu belum dipakai 6 bulan</b><span class="reminder__text">Ada 2 lembaga yang sedang butuh blazer ukuran M.</span></div>
+      <div class="reminder__actions"><a class="btn btn--primary btn--sm" href="jual.html">Jual</a><a class="btn btn--sm btn--on-dark" href="../04-donasi/kebutuhan.html">Donasi</a><button class="btn btn--sm btn--on-dark" type="button">Simpan</button></div>
+      <button class="icon-btn reminder__next only-desktop" type="button" aria-label="Pengingat berikutnya">→</button>
+      <span class="reminder__dots only-mobile" aria-hidden="true"><span class="is-active"></span><span></span><span></span></span>
+    </section>
+    <div class="wardrobe__bar">
+      <div class="tabs" role="tablist" aria-label="Filter lemari"><a class="tab is-active" role="tab" aria-selected="true" href="#">Semua (24)</a><a class="tab" role="tab" aria-selected="false" href="#">Jarang dipakai (3)</a><a class="tab" role="tab" aria-selected="false" href="#">Dijual (2)</a><a class="tab only-desktop" role="tab" aria-selected="false" href="#">Didonasikan (1)</a></div>
+      <label class="sort only-desktop">Urutkan <select class="select select--pill"><option>Paling lama tak dipakai</option></select></label>
+    </div>
+    <div class="items"><a class="item" href="jual.html"><span class="item__img" style="--img: url(../shared/img/blazer-abu.jpg)"></span><b>Blazer wol</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 6 bln lalu</span><span class="only-mobile">Dipakai 6 bln lalu</span></span></a><a class="item" href="jual.html"><span class="item__img" style="--img: url(../shared/img/sneakers-suede.jpg)"></span><b>Sneakers suede</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 7 bln lalu</span><span class="only-mobile">Dipakai 7 bln lalu</span></span></a><a class="item" href="jual.html"><span class="item__img" style="--img: url(../shared/img/kamera-film.jpg)"></span><b>Kamera analog</b><span class="text-sm text-muted"><span class="only-desktop">Dijual · 3 orang menyimpan</span><span class="only-mobile">Dijual · 3 menyimpan</span></span></a><a class="item" href="jual.html"><span class="item__img" style="--img: url(../shared/img/kemeja-linen.jpg)"></span><b>Kemeja linen</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 2 mgg lalu</span><span class="only-mobile">Dipakai 2 mgg lalu</span></span></a><a class="item" href="jual.html"><span class="item__img" style="--img: url(../shared/img/buku-vintage.jpg)"></span><b>Buku vintage (5)</b><span class="text-sm text-muted"><span class="only-desktop">Disimpan · ingatkan Jan</span><span class="only-mobile">Disimpan · ingatkan Jan</span></span></a><a class="item" href="jual.html"><span class="item__img" style="--img: url(../shared/img/jaket-track-zaitun.jpg)"></span><b>Jaket track suede</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 1 bln lalu</span><span class="only-mobile">Dipakai 1 bln lalu</span></span></a><a class="item" href="jual.html"><span class="item__img" style="--img: url(../shared/img/tas-mini-marun.jpg)"></span><b>Tas mini kulit</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 3 bln lalu</span><span class="only-mobile">Dipakai 3 bln lalu</span></span></a><a class="item" href="jual.html"><span class="item__img" style="--img: url(../shared/img/vas-keramik.jpg)"></span><b>Vas keramik</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 4 bln lalu</span><span class="only-mobile">Dipakai 4 bln lalu</span></span></a><a class="btn btn--dashed only-desktop items__add" href="lemari-awal.html">+ Tambah barang</a></div>
+  </main>
+  <nav class="bottom-nav" aria-label="Utama"><a href="../00-umum/index.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-5.5h-5V21H5a1 1 0 0 1-1-1z"/></svg>Beranda</a><a href="../03-lemari/index.html" aria-current="page"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7.6a2.1 2.1 0 1 1 2.1-2.1"/><path d="M12 7.6v1.1l-8.2 6.1a1.2 1.2 0 0 0 .7 2.2h15a1.2 1.2 0 0 0 .7-2.2L12 8.7"/></svg>Lemari</a><a href="../02-marketplace/index.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5h14l-1.1 11.5H6.1z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg>Marketplace</a><a href="../04-donasi/kebutuhan.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19.5s-7-4.3-7-9.6A3.9 3.9 0 0 1 12 7.6a3.9 3.9 0 0 1 7 2.3c0 5.3-7 9.6-7 9.6z"/></svg>Donasi</a><a href="../05-dampak/index.html"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5c.6 4.4 3.4 7.2 8 8-4.6.8-7.4 3.6-8 8-.6-4.4-3.4-7.2-8-8 4.6-.8 7.4-3.6 8-8z"/></svg>Dampak</a></nav>
+</div>
+</body>
+</html>

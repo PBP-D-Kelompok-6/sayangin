@@ -1,0 +1,53 @@
+/* ==========================================================
+   Onboarding (daftar, profil awal, isi lemari pertama, data lembaga)
+   ========================================================== */
+
+/* ---------- Kerangka onboarding ---------- */
+.onboard { min-height: 100vh; display: flex; flex-direction: column; }
+.onboard--split { flex-direction: row; }
+.onboard__header { height: var(--header-h); flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--gutter); }
+.onboard__header .logo { font-size: 30px; gap: 10px; letter-spacing: -0.01em; }
+.onboard__spacer { width: 80px; }
+.onboard__body { flex: 1; display: flex; min-height: 0; }
+
+.onboard__aside { width: 420px; flex: none; padding: 40px; display: flex; flex-direction: column; justify-content: flex-end; }
+.onboard--split .onboard__aside { width: 520px; justify-content: space-between; }
+.onboard__aside-logo { position: relative; }
+.onboard__art { position: absolute; left: 0; right: 0; top: 40px; height: 380px; }
+.onboard--split .onboard__art { position: relative; top: 0; height: 420px; }
+.onboard__img { position: absolute; filter: drop-shadow(0 24px 30px rgba(0,0,0,.55)); }
+.onboard__chrome { position: absolute; left: 20px; top: 230px; width: 260px; height: 198px; overflow: visible; }
+.onboard__caption { position: relative; display: flex; flex-direction: column; gap: 10px; }
+.onboard__title { font-family: var(--font-serif); font-size: 30px; line-height: 1.08; }
+.onboard--split .onboard__title { font-size: 38px; line-height: 1.05; }
+.onboard__title em { color: inherit; }
+.onboard__text { color: var(--on-dark-muted); line-height: 1.55; }
+
+.onboard__main { flex: 1; min-width: 0; padding: 40px var(--gutter); overflow: auto; }
+.onboard__main--center { display: flex; flex-direction: column; justify-content: center; padding: 48px 80px; }
+
+.auth-form { width: 100%; max-width: 560px; }
+.auth-form--wide { max-width: 640px; margin-inline: auto; }
+.auth-form .page-title { font-size: 39px; }
+
+.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.choice-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+
+.dropzone--row { min-height: 80px; padding: 0 16px; }
+
+.divider-text { display: flex; align-items: center; gap: 12px; color: var(--color-text-soft); }
+.divider-text::before, .divider-text::after { content: ""; flex: 1; height: 1px; background: #D4D4D4; }
+
+@media (max-width: 767px) {
+  .onboard--split { flex-direction: column; }
+  .onboard__main, .onboard__main--center { padding: 20px 16px 104px; justify-content: flex-start; }
+  .onboard--split .onboard__main { padding-bottom: 32px; }
+  .auth-form .page-title { font-size: 34px; }
+  .choice-grid { grid-template-columns: 1fr; gap: 8px; }
+  .choice-grid--4 { grid-template-columns: 1fr 1fr; }
+  /* tombol utama menempel di bawah layar (alur fokus) */
+  .form-actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; padding: 12px 16px 20px; background: var(--paper); }
+  .form-actions .btn { flex: 1; }
+  .onboard--split .form-actions { position: static; }
+}
+
