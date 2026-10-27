@@ -7,6 +7,7 @@
     <title>{% block title %}Barang lama, disayang lagi — Sayangin{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}Sayangin: marketplace barang preloved dengan Lemari Digital, Tunda Beli, dan donasi tepat sasaran.{% endblock %}">
     {% include 'includes/fonts.html' %}
+    {% include 'includes/tailwind.html' %}
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
@@ -18,7 +19,7 @@
 
     <a class="skip-link" href="#konten">Lewati ke konten</a>
 
-    <div class="page">
+    <div class="page min-h-screen flex flex-col">
         {% block navbar %}
             {% include 'includes/navbar.html' %}
         {% endblock %}

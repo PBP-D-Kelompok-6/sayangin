@@ -10,14 +10,14 @@
 {% endblock %}
 
 {% block app_bar %}
-  <header class="app-bar app-bar--back only-mobile">
+  <header class="app-bar app-bar--back only-mobile flex md:hidden items-center">
     <a class="icon-btn" href="{% url 'main:show_main' %}" aria-label="Kembali">←</a>
     <span class="app-bar__label">Akun</span>
   </header>
 {% endblock %}
 
 {% block content %}
-  <main class="page__main container profile" id="konten">
+  <main class="page__main container profile flex-1 flex flex-col" id="konten">
     {% if messages %}
       {% for message in messages %}
         {% if 'error' in message.tags %}
@@ -31,23 +31,23 @@
       {% endfor %}
     {% endif %}
 
-    <h1 class="page-title only-desktop"><span class="eyebrow">Akun saya</span>Halo, <em>{{ first_name }}</em></h1>
+    <h1 class="page-title only-desktop hidden md:block"><span class="eyebrow">Akun saya</span>Halo, <em>{{ first_name }}</em></h1>
 
-    <div class="profile__grid">
-      <aside class="profile__summary">
+    <div class="profile__grid flex flex-col md:flex-row items-start">
+      <aside class="profile__summary w-full md:w-[300px] flex flex-col">
         <span class="avatar avatar--lg" aria-hidden="true"></span>
-        <div class="profile__who">
+        <div class="profile__who flex flex-col">
           <span class="serif profile__name">{{ profile.full_name|default:user.username }}</span>
           <span class="text-soft">@{{ user.username }} · {% if profile.role == 'LEMBAGA' %}Akun lembaga{% else %}Akun pribadi{% endif %}</span>
-          <span class="text-sm text-soft only-desktop">Bergabung sejak {{ user.date_joined|date:"F Y" }}</span>
+          <span class="text-sm text-soft only-desktop hidden md:inline">Bergabung sejak {{ user.date_joined|date:"F Y" }}</span>
         </div>
-        <a class="text-sm only-mobile" href="{% url 'main:edit_profile' %}">Ubah</a>
+        <a class="text-sm only-mobile md:hidden" href="{% url 'main:edit_profile' %}">Ubah</a>
         <div class="profile__stats">
           <span><b class="serif">410</b><span>poin dampak</span></span>
           <span><b class="serif">2</b><span>lencana</span></span>
           <span><b class="serif">24</b><span>barang di lemari</span></span>
         </div>
-        <nav class="only-desktop" aria-label="Pintasan akun">
+        <nav class="only-desktop hidden md:block" aria-label="Pintasan akun">
           <a class="list-row list-row--link" href="{% url 'main:show_main' %}#baru-masuk">
             <span class="spacer">Pesanan saya</span>
             <span class="text-sm text-muted">2 dalam pengiriman</span>
@@ -69,12 +69,35 @@
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
         </nav>
-        <a class="btn btn--danger btn--sm only-desktop" href="#keluar" data-dialog-open="keluar">
+        <nav class="only-desktop profile__help hidden md:block" aria-label="Bantuan dan kebijakan">
+          <h2 class="eyebrow">Bantuan &amp; kebijakan</h2>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#faq">
+            <span class="spacer">Pusat bantuan &amp; FAQ</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Hubungi kami</span>
+            <span class="text-sm text-muted">Balas &lt; 1 hari kerja</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Kebijakan privasi</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Syarat &amp; ketentuan</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </nav>
+        <a class="btn btn--danger btn--sm only-desktop hidden md:inline-flex" href="#keluar" data-dialog-open="keluar">
           <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Keluar
         </a>
       </aside>
 
-      <div class="profile__settings only-desktop">
+      <div class="profile__settings only-desktop hidden md:flex flex-1 flex-col">
         <section>
           <h2 class="eyebrow">Data diri</h2>
           <div class="list-row">
@@ -108,7 +131,7 @@
           <h2 class="eyebrow">Preferensi</h2>
           <div class="list-row">
             <span class="profile__key">Ukuran pakaian</span>
-            <span class="chips">
+            <span class="chips flex flex-wrap">
               <label><input class="visually-hidden" type="checkbox"><span class="chip">S</span></label>
               <label><input class="visually-hidden" type="checkbox" checked><span class="chip">M</span></label>
               <label><input class="visually-hidden" type="checkbox"><span class="chip">L</span></label>
@@ -116,7 +139,7 @@
           </div>
           <div class="list-row">
             <span class="profile__key">Kategori favorit</span>
-            <span class="chips">
+            <span class="chips flex flex-wrap">
               <label><input class="visually-hidden" type="checkbox" checked><span class="chip">Atasan</span></label>
               <label><input class="visually-hidden" type="checkbox" checked><span class="chip">Tas</span></label>
               <label><input class="visually-hidden" type="checkbox"><span class="chip">Buku</span></label>
@@ -149,7 +172,7 @@
         </section>
       </div>
 
-      <div class="profile__mobile only-mobile">
+      <div class="profile__mobile only-mobile flex md:hidden flex-col w-full">
         <section>
           <h2 class="eyebrow">Aktivitas</h2>
           <a class="list-row list-row--link" href="{% url 'main:show_main' %}#baru-masuk">
@@ -210,7 +233,31 @@
           </label>
         </section>
 
-        <a class="btn btn--danger btn--block" href="#keluar" data-dialog-open="keluar">
+        <section>
+          <h2 class="eyebrow">Bantuan &amp; kebijakan</h2>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#faq">
+            <span class="spacer">Pusat bantuan &amp; FAQ</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Hubungi kami</span>
+            <span class="text-sm text-muted">Balas &lt; 1 hari kerja</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Kebijakan privasi</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Syarat &amp; ketentuan</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </section>
+
+        <a class="btn btn--danger btn--block w-full" href="#keluar" data-dialog-open="keluar">
           <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Keluar
         </a>
         <a class="profile__delete text-sm text-muted" href="#">Hapus akun</a>

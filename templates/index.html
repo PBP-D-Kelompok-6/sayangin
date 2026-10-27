@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Barang lama, disayang lagi — Sayangin</title>
   {% include 'includes/fonts.html' %}
+  {% include 'includes/tailwind.html' %}
   <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
@@ -16,35 +17,35 @@
   {% include 'includes/svg_filters.html' %}
 
   <div class="landing">
-    <header class="landing-header">
+    <header class="landing-header flex items-center justify-between">
       <a class="logo" href="{% url 'main:show_main' %}">
-        <img class="only-desktop" src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">
-        <img class="only-mobile" src="{% static 'img/logo-light.svg' %}" alt="" width="35" height="35">
+        <img class="only-desktop hidden md:block" src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">
+        <img class="only-mobile md:hidden" src="{% static 'img/logo-light.svg' %}" alt="" width="35" height="35">
         sayangin
       </a>
-      <nav class="landing-nav only-desktop" aria-label="Utama">
+      <nav class="landing-nav only-desktop hidden md:flex items-center" aria-label="Utama">
         <a href="#baru-masuk">Marketplace</a>
         <a href="#lemari">Lemari Digital</a>
         <a href="#kebutuhan">Donasi</a>
         <a href="#dampak">Dampak</a>
       </nav>
-      <div class="row landing-header__actions">
-        <a class="icon-btn only-desktop" href="#baru-masuk" aria-label="Cari">
+      <div class="row landing-header__actions flex items-center">
+        <a class="icon-btn only-desktop hidden md:inline-flex" href="#baru-masuk" aria-label="Cari">
           <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
         </a>
         {% if user.is_authenticated %}
           {% if user.profile.role == 'LEMBAGA' %}
             <a class="header-link" href="{% url 'main:show_lembaga_profile' %}">Dashboard</a>
-            <a class="btn btn--primary only-desktop" href="{% url 'main:show_lembaga_profile' %}">Profil lembaga</a>
+            <a class="btn btn--primary only-desktop hidden md:inline-flex" href="{% url 'main:show_lembaga_profile' %}">Profil lembaga</a>
           {% else %}
             <a class="header-link" href="{% url 'main:show_profile' %}">Akun saya</a>
-            <a class="avatar only-desktop" href="{% url 'main:show_profile' %}" aria-label="Profil"></a>
+            <a class="avatar only-desktop hidden md:inline-block" href="{% url 'main:show_profile' %}" aria-label="Profil"></a>
           {% endif %}
         {% else %}
           <a class="header-link" href="{% url 'main:show_login' %}">Masuk</a>
-          <a class="btn btn--primary only-desktop" href="{% url 'main:show_register' %}">Mulai sekarang</a>
+          <a class="btn btn--primary only-desktop hidden md:inline-flex" href="{% url 'main:show_register' %}">Mulai sekarang</a>
         {% endif %}
-        <a class="icon-btn only-mobile" href="{% url 'main:show_menu' %}" aria-label="Buka menu">
+        <a class="icon-btn only-mobile md:hidden" href="{% url 'main:show_menu' %}" aria-label="Buka menu">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg>
         </a>
       </div>
@@ -53,29 +54,29 @@
     <main id="konten">
       <section class="hero">
         <h1 class="hero__wordmark">Sayangin</h1>
-        <div class="hero__decor only-desktop" aria-hidden="true">
+        <div class="hero__decor only-desktop hidden md:block" aria-hidden="true">
           <svg class="hero__ribbon" viewBox="0 0 420 320" aria-hidden="true"><path filter="url(#sgliq1)" fill="url(#sgbands)" d="M50 210C80 120 170 84 236 126S344 196 384 118C404 84 418 156 386 198S272 266 208 226S96 270 50 210Z"/></svg>
           <img class="hero__jacket cutout" src="{% static 'img/jaket-kulit-cut.png' %}" alt="">
           <img class="hero__glasses cutout" src="{% static 'img/kacamata-cut.png' %}" alt="">
           <span class="pearl hero__pearl"></span>
         </div>
-        <a class="hero__video only-desktop" href="#cara-kerja">
+        <a class="hero__video only-desktop hidden md:flex" href="#cara-kerja">
           <span class="hero__video-thumb">
             <span class="hero__play"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7l8 5-8 5z" fill="currentColor"/></svg></span>
           </span>
           <span><b>Tonton cara kerja</b><br><span class="eyebrow">01:00</span></span>
         </a>
-        <div class="hero__card only-desktop">
+        <div class="hero__card only-desktop hidden md:flex flex-col">
           <span class="row"><b>Jaket kulit</b><span class="spacer"></span><b>Rp280.000</b></span>
           <span class="text-sm text-soft">Bekas, terawat · L</span>
           <button class="icon-btn hero__add" type="button" aria-label="Tambah jaket kulit ke keranjang">+</button>
         </div>
-        <div class="hero__copy">
+        <div class="hero__copy flex flex-col">
           <p class="hero__lead">
-            <span class="only-desktop">Barang lama, <em>disayang</em> lagi. Jual, donasikan, atau simpan dengan sadar.</span>
-            <span class="only-mobile">Barang lama, <em>disayang</em> lagi.</span>
+            <span class="only-desktop hidden md:inline">Barang lama, <em>disayang</em> lagi. Jual, donasikan, atau simpan dengan sadar.</span>
+            <span class="only-mobile md:hidden">Barang lama, <em>disayang</em> lagi.</span>
           </p>
-          <div class="hero__ctas">
+          <div class="hero__ctas flex flex-col md:flex-row">
             <a class="btn btn--primary btn--lg" href="#baru-masuk">Jelajahi marketplace</a>
             {% if user.is_authenticated %}
               {% if user.profile.role == 'LEMBAGA' %}
@@ -90,19 +91,19 @@
         </div>
       </section>
 
-      <section class="statement container">
-        <span class="statement__label only-desktop"><span class="eyebrow">( 01 ) Tentang kami</span><span class="serif">Kenapa Sayangin</span></span>
-        <span class="eyebrow only-mobile">Cerita kami</span>
-        <div class="statement__stack">
-          <p class="statement__text only-desktop">Setiap barang di lemarimu punya <em>jalan pulang</em>: dipakai orang lain, diteruskan ke yang membutuhkan, atau disimpan dengan alasan.</p>
-          <h2 class="statement__text only-mobile">SETIAP BARANG<br><em>punya jalan</em><br>PULANG</h2>
-          <p class="only-mobile text-soft">Dipakai orang lain, diteruskan ke yang membutuhkan, atau disimpan dengan alasan.</p>
-          <a class="btn btn--dark only-desktop" href="#cara-kerja">Cara kerja →</a>
+      <section class="statement container grid grid-cols-1 md:grid-cols-2">
+        <span class="statement__label only-desktop hidden md:flex flex-col"><span class="eyebrow">( 01 ) Tentang kami</span><span class="serif">Kenapa Sayangin</span></span>
+        <span class="eyebrow only-mobile md:hidden">Cerita kami</span>
+        <div class="statement__stack flex flex-col">
+          <p class="statement__text only-desktop hidden md:block">Setiap barang di lemarimu punya <em>jalan pulang</em>: dipakai orang lain, diteruskan ke yang membutuhkan, atau disimpan dengan alasan.</p>
+          <h2 class="statement__text only-mobile md:hidden">SETIAP BARANG<br><em>punya jalan</em><br>PULANG</h2>
+          <p class="only-mobile md:hidden text-soft">Dipakai orang lain, diteruskan ke yang membutuhkan, atau disimpan dengan alasan.</p>
+          <a class="btn btn--dark only-desktop hidden md:inline-flex" href="#cara-kerja">Cara kerja →</a>
         </div>
       </section>
 
-      <section class="phases container only-mobile" id="cara-kerja">
-        <div class="phases__tabs" role="tablist" aria-label="Cara kerja">
+      <section class="phases container only-mobile flex md:hidden flex-col" id="cara-kerja">
+        <div class="phases__tabs grid grid-cols-3" role="tablist" aria-label="Cara kerja">
           <a class="btn btn--dark" role="tab" aria-selected="true" href="#cara-kerja" data-phase-tab="0">1 · Catat</a>
           <a class="btn btn--outline" role="tab" aria-selected="false" href="#cara-kerja" data-phase-tab="1">2 · Pilih</a>
           <a class="btn btn--outline" role="tab" aria-selected="false" href="#cara-kerja" data-phase-tab="2">3 · Salurkan</a>
@@ -111,28 +112,28 @@
         <p class="text-soft" data-phase-text>Foto barangmu dan masukkan ke Lemari Digital. Satu menit per barang.</p>
       </section>
 
-      <section class="cats container only-desktop" aria-label="Kategori">
-        <a class="cat" href="#baru-masuk">
-          <span class="cat__label"><span>( atasan )</span><span aria-hidden="true">↗</span></span>
+      <section class="cats container only-desktop hidden md:grid grid-cols-4" aria-label="Kategori">
+        <a class="cat flex flex-col" href="#baru-masuk">
+          <span class="cat__label flex justify-between"><span>( atasan )</span><span aria-hidden="true">↗</span></span>
           <span class="cat__img cat__img--atasan" role="img" aria-label="atasan"></span>
         </a>
-        <a class="cat" href="#baru-masuk">
-          <span class="cat__label"><span>( celana )</span><span aria-hidden="true">↗</span></span>
+        <a class="cat flex flex-col" href="#baru-masuk">
+          <span class="cat__label flex justify-between"><span>( celana )</span><span aria-hidden="true">↗</span></span>
           <span class="cat__img cat__img--celana" role="img" aria-label="celana"></span>
         </a>
-        <a class="cat" href="#baru-masuk">
-          <span class="cat__label"><span>( sepatu )</span><span aria-hidden="true">↗</span></span>
+        <a class="cat flex flex-col" href="#baru-masuk">
+          <span class="cat__label flex justify-between"><span>( sepatu )</span><span aria-hidden="true">↗</span></span>
           <span class="cat__img cat__img--sepatu" role="img" aria-label="sepatu"></span>
         </a>
-        <a class="cat" href="#baru-masuk">
-          <span class="cat__label"><span>( tas )</span><span aria-hidden="true">↗</span></span>
+        <a class="cat flex flex-col" href="#baru-masuk">
+          <span class="cat__label flex justify-between"><span>( tas )</span><span aria-hidden="true">↗</span></span>
           <span class="cat__img cat__img--tas" role="img" aria-label="tas"></span>
         </a>
       </section>
 
       <section class="newin" id="baru-masuk">
-        <div class="newin__head container"><h2 class="section-title">Baru <em>masuk</em></h2><a href="#baru-masuk">Lihat semua</a></div>
-        <div class="newin__feature only-desktop">
+        <div class="newin__head container flex justify-between items-baseline"><h2 class="section-title">Baru <em>masuk</em></h2><a href="#baru-masuk">Lihat semua</a></div>
+        <div class="newin__feature only-desktop hidden md:grid grid-cols-2">
           <div class="newin__photo">
             <span><span class="serif newin__photo-title">Koleksi <em>kemeja putih</em></span><br>Atasan &amp; blus preloved</span>
           </div>
@@ -142,37 +143,37 @@
             <svg class="newin__pebble" viewBox="0 0 420 320" aria-hidden="true"><path filter="url(#sgliq3)" fill="url(#sgbands)" d="M120 160c0-40 40-70 90-70s92 26 92 70-44 72-96 72-86-30-86-72z"/></svg>
           </div>
         </div>
-        <div class="tiles">
-          <a class="tile" href="#baru-masuk">
-            <span class="tile__meta"><span class="tile__name">Blus organza</span><span class="tile__price">Rp145.000</span></span>
+        <div class="tiles grid grid-cols-2 md:grid-cols-4">
+          <a class="tile flex" href="#baru-masuk">
+            <span class="tile__meta flex"><span class="tile__name">Blus organza</span><span class="tile__price">Rp145.000</span></span>
             <span class="tile__img tile__img--blus-organza" role="img" aria-label="Blus organza"></span>
           </a>
-          <a class="tile" href="#baru-masuk">
-            <span class="tile__meta"><span class="tile__name">Rok tulle</span><span class="tile__price">Rp165.000</span></span>
+          <a class="tile flex" href="#baru-masuk">
+            <span class="tile__meta flex"><span class="tile__name">Rok tulle</span><span class="tile__price">Rp165.000</span></span>
             <span class="tile__img tile__img--rok-tulle" role="img" aria-label="Rok tulle"></span>
           </a>
-          <a class="tile" href="#baru-masuk">
-            <span class="tile__meta"><span class="tile__name">Sweter bintang</span><span class="tile__price">Rp185.000</span></span>
+          <a class="tile flex" href="#baru-masuk">
+            <span class="tile__meta flex"><span class="tile__name">Sweter bintang</span><span class="tile__price">Rp185.000</span></span>
             <span class="tile__img tile__img--sweter-bintang" role="img" aria-label="Sweter bintang"></span>
           </a>
-          <a class="tile" href="#baru-masuk">
-            <span class="tile__meta"><span class="tile__name">Tas mesh</span><span class="tile__price">Rp120.000</span></span>
+          <a class="tile flex" href="#baru-masuk">
+            <span class="tile__meta flex"><span class="tile__name">Tas mesh</span><span class="tile__price">Rp120.000</span></span>
             <span class="tile__img tile__img--tas-mesh" role="img" aria-label="Tas mesh"></span>
           </a>
         </div>
       </section>
 
       <section class="band dark-panel" id="lemari">
-        <div class="band__art band__art--small only-desktop">
+        <div class="band__art band__art--small only-desktop hidden md:block">
           <svg class="caustics" viewBox="0 0 420 320" preserveAspectRatio="none" aria-hidden="true"><rect width="420" height="320" filter="url(#sgcaus)"/></svg>
           <img class="cutout" src="{% static 'img/headphone-kulit-cut.png' %}" alt="Headphone kulit">
           <svg class="band__pebble" viewBox="0 0 420 320" aria-hidden="true"><path filter="url(#sgliq3)" fill="url(#sgbands)" d="M120 160c0-40 40-70 90-70s92 26 92 70-44 72-96 72-86-30-86-72z"/></svg>
         </div>
-        <div class="band__copy">
+        <div class="band__copy flex flex-col">
           <span class="eyebrow">Lemari Digital</span>
-          <h2 class="band__title"><span class="only-desktop">Diingatkan <em>sebelum</em> terlupakan.</span><span class="only-mobile">DIINGATKAN<br><em>sebelum</em><br>TERLUPAKAN</span></h2>
-          <p class="band__text only-desktop">Catat barangmu. Saat lama tak dipakai, kami tanya: jual, donasi, atau simpan?</p>
-          <a class="btn btn--on-dark only-desktop" href="{% if user.is_authenticated %}{% url 'main:show_profile' %}{% else %}{% url 'main:show_register' %}{% endif %}">Buka lemari →</a>
+          <h2 class="band__title"><span class="only-desktop hidden md:inline">Diingatkan <em>sebelum</em> terlupakan.</span><span class="only-mobile md:hidden">DIINGATKAN<br><em>sebelum</em><br>TERLUPAKAN</span></h2>
+          <p class="band__text only-desktop hidden md:block">Catat barangmu. Saat lama tak dipakai, kami tanya: jual, donasi, atau simpan?</p>
+          <a class="btn btn--on-dark only-desktop hidden md:inline-flex" href="{% if user.is_authenticated %}{% url 'main:show_profile' %}{% else %}{% url 'main:show_register' %}{% endif %}">Buka lemari →</a>
         </div>
         <div class="band__art band__art--big">
           <svg class="caustics" viewBox="0 0 420 320" preserveAspectRatio="none" aria-hidden="true"><rect width="420" height="320" filter="url(#sgcaus)"/></svg>
@@ -180,36 +181,36 @@
           <img class="cutout band__jacket" src="{% static 'img/jaket-track-zaitun-cut.png' %}" alt="Jaket track suede zaitun">
           <img class="cutout band__jeans" src="{% static 'img/jeans-lukis-cut.png' %}" alt="Jeans lukis hitam">
         </div>
-        <p class="band__text only-mobile">Saat barang lama tak dipakai, kami tanya: jual, donasi, atau simpan?</p>
-        <a class="btn btn--on-dark only-mobile" href="{% if user.is_authenticated %}{% url 'main:show_profile' %}{% else %}{% url 'main:show_register' %}{% endif %}">Buka lemari</a>
+        <p class="band__text only-mobile md:hidden">Saat barang lama tak dipakai, kami tanya: jual, donasi, atau simpan?</p>
+        <a class="btn btn--on-dark only-mobile md:hidden" href="{% if user.is_authenticated %}{% url 'main:show_profile' %}{% else %}{% url 'main:show_register' %}{% endif %}">Buka lemari</a>
       </section>
 
-      <section class="impact container" id="dampak">
+      <section class="impact container flex flex-col items-center" id="dampak">
         <span class="eyebrow">Dampak bersama</span>
-        <div class="impact__numbers">
-          <div class="impact__item"><span class="impact__value">1.240</span><span>barang terselamatkan</span></div>
+        <div class="impact__numbers flex flex-col md:flex-row items-center">
+          <div class="impact__item flex flex-col items-center"><span class="impact__value">1.240</span><span>barang terselamatkan</span></div>
           <span class="impact__divider" aria-hidden="true"></span>
-          <div class="impact__item"><span class="impact__value">480</span><span>donasi tersalurkan</span></div>
+          <div class="impact__item flex flex-col items-center"><span class="impact__value">480</span><span>donasi tersalurkan</span></div>
         </div>
         <a class="btn btn--outline" href="#dampak">Lihat dampak →</a>
       </section>
 
-      <section class="needs container" id="kebutuhan">
+      <section class="needs container flex flex-col" id="kebutuhan">
         <h2 class="needs__title">KEBUTUHAN</h2>
-        <img class="cutout needs__left only-desktop" src="{% static 'img/henley-sage-cut.png' %}" alt="">
-        <img class="cutout needs__right only-desktop" src="{% static 'img/baret-navy-cut.png' %}" alt="">
-        <p class="needs__intro only-desktop">Lembaga mitra memasang barang yang benar-benar mereka butuhkan.</p>
-        <div class="needs__list">
-          <a class="need" href="#kebutuhan"><span class="need__item">Selimut &amp; kursi roda</span><span class="need__place">Panti Werdha Kasih Bunda</span><span class="need__count">1 / 5</span><span aria-hidden="true">↗</span></a>
-          <a class="need" href="#kebutuhan"><span class="need__item">15 sweter anak</span><span class="need__place">Panti Asuhan Harapan</span><span class="need__count">8 / 15</span><span aria-hidden="true">↗</span></a>
-          <a class="need" href="#kebutuhan"><span class="need__item">40 buku cerita anak</span><span class="need__place">SD Negeri 04 Depok</span><span class="need__count">15 / 40</span><span aria-hidden="true">↗</span></a>
-          <a class="need" href="#kebutuhan"><span class="need__item">Sepatu sekolah</span><span class="need__place">Sekolah Bisa Mandiri</span><span class="need__count">0 / 20</span><span aria-hidden="true">↗</span></a>
-          <a class="need" href="#kebutuhan"><span class="need__item">Peralatan dapur</span><span class="need__place">Komunitas Dapur Bersama</span><span class="need__count">3 / 10</span><span aria-hidden="true">↗</span></a>
+        <img class="cutout needs__left only-desktop hidden md:block" src="{% static 'img/henley-sage-cut.png' %}" alt="">
+        <img class="cutout needs__right only-desktop hidden md:block" src="{% static 'img/baret-navy-cut.png' %}" alt="">
+        <p class="needs__intro only-desktop hidden md:block">Lembaga mitra memasang barang yang benar-benar mereka butuhkan.</p>
+        <div class="needs__list flex flex-col">
+          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">Selimut &amp; kursi roda</span><span class="need__place">Panti Werdha Kasih Bunda</span><span class="need__count">1 / 5</span><span aria-hidden="true">↗</span></a>
+          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">15 sweter anak</span><span class="need__place">Panti Asuhan Harapan</span><span class="need__count">8 / 15</span><span aria-hidden="true">↗</span></a>
+          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">40 buku cerita anak</span><span class="need__place">SD Negeri 04 Depok</span><span class="need__count">15 / 40</span><span aria-hidden="true">↗</span></a>
+          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">Sepatu sekolah</span><span class="need__place">Sekolah Bisa Mandiri</span><span class="need__count">0 / 20</span><span aria-hidden="true">↗</span></a>
+          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">Peralatan dapur</span><span class="need__place">Komunitas Dapur Bersama</span><span class="need__count">3 / 10</span><span aria-hidden="true">↗</span></a>
         </div>
-        <a class="btn btn--outline needs__all only-desktop" href="#kebutuhan">Lihat semua</a>
+        <a class="btn btn--outline needs__all only-desktop hidden md:inline-flex" href="#kebutuhan">Lihat semua</a>
       </section>
 
-      <section class="choices container only-desktop" id="pilihan">
+      <section class="choices container only-desktop hidden md:flex flex-col items-center" id="pilihan">
         <span class="eyebrow">Satu barang, empat pilihan</span>
         <span class="choices__word" data-choice-word="jual" data-choice-img="{% static 'img/jaket-kulit.jpg' %}" data-choice-desc="Tayangkan langsung dari Lemari Digital ke marketplace tanpa membuat akun toko terpisah.">JUAL</span>
         <span class="choices__word is-active" data-choice-word="donasi" data-choice-img="{% static 'img/heels-chrome.jpg' %}" data-choice-desc="Pilih satu kata untuk melihat penjelasannya. Gambar di sampingnya ikut berganti.">DONASI</span>
@@ -219,15 +220,15 @@
         <p class="text-soft" data-choice-caption>Pilih satu kata untuk melihat penjelasannya. Gambar di sampingnya ikut berganti.</p>
       </section>
 
-      <section class="faq container" id="faq">
+      <section class="faq container grid grid-cols-1 md:grid-cols-2" id="faq">
         <div>
           <h2 class="section-title">Pertanyaan umum</h2>
-          <details class="faq__item" open><summary>Bagaimana kondisi barang dijamin?</summary><p>Penjual wajib memilih kondisi dan menambahkan foto cacat. Pembeli bisa mengulas setelah barang diterima.</p></details>
+          <details class="faq__item" open><summary>Bagaimana kondisi barang dijamin?</summary><p>Penjual wajib memilih kondisi dan menambahkan foto cacat. Kalau barang tidak sesuai, ajukan masalah dari halaman Lacak pesanan.</p></details>
           <details class="faq__item"><summary>Apakah donasi benar-benar sampai?</summary><p>Lembaga mitra mengonfirmasi setiap barang yang diterima, dan statusnya bisa kamu lacak.</p></details>
           <details class="faq__item"><summary>Apa itu Tunda Beli?</summary><p>Daftar tunggu untuk barang baru yang ingin kamu beli. Selama masa tunggu, kami carikan versi preloved-nya.</p></details>
           <details class="faq__item"><summary>Bagaimana lembaga bisa bergabung?</summary><p>Daftar sebagai lembaga mitra dan unggah akta atau surat izin. Tim kami memverifikasi dalam 2 hari kerja.</p></details>
         </div>
-        <div class="faq__art only-desktop">
+        <div class="faq__art only-desktop hidden md:block">
           <span class="ripple" aria-hidden="true"></span>
           <img class="cutout" src="{% static 'img/loafer-marun-cut.png' %}" alt="Loafer kulit marun">
         </div>

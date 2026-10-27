@@ -5,7 +5,8 @@
 /* ---------- Kerangka onboarding ---------- */
 .onboard { min-height: 100vh; display: flex; flex-direction: column; }
 .onboard--split { flex-direction: row; }
-.onboard__header { height: 64px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; border-bottom: 1px solid var(--color-border); }
+.onboard__header { height: var(--header-h); flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--gutter); }
+.onboard__header .logo { font-size: 30px; gap: 10px; letter-spacing: -0.01em; }
 .onboard__spacer { width: 80px; }
 .onboard__body { flex: 1; display: flex; min-height: 0; }
 

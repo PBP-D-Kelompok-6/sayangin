@@ -9,6 +9,8 @@
 .profile__grid { display: flex; gap: 72px; align-items: flex-start; }
 .profile__summary { width: 300px; flex: none; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .profile__summary nav { align-self: stretch; }
+.profile__help { padding-top: 8px; }
+.profile__help .eyebrow { padding-bottom: 4px; }
 .profile__who { display: flex; flex-direction: column; gap: 4px; }
 .profile__name { font-size: 30px; line-height: 1.05; }
 .profile__stats { align-self: stretch; display: flex; gap: 22px; padding: 14px 0; border-block: 1px solid var(--color-border); }

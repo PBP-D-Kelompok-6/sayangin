@@ -84,7 +84,7 @@
   closeBtn?.addEventListener('click', () => setDrawer(false));
   drawer?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setDrawer(false)));
 
-  /* ---------- A7 · Konfirmasi keluar (#keluar overlay / <dialog>) ---------- */
+  /* ---------- Konfirmasi keluar (#keluar overlay / <dialog>) ---------- */
   const keluarOverlay = document.getElementById('keluar');
   const closeKeluar = () => {
     if (!keluarOverlay) return;
