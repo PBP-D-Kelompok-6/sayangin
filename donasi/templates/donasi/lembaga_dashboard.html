@@ -24,7 +24,7 @@
     </section>
     <section>
       <div class="section-head"><h2 class="section-title">Kebutuhan <em>aktif</em></h2><a class="text-sm" href="{% url 'donasi:kebutuhan_list' %}">Kelola</a></div>
-      {% for k in kebutuhan_aktif %}{% include "donasi/_need_row.html" %}{% empty %}<p class="text-soft">Belum ada kebutuhan aktif. <a href="{% url 'donasi:kebutuhan_buat' %}">Buat yang pertama</a>.</p>{% endfor %}
+      {% for k in kebutuhan_aktif %}{% include "donasi/_need_row.html" with tanpa_aksi=True %}{% empty %}<p class="text-soft">Belum ada kebutuhan aktif. <a href="{% url 'donasi:kebutuhan_buat' %}">Buat yang pertama</a>.</p>{% endfor %}
     </section>
   </div>
 </main>
