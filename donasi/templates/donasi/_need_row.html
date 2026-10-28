@@ -1,0 +1,9 @@
+<div class="need-row" id="need-{{ k.pk }}">
+  <div class="row"><b class="spacer">{{ k.nama_barang }}</b><span class="mono">{{ k.terpenuhi }} / {{ k.jumlah }}</span></div>
+  <div class="progress progress--thin" style="--value: {{ k.persen }}%"><span></span></div>
+  <span class="text-sm text-soft">{% if k.tenggat %}Tenggat {{ k.tenggat|date:"j M" }} · {% endif %}{{ k.get_status_display }}</span>
+  <span class="need-row__actions">
+    <a class="btn btn--outline btn--sm" href="{% url 'donasi:kebutuhan_ubah' k.pk %}">Ubah</a>
+    <button class="btn btn--outline btn--sm" type="button" hx-delete="{% url 'donasi:kebutuhan_hapus' k.pk %}" hx-target="#need-{{ k.pk }}" hx-swap="outerHTML" hx-confirm="Hapus kebutuhan {{ k.nama_barang }}?">Hapus</button>
+  </span>
+</div>

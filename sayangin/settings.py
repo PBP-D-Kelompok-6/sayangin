@@ -50,8 +50,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main'
+    'main',
+    'donasi',
 ]
+
+LOGIN_URL = '/login/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

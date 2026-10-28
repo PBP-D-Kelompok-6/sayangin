@@ -1,0 +1,25 @@
+{% extends "donasi/base_donasi.html" %}
+{% load static %}
+{% block title %}Kelola kebutuhan — Sayangin{% endblock %}
+{% block page_class %} has-bottom-nav{% endblock %}
+{% block header %}
+{% include "donasi/_header_lembaga.html" with aktif="kebutuhan" %}
+<header class="app-bar only-mobile"><a class="icon-btn" href="{% url 'donasi:dashboard_lembaga' %}" aria-label="Kembali">←</a><span class="app-bar__label">Kebutuhan</span><a href="{% url 'donasi:kebutuhan_buat' %}">+ Baru</a></header>
+{% endblock %}
+{% block content %}
+<main class="page__main container org-dash" id="konten">
+  <div class="org-dash__head">
+    <h1 class="page-title"><span class="eyebrow">Mitra · kebutuhan</span>Kelola <em>kebutuhan</em></h1>
+    <a class="btn btn--primary" href="{% url 'donasi:kebutuhan_buat' %}">+ Buat kebutuhan</a>
+  </div>
+  <form hx-get="{% url 'donasi:kebutuhan_list' %}" hx-trigger="input delay:300ms" hx-target="#need-rows" hx-indicator="#cari-indikator" class="form-row">
+    <label class="field"><span class="field__label">Cari</span><input class="input" type="search" name="q" value="{{ q }}" placeholder="Cari kebutuhan…"></label>
+    <label class="field"><span class="field__label">Status</span>
+      <select class="select" name="status"><option value="">Semua</option>{% for nilai, label in opsi_status %}<option value="{{ nilai }}"{% if status == nilai %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    </label>
+  </form>
+  <span id="cari-indikator" class="htmx-indicator text-sm text-soft">Mencari…</span>
+  <section id="need-rows">{% include "donasi/_need_rows.html" %}</section>
+</main>
+{% endblock %}
+{% block bottom_nav %}{% include "donasi/_bottom_nav_lembaga.html" with aktif="kebutuhan" %}{% endblock %}

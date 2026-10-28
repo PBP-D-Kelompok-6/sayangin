@@ -1,82 +1,83 @@
 /* ==========================================================
-   Sayangin — Design Tokens
-   Sumber: color palette & text styles milik tim Sayangin.
-   Nilai hex adalah perkiraan dari swatch; sesuaikan bila
-   nilai asli di Figma berbeda (cukup ubah di sini).
+   Sayangin — Design Tokens (redesign)
+   Nama variabel sama dengan static/css/tokens.css milik tim,
+   nilainya mengikuti desain baru di canvas & Figma.
    ========================================================== */
 
 :root {
   /* ---------- Raw palette ---------- */
-  --coffee-bean:    #2B1216;
-  --cedar:          #3E1F17;
-  --cowboy:         #4D2A2D;
-  --night-bordeaux: #5E1C24;
-  --dark-burgundy:  #720B10;
-  --vesuvius:       #A8430C;
-  --burnt-sienna:   #EC8661;
-  --mondo:          #44432A;
-  --hemlock:        #5D5B3A;
-  --ferra:          #6F4E50;
+  --ink:          #1A1210;   /* teks utama, tombol gelap */
+  --ink-soft:     #4A3F3B;   /* teks sekunder */
+  --ink-muted:    #6E625E;   /* label, keterangan */
+  --maroon:       #6B1420;   /* aksen: kata miring, nav aktif, error */
+  --maroon-glow:  #7A1E2A;
+  --chocolate:    #3E2723;
+  --night:        #120B09;   /* section gelap */
+  --night-footer: #1E1411;
 
-  /* Netral hangat (turunan untuk background & kartu) */
-  --cream-50:  #FCF7EE;
-  --cream-100: #F7EFE1;
-  --cream-200: #EFE3CF;
-  --sand-300:  #E3D3B6;
-  --sand-400:  #CDB997;
+  --paper:        #FAFAF8;   /* latar halaman */
+  --white:        #FFFFFF;
+  --grey-50:      #F6F5F3;   /* baris pilihan */
+  --grey-100:     #F1F1EF;   /* panel info, ringkasan error */
+  --grey-150:     #EFEDEB;   /* baris terpilih */
+  --grey-200:     #D9D5D2;
+  --photo-bg:     #F3F1EF;   /* latar foto produk (multiply) */
 
-  /* Warna placeholder foto (dari mockup hi-fi) */
-  --tint-wheat: #EBDDBB;
-  --tint-mint:  #DDE9E0;
-  --tint-straw: #E4D4B0;
-  --tint-stone: #D8D2B9;
-  --tint-blush: #F1D9CC;
-  --tint-sage:  #D5D9C2;
+  --on-dark:       #F4EEEB;
+  --on-dark-muted: #CFC3BE;
 
   /* ---------- Semantic tokens ---------- */
-  --color-primary:         var(--dark-burgundy);
-  --color-primary-hover:   var(--night-bordeaux);
-  --color-on-primary:      var(--cream-50);
-  --color-secondary:       var(--mondo);
-  --color-secondary-hover: var(--hemlock);
-  --color-on-secondary:    var(--cream-100);
-  --color-accent:          var(--burnt-sienna);
-  --color-accent-strong:   var(--vesuvius);
+  --color-primary:       var(--ink);
+  --color-primary-hover: #2B1F1C;
+  --color-on-primary:    var(--white);
+  --color-accent:        var(--maroon);
 
-  --color-bg:         var(--cream-50);
-  --color-surface:    #FFFDF8;
-  --color-surface-2:  var(--cream-100);
-  --color-text:       var(--coffee-bean);
-  --color-text-muted: var(--ferra);
-  --color-border:     var(--cream-200);
-  --color-border-strong: var(--sand-400);
+  --color-bg:         var(--paper);
+  --color-surface:    var(--white);
+  --color-surface-2:  var(--grey-100);
+  --color-selected:   var(--grey-150);
+  --color-text:       var(--ink);
+  --color-text-soft:  var(--ink-soft);
+  --color-text-muted: var(--ink-muted);
+  --color-border:     rgba(26, 18, 16, 0.12);
+  --color-border-strong: rgba(26, 18, 16, 0.25);
+  --color-input-border:  rgba(26, 18, 16, 0.18);
 
-  --color-success:    #4F6B3A;
-  --color-success-bg: #E6EBD9;
-  --color-error:      #B3261E;
-  --color-error-bg:   #F7E1DC;
-  --color-focus:      var(--vesuvius);
+  --color-error:      var(--maroon);
+  --color-error-bg:   var(--grey-100);   /* tidak pakai pink: ringkasan error abu + ikon */
+  --color-success:    var(--ink);
+  --color-focus:      var(--maroon);
+
+  /* Tombol utama = perak (chrome) */
+  --silver: linear-gradient(180deg, #FFFFFF 0%, #F3F4F5 30%, #E4E6E8 62%, #D9DBDE 85%, #EEEFF1 100%);
+  --silver-shadow: inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 1px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.08);
+  --silver-border: rgba(0, 0, 0, 0.14);
+
+  /* Gradasi teks besar */
+  --wordmark-light: linear-gradient(180deg, #E9E3E0 0%, #B9ACA6 38%, #7C6A64 72%, #4A2E28 100%);
+  --wordmark-dark:  linear-gradient(180deg, #F4EFEC 0%, #A8998F 50%, #4A2E28 100%);
+  --number-chrome:  linear-gradient(100deg, #2A1512 0%, #6B1420 24%, #D9C6BE 40%, #7A2A33 50%, #2B1A16 68%, #A88A82 84%, #3A201B 100%);
+  --dark-glow: radial-gradient(70% 60% at 85% 10%, rgba(122,30,42,0.6), rgba(122,30,42,0) 70%), var(--night);
+  --avatar: radial-gradient(circle at 34% 28%, #FFFFFF 0 6%, rgba(255,255,255,0) 26%), conic-gradient(from 160deg, #3A221C, #D8C6BF, #7A1E2A, #F4ECE8, #4E2E26, #B7A39B, #3A221C);
 
   /* ---------- Typography ---------- */
-  --font-display: "Libre Caslon Display", "Libre Caslon Text", Georgia, serif;
-  --font-serif:   "Libre Caslon Text", Georgia, serif;
-  --font-sans:    "Hanken Grotesk", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-brand:   "Bricolage Grotesque", var(--font-sans);
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-serif:   "Instrument Serif", Georgia, serif;
+  --font-sans:    "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, monospace;
 
-  /* Skala tipe (fluid: mobile → desktop) */
-  --text-xs:   0.75rem;                              /* 12 */
-  --text-sm:   0.875rem;                             /* 14 */
-  --text-base: 1rem;                                 /* 16 */
-  --text-lg:   1.125rem;                             /* 18 */
-  --text-xl:   clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
-  --text-2xl:  clamp(1.5rem, 1.25rem + 1vw, 2rem);
-  --text-3xl:  clamp(2rem, 1.5rem + 2vw, 3rem);
-  --text-hero: clamp(2.25rem, 1.4rem + 3.4vw, 4rem);
+  --text-xs:   0.6875rem;   /* 11 — eyebrow mono */
+  --text-sm:   0.8125rem;   /* 13 */
+  --text-base: 0.875rem;    /* 14 */
+  --text-md:   1rem;        /* 16 */
+  --text-xl:   clamp(1.5rem, 1.2rem + 1vw, 1.875rem);   /* 24 → 30 */
+  --text-2xl:  clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);  /* 28 → 40 */
+  --text-3xl:  clamp(2.125rem, 1.4rem + 2.6vw, 2.75rem);/* 34 → 44 */
+  --text-hero: clamp(4.25rem, 1rem + 15vw, 17.5rem);    /* 68 → 280 */
 
-  --leading-tight: 1.1;
-  --leading-snug:  1.3;
-  --leading-body:  1.6;
-
+  --leading-tight: 1;
+  --leading-snug:  1.1;
+  --leading-body:  1.55;
   --tracking-label: 0.14em;
 
   /* ---------- Spacing (basis 4px) ---------- */
@@ -92,33 +93,37 @@
   --space-16: 4rem;
   --space-20: 5rem;
 
-  --section-gap: clamp(3rem, 2rem + 4vw, 5.5rem);
-  --gutter: clamp(1rem, 0.5rem + 2.5vw, 3rem);
+  --gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
   --container: 1280px;
 
   /* ---------- Shape ---------- */
-  --radius-sm: 2px;   /* tombol, input — mengikuti mockup yang tegas */
-  --radius-md: 4px;   /* kartu */
-  --radius-lg: 8px;   /* panel besar */
-  --radius-pill: 999px;
-
-  --border-width: 1px;
+  --radius-sm: 8px;     /* input */
+  --radius-md: 10px;    /* baris pilihan, foto kecil */
+  --radius-lg: 14px;    /* foto besar, dropzone */
+  --radius-xl: 24px;    /* panel hero */
+  --radius-pill: 999px; /* SEMUA tombol & chip */
 
   /* ---------- Elevation ---------- */
-  --shadow-sm: 0 1px 2px rgba(43, 18, 22, 0.06);
-  --shadow-md: 0 8px 24px -12px rgba(43, 18, 22, 0.22);
-  --shadow-lg: 0 20px 48px -20px rgba(43, 18, 22, 0.35);
+  --shadow-photo: 0 22px 26px rgba(26, 18, 16, 0.22);
+  --shadow-toast: 0 12px 30px rgba(18, 11, 9, 0.25);
+  --shadow-dialog: 0 30px 80px rgba(18, 11, 9, 0.35);
 
   /* ---------- Motion ---------- */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
   --duration-fast: 150ms;
   --duration: 250ms;
 
-  /* ---------- Layout ---------- */
-  --header-h: 64px;
-  --control-h: 48px;
+  /* ---------- Control sizes (8 Golden Rules: konsisten) ---------- */
+  --btn-sm: 36px;   /* aksi di dalam list / kartu */
+  --btn-md: 40px;   /* header, tengah halaman */
+  --btn-lg: 48px;   /* aksi utama di bawah halaman (mobile 50px) */
+  --chip-h: 32px;
+  --control-h: 44px;
+  --header-h: 80px;
+  --app-bar-h: 56px;
+  --bottom-nav-h: 64px;
 }
 
-@media (min-width: 1024px) {
-  :root { --control-h: 44px; }
+@media (max-width: 767px) {
+  :root { --btn-lg: 50px; --control-h: 48px; }
 }

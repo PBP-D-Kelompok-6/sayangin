@@ -1,0 +1,60 @@
+{% extends "donasi/base_donasi.html" %}
+{% load static %}
+{% block title %}{% if kebutuhan %}Ubah{% else %}Buat{% endif %} kebutuhan — Sayangin{% endblock %}
+{% block header %}
+{% include "donasi/_header_lembaga.html" with aktif="kebutuhan" %}
+<header class="app-bar only-mobile"><a class="icon-btn" href="{% url 'donasi:dashboard_lembaga' %}" aria-label="Tutup">✕</a><span class="app-bar__label">{% if kebutuhan %}Ubah kebutuhan{% else %}Kebutuhan baru{% endif %}</span><a href="#pratinjau">Pratinjau</a></header>
+{% endblock %}
+{% block content %}
+<main class="page__main container new-need" id="konten">
+  <form class="stack new-need__form" style="--stack-gap: 16px" method="post" novalidate
+        hx-post="{% url 'donasi:kebutuhan_pratinjau' %}" hx-trigger="input delay:400ms" hx-target="#preview-card" hx-swap="innerHTML">
+    {% csrf_token %}
+    <h1 class="page-title only-desktop"><span class="eyebrow">Mitra · kebutuhan</span>{% if kebutuhan %}Ubah <em>kebutuhan</em>{% else %}Buat kebutuhan <em>baru</em>{% endif %}</h1>
+    {% if form.errors %}<div class="alert" role="alert"><b>!</b> Ada isian yang perlu diperbaiki.</div>{% endif %}
+
+    <label class="field"><span class="field__label">Barang yang dibutuhkan</span>{{ form.nama_barang }}{% for e in form.nama_barang.errors %}<span class="field__error">{{ e }}</span>{% endfor %}</label>
+
+    <div class="form-row form-row--2-1">
+      <label class="field"><span class="field__label">Kategori</span>{{ form.kategori }}</label>
+      <div class="field"><span class="field__label" id="jml">Jumlah</span>
+        <span class="stepper" role="group" aria-labelledby="jml">
+          <button type="button" aria-label="Kurangi" onclick="var i=this.parentNode.querySelector('input');i.stepDown();i.dispatchEvent(new Event('input',{bubbles:true}))">−</button>
+          {{ form.jumlah }}
+          <button type="button" aria-label="Tambah" onclick="var i=this.parentNode.querySelector('input');i.stepUp();i.dispatchEvent(new Event('input',{bubbles:true}))">+</button>
+        </span>
+        {% for e in form.jumlah.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+      </div>
+    </div>
+
+    <fieldset class="field"><legend class="field__label">Ukuran <span class="text-muted only-desktop">(boleh lebih dari satu)</span></legend>
+      <div class="chips">
+        {% for opt in form.ukuran %}<label><input class="visually-hidden" type="checkbox" name="{{ opt.data.name }}" value="{{ opt.data.value }}"{% if opt.data.selected %} checked{% endif %}><span class="chip chip--lg">{{ opt.choice_label }}</span></label>{% endfor %}
+      </div>
+    </fieldset>
+
+    <fieldset class="field"><legend class="field__label">Kondisi minimal</legend>
+      <div class="chips">
+        {% for opt in form.kondisi_min %}<label><input class="visually-hidden" type="radio" name="{{ opt.data.name }}" value="{{ opt.data.value }}"{% if opt.data.selected %} checked{% endif %}><span class="chip chip--lg">{{ opt.choice_label }}</span></label>{% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="form-row">
+      <label class="field"><span class="field__label">Tenggat</span>{{ form.tenggat }}{% for e in form.tenggat.errors %}<span class="field__error">{{ e }}</span>{% endfor %}</label>
+      <label class="field"><span class="field__label">Foto <span class="text-muted">(tautan, opsional)</span></span>{{ form.foto_url }}{% for e in form.foto_url.errors %}<span class="field__error">{{ e }}</span>{% endfor %}</label>
+    </div>
+
+    <label class="field"><span class="field__label">Cerita singkat untuk donatur</span>{{ form.cerita }}<span class="field__hint only-desktop">Kebutuhan dengan cerita lebih sering dibantu.</span></label>
+
+    <div class="new-need__actions">
+      <button class="btn btn--outline btn--lg" type="submit" name="aksi" value="draf">Simpan draf</button>
+      <button class="btn btn--primary btn--lg" type="submit" name="aksi" value="tayangkan"><span class="only-desktop">Tayangkan kebutuhan</span><span class="only-mobile">Tayangkan</span></button>
+    </div>
+  </form>
+
+  <aside class="preview" id="pratinjau" aria-label="Pratinjau">
+    <span class="eyebrow">Pratinjau · begini donatur melihatnya</span>
+    <div class="preview__card" id="preview-card">{% include "donasi/_preview_card.html" %}</div>
+  </aside>
+</main>
+{% endblock %}

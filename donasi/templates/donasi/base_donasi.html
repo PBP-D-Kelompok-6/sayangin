@@ -1,0 +1,48 @@
+{% load static %}<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Donasi tepat sasaran — Sayangin{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'donasi/donasi.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js"></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <a class="skip-link" href="#konten">Lewati ke konten</a>
+  <div class="page{% block page_class %}{% endblock %}">
+    {% block header %}
+    {# TODO integrasi: ganti path di bawah dengan tag url dari modul lain saat sudah tersedia #}
+    <header class="site-header only-desktop">
+      <div class="site-header__bar">
+        <a class="logo" href="/"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
+        <nav class="primary-nav" aria-label="Utama">
+          <a href="/marketplace/">Marketplace</a>
+          <a href="/lemari/">Lemari Digital</a>
+          <a href="{% url 'donasi:pilih_lembaga' %}" aria-current="page">Donasi</a>
+          <a href="/dampak/">Dampak</a>
+        </nav>
+        <div class="site-header__actions">
+          <a class="header-link" href="{% url 'donasi:tawaran_saya' %}">Donasiku</a>
+          <a class="header-link" href="/tunda-beli/">Tunda Beli</a>
+          <a class="avatar" href="/profil/" aria-label="Profil"></a>
+        </div>
+      </div>
+    </header>
+    <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="javascript:history.back()" aria-label="Kembali">←</a><span class="app-bar__label">{% block appbar_title %}Donasikan{% endblock %}</span><a class="avatar-link" href="/profil/" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
+    {% endblock %}
+    {% if messages %}
+    <div class="container" style="padding-top:16px">
+      {% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+    {% block bottom_nav %}{% endblock %}
+  </div>
+</body>
+</html>

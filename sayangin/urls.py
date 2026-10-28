@@ -20,5 +20,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('main.urls')), # Replace 'main' with your app folder name
+    path('donasi/', include('donasi.urls')),
 ]
 

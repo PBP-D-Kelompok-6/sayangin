@@ -1,0 +1,19 @@
+{% load static %}{% static 'img/logo.svg' as placeholder %}
+<div class="offer" id="offer-{{ p.pk }}">
+  <span class="offer__img" style="--img: url('{{ p.foto_url|default:placeholder }}')"></span>
+  <span class="spacer"><b>{{ p.jumlah }} {{ p.nama_barang|lower }}{% if p.ukuran %}, ukuran {{ p.ukuran }}{% endif %}</b><br>
+    <span class="text-sm text-soft"><span class="only-desktop">dari @{{ p.donatur.username }} · {% if p.kebutuhan %}untuk kebutuhan "{{ p.kebutuhan.nama_barang }}"{% else %}tidak ada kebutuhan yang cocok{% endif %} · {{ p.get_kondisi_display|lower }}</span><span class="only-mobile">@{{ p.donatur.username }} · {{ p.get_kondisi_display|lower }}</span></span>
+    {% if p.pesan %}<br><span class="text-sm">“{{ p.pesan }}”</span>{% endif %}
+  </span>
+  <span class="offer__actions">
+    {% if p.status == "menunggu" %}
+    <button class="btn btn--outline btn--sm" type="button" hx-post="{% url 'donasi:penawaran_tolak' p.pk %}" hx-target="#offer-{{ p.pk }}" hx-swap="outerHTML" hx-confirm="Tolak tawaran ini?">Tolak</button>
+    <button class="btn btn--primary btn--sm" type="button" hx-post="{% url 'donasi:penawaran_terima' p.pk %}" hx-target="#offer-{{ p.pk }}" hx-swap="outerHTML">Terima</button>
+    {% elif p.status == "diterima" %}
+    <span class="text-sm text-soft">Menunggu barang{% if p.tanggal_rencana %} · {{ p.tanggal_rencana|date:"j M" }}{% endif %}</span>
+    <button class="btn btn--primary btn--sm" type="button" hx-post="{% url 'donasi:penawaran_selesai' p.pk %}" hx-target="#offer-{{ p.pk }}" hx-swap="outerHTML" hx-confirm="Barang sudah diterima secara fisik?">Tandai diterima</button>
+    {% else %}
+    <span class="text-sm text-soft">{{ p.get_status_display }}</span>
+    {% endif %}
+  </span>
+</div>

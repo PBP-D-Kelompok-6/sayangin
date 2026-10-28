@@ -1,0 +1,13 @@
+{% load static %}
+<header class="site-header only-desktop">
+  <div class="site-header__bar">
+    <a class="logo" href="{% url 'donasi:dashboard_lembaga' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span></a>
+    <nav class="primary-nav" aria-label="Utama">
+      <a href="{% url 'donasi:dashboard_lembaga' %}"{% if aktif == "dashboard" %} aria-current="page"{% endif %}>Dashboard</a>
+      <a href="{% url 'donasi:kebutuhan_list' %}"{% if aktif == "kebutuhan" %} aria-current="page"{% endif %}>Kebutuhan</a>
+      <a href="{% url 'donasi:dashboard_lembaga' %}#tawaran">Tawaran masuk{% if jumlah_menunggu %} ({{ jumlah_menunggu }}){% endif %}</a>
+      <a href="{% url 'donasi:riwayat_lembaga' %}"{% if aktif == "riwayat" %} aria-current="page"{% endif %}>Riwayat</a>
+    </nav>
+    <div class="site-header__actions"><span class="text-soft">{{ request.user.get_full_name|default:request.user.username }}</span><a class="avatar" href="/profil/" aria-label="Profil lembaga"></a></div>
+  </div>
+</header>
