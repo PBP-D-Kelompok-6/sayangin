@@ -4,14 +4,7 @@
 {% static 'img/logo.svg' as placeholder %}
 <main class="page__main container donate" id="konten">
   {% if barang.nama %}
-  <div class="item-strip">
-    <span class="item-strip__img" style="--img: url('{{ barang.foto|default:placeholder }}')"></span>
-    <span class="spacer">
-      <span class="eyebrow only-desktop">Barang yang akan didonasikan</span>
-      <b>{{ barang.nama }}{% if barang.ukuran %} · {{ barang.ukuran }}{% endif %}{% if kondisi_label %} · {{ kondisi_label }}{% endif %}</b>
-    </span>
-    <a class="text-sm" href="/lemari/">Ganti<span class="only-desktop"> barang</span></a>
-  </div>
+    {% include "donasi/_item_strip.html" %}
   {% endif %}
   <div class="donate__head">
     <h1 class="page-title"><span class="eyebrow">Donasi tepat sasaran</span>{{ daftar|length }} {% if barang.nama %}lembaga <em>butuh</em> barang ini{% else %}kebutuhan <em>aktif</em>{% endif %}</h1>

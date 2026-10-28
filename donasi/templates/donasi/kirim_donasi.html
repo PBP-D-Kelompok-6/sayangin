@@ -10,8 +10,6 @@
     <h1 class="page-title only-desktop"><span class="eyebrow">Kirim donasi</span>Bagaimana barangnya <em>sampai</em>?</h1>
     {% if form.errors %}<div class="alert" role="alert"><b>!</b> Ada isian yang perlu diperbaiki.</div>{% endif %}
 
-    {% include "donasi/_item_strip.html" %}
-
     <fieldset class="stack" style="--stack-gap: 8px"><legend class="field__label">Cara pengiriman</legend>
       {% for opt in form.metode %}
       <label class="choice{% if not opt.data.selected %} choice--plain{% endif %}">
@@ -33,7 +31,10 @@
   </form>
   <aside class="send__summary only-desktop" aria-label="Ringkasan donasi">
     <b>Ringkasan</b>
-    <div class="cart-item"><span class="cart-item__img cart-item__img--org"></span><span>{{ barang.nama }}<br><span class="text-sm text-soft">1 barang</span></span></div>
+    <div class="cart-item">
+      <span class="cart-item__img{% if not foto %} cart-item__img--org{% endif %}"{% if foto %}style="background: url('{{ foto }}') center / cover no-repeat"{% endif %}></span>
+      <span>{{ barang.nama }}<br><span class="text-sm text-soft">{% if barang.ukuran %}Ukuran {{ barang.ukuran }} · {% endif %}{{ kondisi_label }} · 1 barang</span></span>
+    </div>
     <div class="cart-item"><span class="cart-item__img cart-item__img--org"></span><span>{{ kebutuhan.nama_lembaga }}<br><span class="text-sm text-soft">Butuh {{ kebutuhan.nama_barang|lower }} · {{ kebutuhan.terpenuhi }}/{{ kebutuhan.jumlah }}</span></span></div>
     <p class="text-sm text-soft">Lembaga akan menerima atau menolak tawaranmu dalam 2 hari. Kamu bisa memantau statusnya di halaman Donasiku.</p>
     <div class="notice text-sm">Poin dampak ditambahkan setelah barang diterima.</div>

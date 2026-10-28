@@ -1,0 +1,9 @@
+{% load static %}{% static 'img/logo.svg' as placeholder %}
+<div class="item-strip">
+  <span class="item-strip__img" style="--img: url('{{ barang.foto|default:placeholder }}')"></span>
+  <span class="spacer">
+    <span class="eyebrow only-desktop">Barang yang akan didonasikan</span>
+    <b>{{ barang.nama }}{% if barang.ukuran %} · {{ barang.ukuran }}{% endif %}{% if kondisi_label %} · {{ kondisi_label }}{% endif %}</b>
+  </span>
+  <a class="text-sm" href="/lemari/">Ganti<span class="only-desktop"> barang</span></a>
+</div>

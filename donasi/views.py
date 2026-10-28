@@ -1,4 +1,5 @@
 import datetime
+import re
 from urllib.parse import urlencode
 
 from django.contrib import messages
@@ -82,7 +83,8 @@ def kirim_donasi(request, kebutuhan_id):
         return redirect("donasi:pilih_lembaga")
 
     kondisi = barang["kondisi"] if barang["kondisi"] in Kondisi.values else Kondisi.TERAWAT
-    foto = barang["foto"] if barang["foto"].startswith(("http://", "https://", "/")) else ""
+    FOTO_AMAN = re.compile(r"^(https?://|/)[^\s'\"()\\]+$")
+    foto = barang["foto"] if FOTO_AMAN.match(barang["foto"]) else ""
 
     if request.method == "POST":
         form = PenawaranForm(request.POST, kebutuhan=kebutuhan)
@@ -107,6 +109,7 @@ def kirim_donasi(request, kebutuhan_id):
         "form": form,
         "kebutuhan": kebutuhan,
         "barang": barang,
+        "foto": foto,
         "kondisi_label": _label_kondisi(kondisi),
     })
 
