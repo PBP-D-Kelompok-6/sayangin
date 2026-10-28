@@ -207,18 +207,27 @@
     const profileErrorText = document.querySelector('[data-profile-modal-error-text]');
     const addressErrorBox = document.querySelector('[data-address-modal-error]');
     const addressErrorText = document.querySelector('[data-address-modal-error-text]');
+    const addressFiltersWrap = document.querySelector('[data-address-filters]');
+    const addressSearchInput = document.querySelector('[data-address-search]');
+
+    let currentAddressFilter = 'ALL';
+    let currentAddressQuery = '';
 
     const renderAddresses = (addresses) => {
       if (!addressListEl) return;
       if (addressCountEl) {
-        addressCountEl.textContent = addresses.length ? `${addresses.length} alamat` : 'Belum diisi';
+        addressCountEl.textContent = addresses.length ? `${addresses.length} alamat` : '0 alamat';
       }
       if (!addresses.length) {
+        const isFiltered = (currentAddressFilter && currentAddressFilter !== 'ALL') || Boolean(currentAddressQuery);
+        const emptyMsg = isFiltered
+          ? 'Tidak ada alamat yang cocok dengan filter saat ini.'
+          : 'Alamat belum diisi';
         addressListEl.innerHTML = `
           <div class="list-row" data-address-empty>
-            <span class="profile__key">Rumah · utama</span>
-            <span class="spacer">Alamat belum diisi</span>
-            <a class="text-sm" href="${escapeHtml(editProfileFallbackUrl)}" data-address-add>Isi</a>
+            <span class="profile__key text-muted">-</span>
+            <span class="spacer">${escapeHtml(emptyMsg)}</span>
+            <a class="text-sm" href="${escapeHtml(editProfileFallbackUrl)}?mode=add" data-address-add>Tambah alamat</a>
           </div>
         `;
         return;
@@ -309,6 +318,51 @@
       });
     });
 
+    const fetchAndRenderFilteredAddresses = async () => {
+      const apiUrl = profileRoot.getAttribute('data-api-profile-url') || '/api/profile/';
+      const params = new URLSearchParams();
+      if (currentAddressFilter && currentAddressFilter !== 'ALL') {
+        params.set('label', currentAddressFilter);
+      }
+      if (currentAddressQuery) {
+        params.set('q', currentAddressQuery);
+      }
+      const queryStr = params.toString() ? `?${params.toString()}` : '';
+      try {
+        const res = await fetch(`${apiUrl}${queryStr}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          renderAddresses(data.addresses);
+        }
+      } catch {
+        showToast('Gagal memuat filter alamat.');
+      }
+    };
+
+    addressFiltersWrap?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-address-filter]');
+      if (!btn) return;
+      e.preventDefault();
+      currentAddressFilter = (btn.getAttribute('data-address-filter') || 'ALL').toUpperCase();
+      addressFiltersWrap.querySelectorAll('[data-address-filter]').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
+      fetchAndRenderFilteredAddresses();
+    });
+
+    let addressSearchDebounceTimer = null;
+    addressSearchInput?.addEventListener('input', (e) => {
+      currentAddressQuery = (e.target.value || '').trim();
+      clearTimeout(addressSearchDebounceTimer);
+      addressSearchDebounceTimer = setTimeout(() => {
+        fetchAndRenderFilteredAddresses();
+      }, 250);
+    });
+
     document.querySelectorAll('[data-address-add]').forEach((btn) => {
       btn.addEventListener('click', openAddressModalForAdd);
     });
@@ -340,7 +394,7 @@
           });
           const data = await res.json();
           if (data.status === 'ok') {
-            renderAddresses(data.addresses);
+            await fetchAndRenderFilteredAddresses();
             showToast(data.message || 'Alamat utama diperbarui.');
           }
         } catch {
@@ -363,7 +417,7 @@
           });
           const data = await res.json();
           if (data.status === 'ok') {
-            renderAddresses(data.addresses);
+            await fetchAndRenderFilteredAddresses();
             showToast(data.message || 'Alamat dihapus.');
           }
         } catch {
@@ -448,9 +502,9 @@
           }
           return;
         }
-        renderAddresses(data.addresses);
         closeModal(modalAlamat);
         showToast(data.message || 'Alamat berhasil disimpan.');
+        await fetchAndRenderFilteredAddresses();
       } catch {
         if (addressErrorBox && addressErrorText) {
           addressErrorText.textContent = 'Terjadi kesalahan jaringan. Coba lagi.';

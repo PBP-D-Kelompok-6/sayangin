@@ -383,6 +383,61 @@ class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
         self.assertFalse(pref_data['reminder'])
         self.assertTrue(pref_data['email_newsletter'])
 
+    def test_filter_addresses_by_label_and_search_query(self):
+        UserAddress.objects.create(
+            user=self.user,
+            label='RUMAH',
+            address='Jl. Margonda Raya No. 10',
+            city='Depok',
+            is_primary=True,
+        )
+        UserAddress.objects.create(
+            user=self.user,
+            label='KOS',
+            address='Jl. Cisitu Indah No. 4',
+            city='Bandung',
+            is_primary=False,
+        )
+        UserAddress.objects.create(
+            user=self.user,
+            label='APARTEMEN',
+            address='Apartemen Kalibata City',
+            city='Jakarta Selatan',
+            is_primary=False,
+        )
+
+        # 1. Filter by label RUMAH via show_addresses_json and api_profile_data
+        res_rumah = self.client.get(reverse('main:show_addresses_json') + '?label=RUMAH')
+        self.assertEqual(res_rumah.status_code, 200)
+        data_rumah = json.loads(res_rumah.content)
+        self.assertEqual(len(data_rumah), 1)
+        self.assertEqual(data_rumah[0]['fields']['label'], 'RUMAH')
+
+        api_res_rumah = self.client.get(reverse('main:api_profile_data') + '?label=RUMAH')
+        self.assertEqual(api_res_rumah.status_code, 200)
+        self.assertEqual(len(api_res_rumah.json()['addresses']), 1)
+        self.assertEqual(api_res_rumah.json()['addresses'][0]['label'], 'RUMAH')
+
+        # 2. Filter by label KOS
+        api_res_kos = self.client.get(reverse('main:api_profile_data') + '?label=KOS')
+        self.assertEqual(len(api_res_kos.json()['addresses']), 1)
+        self.assertEqual(api_res_kos.json()['addresses'][0]['label'], 'KOS')
+
+        # 3. Search query q=Bandung
+        api_res_q = self.client.get(reverse('main:api_profile_data') + '?q=Bandung')
+        self.assertEqual(len(api_res_q.json()['addresses']), 1)
+        self.assertEqual(api_res_q.json()['addresses'][0]['city'], 'Bandung')
+
+        # 4. Search query with no match
+        api_res_empty = self.client.get(reverse('main:api_profile_data') + '?q=NonExistentPlace')
+        self.assertEqual(len(api_res_empty.json()['addresses']), 0)
+
+        # 5. Profile page HTML renders filter chips and addresses
+        profile_page = self.client.get(reverse('main:show_profile') + '?label=KOS')
+        self.assertEqual(profile_page.status_code, 200)
+        self.assertContains(profile_page, 'data-address-filter="KOS"')
+        self.assertContains(profile_page, 'Jl. Cisitu Indah No. 4')
+
 
 class SecurityAndGoogleAuthTests(TestCase):
     def setUp(self):

@@ -126,7 +126,25 @@
         </section>
 
         <section>
-          <h2 class="eyebrow">Alamat</h2>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="eyebrow m-0">Alamat</h2>
+            <span class="text-sm text-muted" data-address-count>{{ total_addresses_count|default:addresses|length }} alamat</span>
+          </div>
+
+          <!-- Filter Kategori & Pencarian Alamat Database -->
+          <div class="address-filter-bar flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
+            <div class="filters flex flex-wrap gap-1.5" role="group" aria-label="Filter kategori alamat" data-address-filters>
+              <button class="filter-chip" type="button" data-address-filter="ALL" aria-pressed="{% if not selected_label or selected_label == 'ALL' %}true{% else %}false{% endif %}">Semua</button>
+              <button class="filter-chip" type="button" data-address-filter="RUMAH" aria-pressed="{% if selected_label == 'RUMAH' %}true{% else %}false{% endif %}">Rumah</button>
+              <button class="filter-chip" type="button" data-address-filter="KOS" aria-pressed="{% if selected_label == 'KOS' %}true{% else %}false{% endif %}">Kos</button>
+              <button class="filter-chip" type="button" data-address-filter="APARTEMEN" aria-pressed="{% if selected_label == 'APARTEMEN' %}true{% else %}false{% endif %}">Apartemen</button>
+              <button class="filter-chip" type="button" data-address-filter="KANTOR" aria-pressed="{% if selected_label == 'KANTOR' %}true{% else %}false{% endif %}">Kantor</button>
+            </div>
+            <div class="search search--sm w-full sm:w-48">
+              <input type="search" placeholder="Cari jalan / kota…" aria-label="Cari alamat" data-address-search value="{{ search_query|default:'' }}" class="input input--sm w-full text-xs py-1 px-3 rounded-full border border-stone-300">
+            </div>
+          </div>
+
           <div id="profile-address-list" data-address-list>
             {% for addr in addresses %}
               <div class="list-row" data-address-row="{{ addr.pk }}">
@@ -156,9 +174,9 @@
               </div>
             {% empty %}
               <div class="list-row" data-address-empty>
-                <span class="profile__key">{{ profile.get_address_label_display|default:"Rumah" }}{% if profile.is_primary_address %} · utama{% endif %}</span>
-                <span class="spacer">{{ formatted_address|default:"Alamat belum diisi" }}</span>
-                <a class="text-sm" href="{% url 'main:edit_profile' %}" data-address-add>Ubah</a>
+                <span class="profile__key text-muted">-</span>
+                <span class="spacer">{% if selected_label != 'ALL' or search_query %}Tidak ada alamat yang cocok dengan filter saat ini.{% else %}Alamat belum diisi{% endif %}</span>
+                <a class="text-sm" href="{% url 'main:edit_profile' %}?mode=add" data-address-add>Tambah alamat</a>
               </div>
             {% endfor %}
           </div>

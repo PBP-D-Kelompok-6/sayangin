@@ -4,6 +4,7 @@ import re
 import secrets
 from urllib.parse import urlencode
 import requests
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
@@ -191,7 +192,7 @@ def show_register(request):
 @personal_required
 def show_profile(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    addresses = _ensure_user_addresses_synced(request.user, profile)
+    all_addresses = _ensure_user_addresses_synced(request.user, profile)
     display_name = (profile.full_name or request.user.username).strip()
     parts = display_name.split()
     first_name = parts[0] if parts else request.user.username
@@ -200,7 +201,7 @@ def show_profile(request):
     else:
         initials = display_name[:2].upper()
 
-    primary_addr = addresses.filter(is_primary=True).first() or addresses.first()
+    primary_addr = all_addresses.filter(is_primary=True).first() or all_addresses.first()
     if primary_addr:
         formatted_address = primary_addr.formatted_address
     else:
@@ -209,11 +210,27 @@ def show_profile(request):
         if profile.postal_code:
             formatted_address = f"{formatted_address} {profile.postal_code}".strip()
 
+    addresses = all_addresses
+    label_filter = (request.GET.get('label') or '').strip().upper()
+    if label_filter and label_filter != 'ALL':
+        addresses = addresses.filter(label=label_filter)
+
+    q = (request.GET.get('q') or '').strip()
+    if q:
+        addresses = addresses.filter(
+            Q(address__icontains=q) |
+            Q(city__icontains=q) |
+            Q(recipient_name__icontains=q)
+        )
+
     prefs = profile.get_preferences_dict()
 
     context = {
         "profile": profile,
         "addresses": addresses,
+        "selected_label": label_filter or 'ALL',
+        "search_query": q,
+        "total_addresses_count": all_addresses.count(),
         "preferences": prefs,
         "first_name": first_name,
         "initials": initials,
@@ -332,10 +349,23 @@ def show_profile_json(request):
 @login_required(login_url='main:show_login')
 @require_GET
 def show_addresses_json(request):
-    """Returns all UserAddress objects for the user serialized using django.core.serializers."""
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    addresses = _ensure_user_addresses_synced(request.user, profile)
-    data = serializers.serialize("json", addresses)
+    _ensure_user_addresses_synced(request.user, profile)
+
+    addresses = UserAddress.objects.filter(user=request.user)
+    label_filter = (request.GET.get('label') or '').strip().upper()
+    if label_filter and label_filter != 'ALL':
+        addresses = addresses.filter(label=label_filter)
+
+    q = (request.GET.get('q') or '').strip()
+    if q:
+        addresses = addresses.filter(
+            Q(address__icontains=q) |
+            Q(city__icontains=q) |
+            Q(recipient_name__icontains=q)
+        )
+
+    data = serializers.serialize('json', addresses)
     return HttpResponse(data, content_type="application/json")
 
 
@@ -349,6 +379,18 @@ def api_profile_data(request):
     parts = display_name.split()
     first_name = parts[0] if parts else request.user.username
     primary_addr = addresses.filter(is_primary=True).first() or addresses.first()
+
+    label_filter = (request.GET.get('label') or '').strip().upper()
+    if label_filter and label_filter != 'ALL':
+        addresses = addresses.filter(label=label_filter)
+
+    q = (request.GET.get('q') or '').strip()
+    if q:
+        addresses = addresses.filter(
+            Q(address__icontains=q) |
+            Q(city__icontains=q) |
+            Q(recipient_name__icontains=q)
+        )
 
     return JsonResponse({
         "status": "ok",
