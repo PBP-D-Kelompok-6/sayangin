@@ -2,44 +2,60 @@
 {% load static %}
 {% block title %}Isi lemari pertama{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/onboarding.css' %}">{% endblock %}
-
 {% block body %}
-<svg class="visually-hidden" aria-hidden="true" focusable="false" width="0" height="0"><defs>
-    <linearGradient id="sgbands" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#FFFFFF"></stop><stop offset="0.12" stop-color="#8E8682"></stop><stop offset="0.2" stop-color="#F7F4F2"></stop><stop offset="0.3" stop-color="#2A1A17"></stop><stop offset="0.38" stop-color="#C9BEB9"></stop><stop offset="0.47" stop-color="#FFFFFF"></stop><stop offset="0.55" stop-color="#6B1420"></stop><stop offset="0.62" stop-color="#1A0D0B"></stop><stop offset="0.72" stop-color="#E9E2DE"></stop><stop offset="0.8" stop-color="#5A4A45"></stop><stop offset="0.9" stop-color="#FFFFFF"></stop><stop offset="1" stop-color="#3E2723"></stop></linearGradient>
-    <filter id="sgliq2" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.008 0.013" numOctaves="2" seed="21" result="n"></feTurbulence><feDisplacementMap in="SourceGraphic" in2="n" scale="90" xChannelSelector="R" yChannelSelector="G" result="d"></feDisplacementMap><feGaussianBlur in="d" stdDeviation="7" result="b"></feGaussianBlur><feColorMatrix in="b" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11" result="goo"></feColorMatrix><feComposite in="d" in2="goo" operator="atop" result="col"></feComposite><feGaussianBlur in="col" stdDeviation="2.2" result="col2"></feGaussianBlur><feComposite in="col2" in2="goo" operator="in" result="col3"></feComposite><feGaussianBlur in="goo" stdDeviation="10" result="h"></feGaussianBlur><feSpecularLighting in="h" surfaceScale="11" specularConstant="1.25" specularExponent="34" lighting-color="#FFFFFF" result="s"><feDistantLight azimuth="235" elevation="48"></feDistantLight></feSpecularLighting><feComposite in="s" in2="goo" operator="in" result="s2"></feComposite><feComposite in="col3" in2="s2" operator="arithmetic" k2="1" k3="0.9" result="o"></feComposite><feDropShadow dx="0" dy="28" stdDeviation="20" flood-color="#3E2723" flood-opacity="0.28"></feDropShadow></filter>
-    <filter id="sgcaus" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="turbulence" baseFrequency="0.016 0.028" numOctaves="1" seed="3" result="t"></feTurbulence><feColorMatrix in="t" type="matrix" values="0 0 0 0 1  0 0 0 0 0.9  0 0 0 0 0.86  -26 0 0 0 2.6" result="c"></feColorMatrix><feGaussianBlur in="c" stdDeviation="1.1" result="g"></feGaussianBlur><feMerge><feMergeNode in="g"></feMergeNode><feMergeNode in="c"></feMergeNode></feMerge></filter>
-  </defs></svg>
 <div class="onboard">
   <header class="onboard__header only-desktop"><a class="logo" href="/"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a><ol class="steps" aria-label="Langkah pendaftaran"><li class="is-done"><span class="steps__dot">✓</span>Akun</li><li class="steps__line is-done" aria-hidden="true"></li><li class="is-done"><span class="steps__dot">✓</span>Profil &amp; alamat</li><li class="steps__line is-done" aria-hidden="true"></li><li aria-current="step"><span class="steps__dot">3</span>Isi lemari</li></ol><a href="{% url 'lemari:index' %}">Lewati</a></header>
   <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="javascript:history.back()" aria-label="Kembali">←</a><span class="app-bar__label">Isi lemari</span><a href="{% url 'lemari:index' %}">Lewati</a></header>
-  <div class="progress only-mobile" style="--value: 33%; border-radius: 0"><span></span></div>
   <div class="onboard__body">
-    <aside class="onboard__aside dark-panel only-desktop">
-      <svg class="caustics" viewBox="0 0 420 320" preserveAspectRatio="none" aria-hidden="true"><rect width="420" height="320" filter="url(#sgcaus)"/></svg>
-      <div class="onboard__art" aria-hidden="true"><svg class="onboard__chrome" viewBox="0 0 420 320" aria-hidden="true"><path filter="url(#sgliq2)" fill="url(#sgbands)" d="M50 210C80 120 170 84 236 126S344 196 384 118C404 84 418 156 386 198S272 266 208 226S96 270 50 210Z"/></svg><img class="cutout onboard__img" src="{% static 'img/henley-sage-cut.png' %}" alt="" style="left: 50px; top: 50px; width: 230px; height: 200px;"><img class="cutout onboard__img" src="{% static 'img/tas-tote-metalik-cut.png' %}" alt="" style="left: 230px; top: 140px; width: 150px; height: 180px;"></div>
-      <div class="onboard__caption"><span class="eyebrow">Tips</span><p class="onboard__title">Mulai dari yang <em>jarang dipakai</em>.</p><p class="onboard__text">Barang yang lama diam di lemari akan kami ingatkan: jual, donasikan, atau simpan dengan alasan.</p></div>
-    </aside>
+    <aside class="onboard__aside dark-panel only-desktop"><div class="onboard__art"><img class="cutout onboard__img" src="{% static 'img/henley-sage-cut.png' %}" alt="" style="left: 50px; top: 50px; width: 230px; height: 200px;"><img class="cutout onboard__img" src="{% static 'img/tas-tote-metalik-cut.png' %}" alt="" style="left: 230px; top: 140px; width: 150px; height: 180px;"></div><div class="onboard__caption"><span class="eyebrow">Tips</span><p class="onboard__title">Mulai dari yang <em>jarang dipakai</em>.</p><p class="onboard__text">Barang yang lama diam di lemari akan kami ingatkan: jual, donasikan, atau simpan.</p></div></aside>
     <main class="onboard__main" id="konten">
       <div class="stack first-items" style="--stack-gap: 20px">
-        <div class="row first-items__head"><div class="stack spacer" style="--stack-gap: 6px"><h1 class="page-title"><span class="eyebrow"><span class="only-desktop">Langkah 3 dari 3 · </span>Lemari Digital</span>Mulai dengan <em>3 barang</em></h1><span class="text-soft">Barang yang jarang dipakai akan kami ingatkan.<span class="only-desktop"> Bisa ditambah kapan saja.</span></span></div><b>1 dari 3</b></div>
-        <div class="progress only-desktop" style="--value: 33%"><span></span></div>
-        <form class="add-item" method="post" enctype="multipart/form-data">
+        <div class="row first-items__head"><div class="stack spacer" style="--stack-gap: 6px"><h1 class="page-title"><span class="eyebrow"><span class="only-desktop">Langkah 3 dari 3 · </span>Lemari Digital</span>Mulai dengan <em>3 barang</em></h1><span class="text-soft">Tambahkan sampai tiga barang sekaligus. Data tetap tersimpan saat berpindah tab.</span></div></div>
+        {% if errors %}<div class="alert" role="alert"><span class="alert-icon" aria-hidden="true">!</span><span>{% for number, message in errors.items %}Barang ke-{{ number }}: {{ message }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span></div>{% endif %}
+        <form class="onboard-items-form" method="post" enctype="multipart/form-data">
           {% csrf_token %}
-          <label class="dropzone add-item__photo"><input class="visually-hidden" type="file" name="foto" accept="image/*" capture="environment">+ <span class="only-desktop">Foto barang</span><span class="only-mobile">Ambil foto atau pilih dari galeri</span><span class="text-sm only-desktop">atau seret ke sini</span></label>
-          <div class="stack" style="--stack-gap: 12px; flex: 1">
-            <label class="field"><span class="field__label">Nama barang</span><input class="input" type="text" name="nama" placeholder="Contoh: Jaket denim biru"></label>
-            <div class="form-row"><label class="field"><span class="field__label">Kategori</span><select class="select" name="kategori"><option>Pilih</option></select></label>
-              <label class="field"><span class="field__label">Terakhir dipakai</span><select class="select" name="terakhir_dipakai"><option>Kira-kira kapan?</option></select></label></div>
-            <button class="btn btn--outline add-item__submit" type="submit" style="--btn-h: 44px">+ Masukkan ke lemari</button>
-          </div>
+          {% for number in '123' %}
+          <section class="add-item item-panel{% if not forloop.first %} is-hidden{% endif %}" data-panel="{{ number }}" role="tabpanel">
+            <label class="dropzone add-item__photo photo-picker"><input class="visually-hidden item-photo-input" type="file" name="foto_{{ number }}" accept="image/*" capture="environment" data-preview="preview-{{ number }}"><span class="photo-picker__empty">+ <span class="only-desktop">Foto barang</span><span class="only-mobile">Ambil foto atau pilih dari galeri</span><span class="text-sm only-desktop">atau seret ke sini</span></span><img class="photo-picker__preview is-hidden" id="preview-{{ number }}" alt="Pratinjau foto barang {{ number }}"></label>
+            <div class="stack" style="--stack-gap: 12px; flex: 1"><label class="field"><span class="field__label">Nama barang</span><input class="input" type="text" name="nama_{{ number }}" placeholder="Contoh: Jaket denim biru"></label><div class="form-row"><label class="field"><span class="field__label">Kategori</span><select class="select" name="kategori_{{ number }}"><option value="">Pilih</option><option>Pakaian</option><option>Sepatu</option><option>Aksesori</option><option>Buku</option><option>Elektronik</option><option>Lainnya</option></select></label><label class="field"><span class="field__label">Terakhir dipakai</span><select class="select" name="terakhir_dipakai_{{ number }}"><option value="">Kira-kira kapan?</option><option>Kurang dari 1 bulan</option><option>1–3 bulan lalu</option><option>3–6 bulan lalu</option><option>Lebih dari 6 bulan</option><option>Belum pernah dipakai</option></select></label></div><span class="item-panel__error" aria-live="polite"></span></div>
+          </section>
+          {% endfor %}
+          <div class="slots" aria-label="Pilih barang"><button class="slot slot-tab is-active" type="button" data-item="1"><span class="slot__number">1</span><b>Barang ke-1</b></button><button class="slot slot-tab" type="button" data-item="2"><span class="slot__number">2</span><b>Barang ke-2</b></button><button class="slot slot-tab" type="button" data-item="3"><span class="slot__number">3</span><b>Barang ke-3</b></button></div>
+          <div class="form-actions"><a class="btn btn--outline btn--lg only-desktop" href="{% url 'lemari:index' %}">Lewati dulu</a><button class="btn btn--primary btn--lg" type="submit">+ Masukkan ke lemari</button></div>
         </form>
-        <div class="slots">
-          <div class="slot slot--filled"><div class="photo" style="--img: url({% static 'img/blazer-abu.jpg' %}); --fit: auto 84%; --ratio: 1; width: 56px; flex: none; border-radius: 8px;" role="img" aria-label=""></div><span><b>Blazer wol</b><br><span class="text-soft">Pakaian · 6 bln lalu</span></span></div>
-          <div class="slot only-desktop">Barang ke-2</div><div class="slot only-desktop">Barang ke-3</div>
-        </div>
-        <div class="form-actions"><a class="btn btn--outline btn--lg only-desktop" href="{% url 'lemari:index' %}">Lewati dulu</a><a class="btn btn--primary btn--lg" href="{% url 'lemari:index' %}">Selesai, lihat lemariku</a></div>
       </div>
     </main>
   </div>
 </div>
+<script>
+(() => {
+  const buttons = [...document.querySelectorAll('[data-item]')], panels = [...document.querySelectorAll('.item-panel')];
+  const select = (item) => { panels.forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.panel !== item)); buttons.forEach(button => button.classList.toggle('is-active', button.dataset.item === item)); };
+  buttons.forEach(button => button.addEventListener('click', () => select(button.dataset.item)));
+  const isComplete = (panel) => {
+    const number = panel.dataset.panel, slot = document.querySelector(`.slot-tab[data-item="${number}"]`);
+    return Boolean(panel.querySelector('.item-photo-input').files.length && panel.querySelector(`[name="nama_${number}"]`).value.trim() && panel.querySelector(`[name="kategori_${number}"]`).value && panel.querySelector(`[name="terakhir_dipakai_${number}"]`).value);
+  };
+  const updateCompletion = (panel) => {
+    const number = panel.dataset.panel, slot = document.querySelector(`.slot-tab[data-item="${number}"]`), complete = isComplete(panel);
+    slot.classList.toggle('is-complete', complete);
+  };
+  document.querySelectorAll('.item-photo-input').forEach(input => input.addEventListener('change', () => {
+    const preview = document.getElementById(input.dataset.preview), empty = input.closest('.photo-picker').querySelector('.photo-picker__empty');
+    const file = input.files[0];
+    if (!file) return;
+    preview.src = URL.createObjectURL(file); preview.classList.remove('is-hidden'); empty.classList.add('is-hidden');
+    updateCompletion(input.closest('.item-panel'));
+  }));
+  panels.forEach(panel => { panel.querySelectorAll('input, select').forEach(field => field.addEventListener('input', () => updateCompletion(panel))); updateCompletion(panel); });
+  document.querySelector('.onboard-items-form').addEventListener('submit', (event) => {
+    const incomplete = panels.find(panel => !isComplete(panel));
+    panels.forEach(panel => panel.querySelector('.item-panel__error').textContent = '');
+    if (!incomplete) return;
+    event.preventDefault();
+    incomplete.querySelector('.item-panel__error').textContent = 'Lengkapi foto, nama, kategori, dan terakhir dipakai sebelum menyimpan.';
+    select(incomplete.dataset.panel);
+  });
+})();
+</script>
 {% endblock %}

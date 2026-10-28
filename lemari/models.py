@@ -30,3 +30,15 @@ class ListingPhoto(models.Model):
     )
     image = models.FileField(upload_to="lemari/listings/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
+class WardrobeItem(models.Model):
+    owner = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    name = models.CharField(max_length=160)
+    category = models.CharField(max_length=80)
+    last_used = models.CharField(max_length=40)
+    photo = models.FileField(upload_to="lemari/wardrobe/", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)

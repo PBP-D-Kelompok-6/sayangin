@@ -1,5 +1,6 @@
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import ListingPhoto, SaleListing
+from .models import ListingPhoto, SaleListing, WardrobeItem
 
 def _listing_values(request):
     def integer(name):
@@ -9,7 +10,8 @@ def _listing_values(request):
 
 
 def index(request):
-    return render(request, "lemari/index.html")
+    wardrobe_items = WardrobeItem.objects.all()
+    return render(request, "lemari/index.html", {"wardrobe_items": wardrobe_items, "wardrobe_count": wardrobe_items.count()})
 
 
 def kosong(request):
@@ -17,7 +19,40 @@ def kosong(request):
 
 
 def awal(request):
+    if request.method == "POST":
+        entries = []
+        errors = {}
+        for number in range(1, 4):
+            name = request.POST.get(f"nama_{number}", "").strip()
+            category = request.POST.get(f"kategori_{number}", "").strip()
+            last_used = request.POST.get(f"terakhir_dipakai_{number}", "").strip()
+            has_content = name or category or last_used or request.FILES.get(f"foto_{number}")
+            if not has_content:
+                continue
+            if not name: errors[number] = "Isi nama barang."
+            elif not category or not last_used: errors[number] = "Lengkapi kategori dan terakhir dipakai."
+            entries.append((number, name, category, last_used))
+        if not entries:
+            errors[1] = "Tambahkan setidaknya satu barang ke lemarimu."
+        if errors:
+            return render(request, "lemari/awal.html", {"errors": errors})
+        for number, name, category, last_used in entries:
+            item = WardrobeItem(name=name, category=category, last_used=last_used)
+            if request.user.is_authenticated:
+                item.owner = request.user
+            photo = request.FILES.get(f"foto_{number}")
+            if photo:
+                item.photo = photo
+            item.save()
+        return redirect("lemari:index")
     return render(request, "lemari/awal.html")
+
+
+def wardrobe_photo(request, item_id):
+    item = get_object_or_404(WardrobeItem, pk=item_id)
+    if not item.photo:
+        raise Http404
+    return FileResponse(item.photo.open("rb"), content_type="image/*")
 
 
 def jual(request):
