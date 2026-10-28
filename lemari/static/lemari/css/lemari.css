@@ -79,6 +79,8 @@
 .sell-form__cond { display: flex; gap: 8px; flex-wrap: wrap; }
 .field__hint--accent { color: var(--color-accent); }
 .sell-form__actions { align-items: center; }
+.input--inline { margin-top: 5px; min-width: 250px; }
+.sell-photos__main { background-size: cover; }
 
 @media (max-width: 767px) {
   .sell { padding-block: 16px 120px; gap: 14px; }
@@ -89,7 +91,6 @@
   .sell-form__cond .chip--lg { width: 100%; justify-content: flex-start; height: 44px; }
   .sell-form .form-row--2-1 { grid-template-columns: 2fr 1fr; }
   .sell-form__actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; padding: 12px 16px 20px; background: var(--paper); }
-  .sell-form__actions > span:first-child { display: none; }
   .sell-form__actions .row { width: 100%; }
   .sell-form__actions .btn { flex: 1; }
 }

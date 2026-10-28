@@ -1,0 +1,14 @@
+{% load static %}
+{# TODO: ganti href="#" dengan {% url %} milik app masing-masing setelah app-nya ada #}
+<header class="site-header only-desktop">
+  <div class="site-header__bar">
+    <a class="logo" href="/"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
+    <nav class="primary-nav" aria-label="Utama"><a href="#">Marketplace</a><a href="{% url 'lemari:index' %}" aria-current="page">Lemari Digital</a><a href="#">Donasi</a><a href="#">Dampak</a></nav>
+    <div class="site-header__actions">
+      <a class="icon-btn" href="#" aria-label="Cari"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></a>
+      <a class="header-link" href="#">Tunda Beli</a>
+      <a class="icon-btn" href="#" aria-label="Keranjang, 2 barang"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5h14l-1.1 11.5H6.1z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg><span class="icon-btn__count" aria-hidden="true">2</span></a>
+      <a class="avatar" href="#" aria-label="Profil"></a>
+    </div>
+  </div>
+</header>
