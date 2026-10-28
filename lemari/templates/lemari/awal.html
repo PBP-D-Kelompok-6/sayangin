@@ -32,6 +32,10 @@
   const buttons = [...document.querySelectorAll('[data-item]')], panels = [...document.querySelectorAll('.item-panel')];
   const select = (item) => { panels.forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.panel !== item)); buttons.forEach(button => button.classList.toggle('is-active', button.dataset.item === item)); };
   buttons.forEach(button => button.addEventListener('click', () => select(button.dataset.item)));
+  const hasContent = (panel) => {
+    const number = panel.dataset.panel;
+    return Boolean(panel.querySelector('.item-photo-input').files.length || panel.querySelector(`[name="nama_${number}"]`).value.trim() || panel.querySelector(`[name="kategori_${number}"]`).value || panel.querySelector(`[name="terakhir_dipakai_${number}"]`).value);
+  };
   const isComplete = (panel) => {
     const number = panel.dataset.panel, slot = document.querySelector(`.slot-tab[data-item="${number}"]`);
     return Boolean(panel.querySelector('.item-photo-input').files.length && panel.querySelector(`[name="nama_${number}"]`).value.trim() && panel.querySelector(`[name="kategori_${number}"]`).value && panel.querySelector(`[name="terakhir_dipakai_${number}"]`).value);
@@ -49,12 +53,19 @@
   }));
   panels.forEach(panel => { panel.querySelectorAll('input, select').forEach(field => field.addEventListener('input', () => updateCompletion(panel))); updateCompletion(panel); });
   document.querySelector('.onboard-items-form').addEventListener('submit', (event) => {
-    const incomplete = panels.find(panel => !isComplete(panel));
+    const incomplete = panels.find(panel => hasContent(panel) && !isComplete(panel));
     panels.forEach(panel => panel.querySelector('.item-panel__error').textContent = '');
-    if (!incomplete) return;
-    event.preventDefault();
-    incomplete.querySelector('.item-panel__error').textContent = 'Lengkapi foto, nama, kategori, dan terakhir dipakai sebelum menyimpan.';
-    select(incomplete.dataset.panel);
+    if (incomplete) {
+      event.preventDefault();
+      incomplete.querySelector('.item-panel__error').textContent = 'Lengkapi foto, nama, kategori, dan terakhir dipakai sebelum menyimpan.';
+      select(incomplete.dataset.panel);
+      return;
+    }
+    if (!panels.some(isComplete)) {
+      event.preventDefault();
+      panels[0].querySelector('.item-panel__error').textContent = 'Tambahkan setidaknya satu barang yang lengkap.';
+      select('1');
+    }
   });
 })();
 </script>
