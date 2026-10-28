@@ -20,9 +20,11 @@
 .onboard-items-form { display: flex; flex-direction: column; gap: 16px; }
 .item-panel.is-hidden { display: none; }
 .slot-tab { width: 100%; gap: 12px; text-align: left; cursor: pointer; font: inherit; }
+.slot-tab:disabled { cursor: not-allowed; opacity: .55; }
 .slot-tab.is-active { border-color: var(--ink); }
 .slot-tab.is-complete { border: 0; background: var(--color-surface-2); }
 .slot__number { width: 32px; height: 32px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--color-surface-2); color: var(--color-text-soft); }
+.slot__optional { color: var(--color-text-muted); font-size: var(--text-sm); font-weight: 400; }
 .slot-tab.is-complete .slot__number { background: var(--ink); color: var(--white); }
 .slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .slot { height: 80px; border: 1.5px dashed rgba(107,20,32,.35); border-radius: var(--radius-md); background: var(--white); display: flex; align-items: center; justify-content: center; color: var(--color-text-soft); font-weight: 500; }
