@@ -19,3 +19,15 @@ def lembaga_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return _wrapped
+
+def donatur_required(view_func):
+    """Hanya User (donatur) yang sudah login. Akun Lembaga tidak boleh mendonasikan barang."""
+
+    @login_required
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if is_lembaga(request.user):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped

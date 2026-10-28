@@ -1,3 +1,6 @@
+import datetime
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -5,12 +8,132 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST, require_http_methods
-from .forms import KebutuhanForm
+
+from .forms import KebutuhanForm, PenawaranForm
 from .models import Kategori, Kebutuhan, Kondisi, Penawaran
-from .permissions import lembaga_required
+from .permissions import lembaga_required, donatur_required
+
+URUTAN = {
+    "tenggat": "Tenggat terdekat",
+    "progres": "Paling sedikit terpenuhi",
+    "terbaru": "Terbaru",
+}
+FIELD_BARANG = ("nama", "kategori", "ukuran", "kondisi", "foto", "lemari_id")
+
 
 def _is_htmx(request):
     return request.headers.get("HX-Request") == "true"
+
+
+def _barang_dari_request(request):
+    """Data barang dari Lemari Digital yang dibawa lewat query string."""
+    return {f: request.GET.get(f, "").strip() for f in FIELD_BARANG}
+
+
+def _label_kondisi(kode):
+    return Kondisi(kode).label if kode in Kondisi.values else ""
+
+
+def urutkan_kebutuhan(daftar, urut):
+    if urut == "progres":
+        return sorted(daftar, key=lambda k: (k.persen, k.pk))
+    if urut == "terbaru":
+        return sorted(daftar, key=lambda k: k.dibuat, reverse=True)
+    paling_jauh = datetime.date.max
+    return sorted(daftar, key=lambda k: (k.tenggat or paling_jauh, k.pk))
+
+
+# ---------------------------------------------------------------------------
+# Sisi donatur
+# ---------------------------------------------------------------------------
+@donatur_required
+def pilih_lembaga(request):
+    barang = _barang_dari_request(request)
+    urut = request.GET.get("urut", "tenggat")
+    if urut not in URUTAN:
+        urut = "tenggat"
+
+    daftar = Kebutuhan.objects.cocok_dengan(
+        kategori=barang["kategori"], ukuran=barang["ukuran"], kondisi=barang["kondisi"]
+    )
+    daftar = urutkan_kebutuhan(daftar, urut)
+
+    konteks = {
+        "barang": barang,
+        "kondisi_label": _label_kondisi(barang["kondisi"]),
+        "barang_query": urlencode({k: v for k, v in barang.items() if v}),
+        "daftar": daftar,
+        "urut": urut,
+        "urutan": URUTAN,
+    }
+    if _is_htmx(request):
+        return render(request, "donasi/_org_list.html", konteks)
+    return render(request, "donasi/pilih_lembaga.html", konteks)
+
+
+@donatur_required
+def kirim_donasi(request, kebutuhan_id):
+    kebutuhan = get_object_or_404(
+        Kebutuhan.objects.aktif().select_related("lembaga"), pk=kebutuhan_id)
+    barang = _barang_dari_request(request)
+
+    if not barang["nama"]:
+        messages.error(request, "Pilih barang yang ingin kamu donasikan terlebih dahulu.")
+        return redirect("donasi:pilih_lembaga")
+
+    kondisi = barang["kondisi"] if barang["kondisi"] in Kondisi.values else Kondisi.TERAWAT
+    foto = barang["foto"] if barang["foto"].startswith(("http://", "https://", "/")) else ""
+
+    if request.method == "POST":
+        form = PenawaranForm(request.POST, kebutuhan=kebutuhan)
+        if form.is_valid():
+            penawaran = form.save(commit=False)
+            penawaran.donatur = request.user
+            penawaran.lembaga = kebutuhan.lembaga
+            penawaran.kebutuhan = kebutuhan
+            penawaran.nama_barang = barang["nama"][:120]
+            penawaran.ukuran = barang["ukuran"][:30]
+            penawaran.kondisi = kondisi
+            penawaran.jumlah = 1
+            penawaran.foto_url = foto
+            penawaran.lemari_id = barang["lemari_id"][:50]
+            penawaran.save()
+            messages.success(request, "Tawaran donasi terkirim. Lembaga akan menjawab dalam 2 hari.")
+            return redirect("donasi:tawaran_saya")
+    else:
+        form = PenawaranForm(kebutuhan=kebutuhan)
+
+    return render(request, "donasi/kirim_donasi.html", {
+        "form": form,
+        "kebutuhan": kebutuhan,
+        "barang": barang,
+        "kondisi_label": _label_kondisi(kondisi),
+    })
+
+
+@donatur_required
+def tawaran_saya(request):
+    daftar = Penawaran.objects.filter(donatur=request.user).select_related("lembaga", "kebutuhan")
+    status = request.GET.get("status", "")
+    if status in Penawaran.Status.values:
+        daftar = daftar.filter(status=status)
+    return render(request, "donasi/tawaran_saya.html", {
+        "daftar": daftar, "status": status, "opsi_status": Penawaran.Status.choices,
+    })
+
+
+@donatur_required
+@require_http_methods(["DELETE", "POST"])
+def batalkan_tawaran(request, pk):
+    penawaran = get_object_or_404(
+        Penawaran, pk=pk, donatur=request.user, status=Penawaran.Status.MENUNGGU
+    )
+    penawaran.delete()
+    if _is_htmx(request):
+        return HttpResponse("")
+    messages.success(request, "Tawaran donasi dibatalkan.")
+    return redirect("donasi:tawaran_saya")
+
 
 # ---------------------------------------------------------------------------
 # Sisi lembaga mitra
@@ -23,7 +146,7 @@ def dashboard_lembaga(request):
         milik.filter(status__in=[Penawaran.Status.MENUNGGU, Penawaran.Status.DITERIMA])
         .select_related("donatur", "kebutuhan")
     )
-    tawaran.sort(key=lambda p: p.status != Penawaran.Status.MENUNGGU)  # yang menunggu di atas (sort stabil)
+    tawaran.sort(key=lambda p: p.status != Penawaran.Status.MENUNGGU)
 
     kebutuhan_aktif = Kebutuhan.objects.filter(lembaga=request.user, status=Kebutuhan.Status.AKTIF)
     diterima_bulan_ini = milik.filter(

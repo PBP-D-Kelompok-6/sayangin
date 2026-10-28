@@ -1,0 +1,19 @@
+{% load static %}{% static 'img/logo.svg' as placeholder %}
+{% for k in daftar %}
+<div class="org">
+  <span class="org__img" style="--img: url('{{ k.foto_url|default:placeholder }}')"></span>
+  <div class="org__info">
+    <span><b>{{ k.nama_lembaga }}</b></span>
+    <span>Butuh: {{ k.nama_barang }}{% if k.ukuran_list %}, ukuran {{ k.ukuran_label }}{% endif %}</span>
+    <div class="progress progress--thin" style="--value: {{ k.persen }}%"><span></span></div>
+    <span class="text-sm text-soft">{{ k.terpenuhi }} / {{ k.jumlah }} terpenuhi{% if k.tenggat %} · tenggat {{ k.tenggat|date:"j M" }}{% endif %}</span>
+  </div>
+  {% if barang_query %}
+  <a class="btn btn--primary btn--sm" href="{% url 'donasi:kirim_donasi' k.pk %}?{{ barang_query }}">Pilih</a>
+  {% else %}
+  <span class="btn btn--outline btn--sm" aria-disabled="true">Pilih barang dulu</span>
+  {% endif %}
+</div>
+{% empty %}
+<div class="org"><span class="text-soft">Belum ada lembaga yang membutuhkan barang ini.</span></div>
+{% endfor %}

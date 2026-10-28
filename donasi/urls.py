@@ -4,6 +4,17 @@ from . import views
 app_name = "donasi"
 
 urlpatterns = [
+    # ---------------------------------------------------------------------------
+    # Sisi donatur
+    # ---------------------------------------------------------------------------
+    path("", views.pilih_lembaga, name="pilih_lembaga"),
+    path("kirim/<int:kebutuhan_id>/", views.kirim_donasi, name="kirim_donasi"),
+    path("saya/", views.tawaran_saya, name="tawaran_saya"),
+    path("saya/<int:pk>/batal/", views.batalkan_tawaran, name="batalkan_tawaran"),
+
+    # ---------------------------------------------------------------------------
+    # Sisi lembaga mitra
+    # ---------------------------------------------------------------------------
     # Dashboard & Riwayat
     path("lembaga/", views.dashboard_lembaga, name="dashboard_lembaga"),
     path("lembaga/riwayat/", views.riwayat_lembaga, name="riwayat_lembaga"),

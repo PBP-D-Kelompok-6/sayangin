@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 
-from .models import UKURAN_CHOICES, Kebutuhan
+from .models import UKURAN_CHOICES, Kebutuhan, Penawaran
 
 
 class KebutuhanForm(forms.ModelForm):
@@ -50,3 +50,34 @@ class KebutuhanForm(forms.ModelForm):
                 f"Jumlah tidak boleh kurang dari barang yang sudah terpenuhi ({self.instance.terpenuhi})."
             )
         return jumlah
+
+class PenawaranForm(forms.ModelForm):
+    bersih = forms.BooleanField(
+        required=True,
+        error_messages={"required": "Pastikan barang sudah bersih dan layak pakai."},
+    )
+
+    class Meta:
+        model = Penawaran
+        fields = ["metode", "tanggal_rencana", "jam", "pesan"]
+        widgets = {
+            "metode": forms.RadioSelect,
+            "tanggal_rencana": forms.DateInput(
+                attrs={"type": "date", "class": "input"}, format="%Y-%m-%d"),
+            "jam": forms.Select(attrs={"class": "select"}),
+            "pesan": forms.Textarea(attrs={
+                "class": "textarea", "rows": 3,
+                "placeholder": "Contoh: kancing kedua sedikit longgar, sudah dicuci.",
+            }),
+        }
+
+    def __init__(self, *args, kebutuhan=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.kebutuhan = kebutuhan
+        self.fields["tanggal_rencana"].required = True
+
+    def clean_tanggal_rencana(self):
+        tanggal = self.cleaned_data.get("tanggal_rencana")
+        if tanggal and tanggal < timezone.localdate():
+            raise forms.ValidationError("Pilih tanggal hari ini atau setelahnya.")
+        return tanggal
