@@ -5,11 +5,11 @@
 {% block body %}
 <div class="page has-bottom-nav">
   {% include 'lemari/_site_header.html' %}
-  <header class="app-bar only-mobile"><h1 class="app-bar__title">Lemari <em>kamu</em></h1><button class="icon-btn" type="button" aria-label="Cari di lemari"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button><a class="btn btn--primary btn--round" href="{% url 'lemari:awal' %}" aria-label="Tambah barang">+</a><a class="avatar-link" href="#" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
+  <header class="app-bar only-mobile"><h1 class="app-bar__title">Lemari <em>kamu</em></h1><button class="icon-btn" type="button" aria-label="Cari di lemari"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button><a class="avatar-link" href="#" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
   <main class="page__main container wardrobe" id="konten">
     <div class="wardrobe__head">
       <div class="stack" style="--stack-gap: 6px"><span class="eyebrow">Lemari digital<span class="only-mobile"> · {{ wardrobe_count|default:0 }} barang</span></span><h1 class="page-title only-desktop">Lemari <em>kamu</em></h1><span class="text-soft only-desktop">{{ wardrobe_count|default:0 }} barang</span></div>
-      <a class="btn btn--primary only-desktop" href="{% url 'lemari:awal' %}">+ Tambah barang</a>
+      <span class="row" style="--row-gap: 8px"><a class="btn btn--primary btn--sm only-mobile" href="{% url 'lemari:awal' %}">+ Tambah barang</a><a class="btn btn--primary only-desktop" href="{% url 'lemari:awal' %}">+ Tambah barang</a></span>
     </div>
     <section class="reminder dark-panel" aria-label="Pengingat">
       <span class="reminder__img" style="--img: url({% static 'img/blazer-abu.jpg' %})"></span>
@@ -19,22 +19,24 @@
       <span class="reminder__dots only-mobile" aria-hidden="true"><span class="is-active"></span><span></span><span></span></span>
     </section>
     <div class="wardrobe__bar">
-      <div class="tabs" role="tablist" aria-label="Filter lemari"><a class="tab is-active" role="tab" aria-selected="true" href="#">Semua (24)</a><a class="tab" role="tab" aria-selected="false" href="#">Jarang dipakai (3)</a><a class="tab" role="tab" aria-selected="false" href="#">Dijual (2)</a><a class="tab only-desktop" role="tab" aria-selected="false" href="#">Didonasikan (1)</a></div>
-      <label class="sort only-desktop">Urutkan <select class="select select--pill"><option>Paling lama tak dipakai</option></select></label>
+      <div class="tabs" role="tablist" aria-label="Filter lemari"><a class="tab is-active" role="tab" aria-selected="true" href="#">Semua ({{ wardrobe_count|default:0 }})</a><a class="tab" role="tab" aria-selected="false" href="#">Dijual</a><a class="tab only-desktop" role="tab" aria-selected="false" href="#">Didonasikan</a></div>
+      <form class="sort" method="get"><label>Urutkan <select class="select select--pill" name="sort" onchange="this.form.submit()"><option value="listed" {% if current_sort == 'listed' %}selected{% endif %}>List</option><option value="usage" {% if current_sort == 'usage' %}selected{% endif %}>Pemakaian</option><option value="category" {% if current_sort == 'category' %}selected{% endif %}>Kategori</option></select></label></form>
     </div>
     <div class="items">
-      {% for item in wardrobe_items %}<a class="item" href="{% url 'lemari:jual' %}"><span class="item__img"{% if item.photo %} style="--img: url('{% url 'lemari:wardrobe_photo' item.pk %}')"{% else %} style="--img: url({% static 'img/blazer-abu.jpg' %})"{% endif %}></span><b>{{ item.name }}</b><span class="text-sm text-muted">{{ item.category }} · {{ item.last_used }}</span></a>{% endfor %}
-      <a class="item" href="{% url 'lemari:jual' %}"><span class="item__img" style="--img: url({% static 'img/blazer-abu.jpg' %})"></span><b>Blazer wol</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 6 bln lalu</span><span class="only-mobile">Dipakai 6 bln lalu</span></span></a>
-      <a class="item" href="{% url 'lemari:jual' %}"><span class="item__img" style="--img: url({% static 'img/sneakers-suede.jpg' %})"></span><b>Sneakers suede</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 7 bln lalu</span><span class="only-mobile">Dipakai 7 bln lalu</span></span></a>
-      <a class="item" href="{% url 'lemari:jual' %}"><span class="item__img" style="--img: url({% static 'img/kamera-film.jpg' %})"></span><b>Kamera analog</b><span class="text-sm text-muted"><span class="only-desktop">Dijual · 3 orang menyimpan</span><span class="only-mobile">Dijual · 3 menyimpan</span></span></a>
-      <a class="item" href="{% url 'lemari:jual' %}"><span class="item__img" style="--img: url({% static 'img/kemeja-linen.jpg' %})"></span><b>Kemeja linen</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 2 mgg lalu</span><span class="only-mobile">Dipakai 2 mgg lalu</span></span></a>
-      <a class="item" href="{% url 'lemari:jual' %}"><span class="item__img" style="--img: url({% static 'img/buku-vintage.jpg' %})"></span><b>Buku vintage (5)</b><span class="text-sm text-muted"><span class="only-desktop">Disimpan · ingatkan Jan</span><span class="only-mobile">Disimpan · ingatkan Jan</span></span></a>
-      <a class="item" href="{% url 'lemari:jual' %}"><span class="item__img" style="--img: url({% static 'img/jaket-track-zaitun.jpg' %})"></span><b>Jaket track suede</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 1 bln lalu</span><span class="only-mobile">Dipakai 1 bln lalu</span></span></a>
-      <a class="item" href="{% url 'lemari:jual' %}"><span class="item__img" style="--img: url({% static 'img/tas-mini-marun.jpg' %})"></span><b>Tas mini kulit</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 3 bln lalu</span><span class="only-mobile">Dipakai 3 bln lalu</span></span></a>
-      <a class="item" href="{% url 'lemari:jual' %}"><span class="item__img" style="--img: url({% static 'img/vas-keramik.jpg' %})"></span><b>Vas keramik</b><span class="text-sm text-muted"><span class="only-desktop">Terakhir dipakai 4 bln lalu</span><span class="only-mobile">Dipakai 4 bln lalu</span></span></a>
-      <a class="btn btn--dashed only-desktop items__add" href="{% url 'lemari:awal' %}">+ Tambah barang</a>
+      {% for item in wardrobe_items %}<div class="item item-card"><button class="item-card__toggle" type="button" aria-expanded="false"><span class="item__img"{% if item.photo %} style="--img: url('{% url 'lemari:wardrobe_photo' item.pk %}')"{% else %} style="--img: url({% static 'img/blazer-abu.jpg' %})"{% endif %}></span><b>{{ item.name }}</b><span class="text-sm text-muted">{{ item.category }} · {{ item.last_used }}</span></button><div class="item-card__actions" hidden><a class="btn btn--primary btn--sm" href="{% url 'lemari:jual' %}?item={{ item.pk }}">Jual</a><form method="post" action="{% url 'lemari:hapus_item' item.pk %}" data-delete-form>{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Hapus</button></form></div></div>{% endfor %}
+      {% if not wardrobe_items %}<p class="text-soft">Belum ada barang di lemarimu. Tambahkan barang pertamamu.</p>{% endif %}
+      <a class="btn btn--dashed items__add" href="{% url 'lemari:awal' %}">+ Tambah barang</a>
     </div>
   </main>
   {% include 'lemari/_bottom_nav.html' %}
 </div>
+<script>
+document.querySelectorAll('.item-card').forEach(card => {
+  const toggle = card.querySelector('.item-card__toggle'), actions = card.querySelector('.item-card__actions');
+  toggle.addEventListener('click', () => { const open = toggle.getAttribute('aria-expanded') === 'true'; toggle.setAttribute('aria-expanded', String(!open)); actions.hidden = open; card.classList.toggle('is-open', !open); });
+});
+document.querySelectorAll('[data-delete-form]').forEach(form => form.addEventListener('submit', event => {
+  if (!window.confirm('Hapus barang ini dari lemarimu?')) event.preventDefault();
+}));
+</script>
 {% endblock %}

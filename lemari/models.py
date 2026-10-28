@@ -6,6 +6,7 @@ class SaleListing(models.Model):
     PUBLISHED = "published"
     STATUS_CHOICES = ((PUBLISHED, "Tayang"),)
     owner = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    source_item = models.ForeignKey("WardrobeItem", null=True, blank=True, on_delete=models.SET_NULL, related_name="sale_listings")
     title = models.CharField(max_length=160, blank=True)
     category = models.CharField(max_length=80, blank=True)
     size = models.CharField(max_length=40, blank=True)
