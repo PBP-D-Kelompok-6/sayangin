@@ -203,6 +203,9 @@ class ProfileAndLogoutTests(TestCase):
         self.assertContains(response, 'cdn.tailwindcss.com')
         self.assertContains(response, 'id="keluar"')
         self.assertContains(response, 'Keluar dari <em>Sayangin</em>?')
+        self.assertContains(response, 'value="XS"')
+        self.assertContains(response, 'value="XL"')
+        self.assertContains(response, 'value="XXL"')
 
     def test_logout_post_clears_session_and_redirects_to_landing(self):
         self.client.login(username='nadia.r', password='password123')
@@ -369,7 +372,7 @@ class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
         pref_res = self.client.post(
             reverse('main:api_update_preferences'),
             data=json.dumps({
-                'sizes': ['S', 'M'],
+                'sizes': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
                 'categories': ['Atasan', 'Buku'],
                 'reminder': False,
                 'email_newsletter': True,
@@ -378,7 +381,7 @@ class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
         )
         self.assertEqual(pref_res.status_code, 200)
         pref_data = pref_res.json()['preferences']
-        self.assertEqual(pref_data['sizes'], ['S', 'M'])
+        self.assertEqual(pref_data['sizes'], ['XS', 'S', 'M', 'L', 'XL', 'XXL'])
         self.assertEqual(pref_data['categories'], ['Atasan', 'Buku'])
         self.assertFalse(pref_data['reminder'])
         self.assertTrue(pref_data['email_newsletter'])

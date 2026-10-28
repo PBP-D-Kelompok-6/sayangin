@@ -188,9 +188,12 @@
           <div class="list-row">
             <span class="profile__key">Ukuran pakaian</span>
             <span class="chips flex flex-wrap">
+              <label><input class="visually-hidden" type="checkbox" value="XS" data-pref-size {% if 'XS' in preferences.sizes %}checked{% endif %}><span class="chip">XS</span></label>
               <label><input class="visually-hidden" type="checkbox" value="S" data-pref-size {% if 'S' in preferences.sizes %}checked{% endif %}><span class="chip">S</span></label>
               <label><input class="visually-hidden" type="checkbox" value="M" data-pref-size {% if 'M' in preferences.sizes %}checked{% endif %}><span class="chip">M</span></label>
               <label><input class="visually-hidden" type="checkbox" value="L" data-pref-size {% if 'L' in preferences.sizes %}checked{% endif %}><span class="chip">L</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="XL" data-pref-size {% if 'XL' in preferences.sizes %}checked{% endif %}><span class="chip">XL</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="XXL" data-pref-size {% if 'XXL' in preferences.sizes %}checked{% endif %}><span class="chip">XXL</span></label>
             </span>
           </div>
           <div class="list-row">
