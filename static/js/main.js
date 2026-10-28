@@ -29,9 +29,12 @@
   };
 
   const escapeHtml = (str) => {
-    const div = document.createElement('div');
-    div.textContent = str ?? '';
-    return div.innerHTML;
+    return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
   };
 
   /* ---------- Landing: Empat pilihan (JUAL / DONASI / SIMPAN / TUNDA BELI) ---------- */
@@ -159,6 +162,8 @@
   const profileRoot = document.querySelector('[data-api-profile-url]');
   const modalProfil = document.getElementById('modal-profil');
   const modalAlamat = document.getElementById('modal-alamat');
+  const modalPassword = document.getElementById('modal-password');
+  const modalDeleteAccount = document.getElementById('hapus-akun');
 
   const openModal = (modalEl) => {
     if (!modalEl) return;
@@ -170,6 +175,9 @@
   const closeModal = (modalEl) => {
     if (!modalEl) return;
     modalEl.classList.remove('is-open');
+    if (window.location.hash === `#${modalEl.id}`) {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
   };
 
   document.querySelectorAll('[data-modal-close]').forEach((btn) => {
@@ -180,7 +188,7 @@
     });
   });
 
-  [modalProfil, modalAlamat].forEach((modalEl) => {
+  [modalProfil, modalAlamat, modalPassword, modalDeleteAccount].forEach((modalEl) => {
     modalEl?.addEventListener('click', (e) => {
       if (e.target === modalEl) {
         closeModal(modalEl);
@@ -514,6 +522,145 @@
     });
   }
 
+  /* ---------- Keamanan: Kata Sandi, Google OAuth & Hapus Akun via AJAX ---------- */
+  const formPassword = document.getElementById('form-ajax-password');
+  const passwordErrorBox = document.querySelector('[data-password-modal-error]');
+  const passwordErrorText = document.querySelector('[data-password-modal-error-text]');
+  const passwordStatusEl = document.querySelector('[data-password-status]');
+  const oldPasswordField = document.querySelector('[data-old-password-field]');
+
+  document.querySelectorAll('[data-password-edit]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      if (!modalPassword) return;
+      e.preventDefault();
+      if (passwordErrorBox) passwordErrorBox.hidden = true;
+      formPassword?.reset();
+      openModal(modalPassword);
+    });
+  });
+
+  formPassword?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (passwordErrorBox) passwordErrorBox.hidden = true;
+    const passwordUrl = profileRoot?.getAttribute('data-api-password-url') || '/api/security/password/';
+    const formData = new FormData(formPassword);
+
+    try {
+      const res = await fetch(passwordUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || data.status !== 'ok') {
+        if (passwordErrorBox && passwordErrorText) {
+          passwordErrorText.textContent = data.message || 'Gagal memperbarui kata sandi.';
+          passwordErrorBox.hidden = false;
+        }
+        return;
+      }
+      if (passwordStatusEl && data.password_status) {
+        passwordStatusEl.textContent = data.password_status;
+      }
+      if (oldPasswordField) {
+        oldPasswordField.hidden = false;
+      }
+      formPassword.reset();
+      closeModal(modalPassword);
+      showToast(data.message || 'Kata sandi berhasil diperbarui.');
+    } catch {
+      if (passwordErrorBox && passwordErrorText) {
+        passwordErrorText.textContent = 'Terjadi kesalahan jaringan. Coba lagi.';
+        passwordErrorBox.hidden = false;
+      }
+    }
+  });
+
+  const googleActionWrap = document.querySelector('[data-google-action-wrap]');
+  const googleStatusEl = document.querySelector('[data-google-status]');
+  const googleStatusMobileEl = document.querySelector('[data-google-status-mobile]');
+
+  googleActionWrap?.addEventListener('click', async (e) => {
+    const disconnectBtn = e.target.closest('[data-google-disconnect]');
+    if (!disconnectBtn) return;
+    e.preventDefault();
+    const disconnectUrl = profileRoot?.getAttribute('data-api-google-disconnect-url') || '/api/security/google/disconnect/';
+    try {
+      const res = await fetch(disconnectUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      const data = await res.json();
+      if (!res.ok || data.status !== 'ok') {
+        showToast(data.message || 'Gagal memutuskan akun Google.');
+        return;
+      }
+      if (googleStatusEl) {
+        googleStatusEl.textContent = 'Belum terhubung';
+      }
+      if (googleStatusMobileEl) {
+        googleStatusMobileEl.textContent = 'Kata sandi';
+      }
+      const connectUrl = data.connect_url || '/auth/google/?action=connect';
+      googleActionWrap.innerHTML = `<a class="text-sm" href="${escapeHtml(connectUrl)}">Hubungkan</a>`;
+      showToast(data.message || 'Akun Google berhasil diputuskan.');
+    } catch {
+      showToast('Gagal memutuskan akun Google.');
+    }
+  });
+
+  const formDeleteAccount = document.getElementById('form-ajax-delete-account');
+  const deleteErrorBox = document.querySelector('[data-delete-modal-error]');
+  const deleteErrorText = document.querySelector('[data-delete-modal-error-text]');
+
+  document.querySelectorAll('[data-delete-account-open]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      if (!modalDeleteAccount) return;
+      e.preventDefault();
+      if (deleteErrorBox) deleteErrorBox.hidden = true;
+      formDeleteAccount?.reset();
+      openModal(modalDeleteAccount);
+    });
+  });
+
+  formDeleteAccount?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (deleteErrorBox) deleteErrorBox.hidden = true;
+    const deleteUrl = profileRoot?.getAttribute('data-api-delete-account-url') || '/api/security/delete-account/';
+    const formData = new FormData(formDeleteAccount);
+
+    try {
+      const res = await fetch(deleteUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken(),
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || data.status !== 'ok') {
+        if (deleteErrorBox && deleteErrorText) {
+          deleteErrorText.textContent = data.message || 'Gagal menghapus akun.';
+          deleteErrorBox.hidden = false;
+        }
+        return;
+      }
+      window.location.href = data.redirect_url || '/';
+    } catch {
+      if (deleteErrorBox && deleteErrorText) {
+        deleteErrorText.textContent = 'Terjadi kesalahan jaringan. Coba lagi.';
+        deleteErrorBox.hidden = false;
+      }
+    }
+  });
+
   /* ---------- Keyboard shortcut "/" untuk fokus ke kolom pencarian & Escape ---------- */
   document.addEventListener('keydown', (e) => {
     if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
@@ -530,12 +677,11 @@
       if (keluarOverlay && (keluarOverlay.classList.contains('is-open') || window.location.hash === '#keluar')) {
         closeKeluar();
       }
-      if (modalProfil && modalProfil.classList.contains('is-open')) {
-        closeModal(modalProfil);
-      }
-      if (modalAlamat && modalAlamat.classList.contains('is-open')) {
-        closeModal(modalAlamat);
-      }
+      [modalProfil, modalAlamat, modalPassword, modalDeleteAccount].forEach((modalEl) => {
+        if (modalEl && (modalEl.classList.contains('is-open') || window.location.hash === `#${modalEl.id}`)) {
+          closeModal(modalEl);
+        }
+      });
     }
   });
 })();

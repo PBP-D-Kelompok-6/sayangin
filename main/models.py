@@ -63,6 +63,9 @@ class UserProfile(models.Model):
     is_primary_address = models.BooleanField(default=True)
     phone_number = models.CharField(max_length=20, blank=True)
     preferences = models.TextField(blank=True, help_text="Simpan preferensi gaya atau ukuran di sini.")
+    google_connected = models.BooleanField(default=False)
+    google_email = models.EmailField(blank=True)
+    password_updated_at = models.DateTimeField(null=True, blank=True)
 
     def get_preferences_dict(self) -> dict:
         default_prefs = {

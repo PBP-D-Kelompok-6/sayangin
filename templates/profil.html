@@ -22,6 +22,9 @@
         data-api-profile-update-url="{% url 'main:api_update_profile' %}"
         data-api-preferences-url="{% url 'main:api_update_preferences' %}"
         data-api-address-add-url="{% url 'main:api_add_address' %}"
+        data-api-password-url="{% url 'main:api_change_password' %}"
+        data-api-google-disconnect-url="{% url 'main:api_disconnect_google' %}"
+        data-api-delete-account-url="{% url 'main:api_delete_account' %}"
         data-edit-profile-url="{% url 'main:edit_profile' %}">
     {% if messages %}
       {% for message in messages %}
@@ -195,15 +198,21 @@
           <h2 class="eyebrow">Keamanan</h2>
           <div class="list-row">
             <span class="profile__key">Kata sandi</span>
-            <span class="spacer">Terakhir diubah baru-baru ini</span>
-            <a class="text-sm" href="#">Ubah</a>
+            <span class="spacer" data-password-status>{% if profile.password_updated_at %}Diubah {{ profile.password_updated_at|timesince }} lalu{% elif has_usable_password %}Terakhir diubah baru-baru ini{% else %}Belum diatur (masuk lewat Google){% endif %}</span>
+            <a class="text-sm" href="#modal-password" data-password-edit>Ubah</a>
           </div>
           <div class="list-row">
             <span class="profile__key">Akun Google</span>
-            <span class="spacer">Terhubung</span>
-            <a class="text-sm" href="#">Putuskan</a>
+            <span class="spacer" data-google-status>{% if profile.google_connected %}Terhubung{% if profile.google_email %} · {{ profile.google_email }}{% endif %}{% else %}Belum terhubung{% endif %}</span>
+            <span data-google-action-wrap>
+              {% if profile.google_connected %}
+                <button class="link-btn text-sm" type="button" data-google-disconnect>Putuskan</button>
+              {% else %}
+                <a class="text-sm" href="{% url 'main:google_login' %}?action=connect">Hubungkan</a>
+              {% endif %}
+            </span>
           </div>
-          <a class="profile__add text-sm text-muted" href="#">Hapus akun</a>
+          <a class="profile__add text-sm text-muted" href="#hapus-akun" data-delete-account-open>Hapus akun</a>
         </section>
       </div>
 
@@ -244,9 +253,9 @@
             <span class="text-sm text-muted" data-address-count>{% if addresses %}{{ addresses|length }} alamat{% elif formatted_address %}1 alamat{% else %}Belum diisi{% endif %}</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
-          <a class="list-row list-row--link" href="#">
+          <a class="list-row list-row--link" href="#modal-password" data-password-edit>
             <span class="spacer">Kata sandi &amp; Google</span>
-            <span class="text-sm text-muted"></span>
+            <span class="text-sm text-muted" data-google-status-mobile>{% if profile.google_connected %}Google terhubung{% else %}Kata sandi{% endif %}</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
         </section>
@@ -295,7 +304,7 @@
         <a class="btn btn--danger btn--block w-full" href="#keluar" data-dialog-open="keluar">
           <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Keluar
         </a>
-        <a class="profile__delete text-sm text-muted" href="#">Hapus akun</a>
+        <a class="profile__delete text-sm text-muted" href="#hapus-akun" data-delete-account-open>Hapus akun</a>
       </div>
     </div>
   </main>
@@ -397,6 +406,70 @@
         <div class="dialog__actions">
           <button class="btn btn--outline" type="button" data-modal-close="modal-alamat">Batal</button>
           <button class="btn btn--primary" type="submit" data-address-submit>Simpan alamat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal AJAX: Ubah Kata Sandi -->
+  <div class="overlay" id="modal-password" role="dialog" aria-modal="true" aria-labelledby="modal-password-title">
+    <div class="dialog dialog--wide">
+      <h2 class="dialog__title" id="modal-password-title">Ubah <em>kata sandi</em></h2>
+      <p class="text-soft text-sm">Gunakan minimal 8 karakter agar akunmu tetap aman.</p>
+      <div class="alert" data-password-modal-error hidden role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span data-password-modal-error-text></span>
+      </div>
+      <form class="dialog__form" id="form-ajax-password" method="POST" action="{% url 'main:change_password' %}" novalidate>
+        {% csrf_token %}
+        <label class="field" data-old-password-field {% if not has_usable_password %}hidden{% endif %}>
+          <span class="field__label">Kata sandi saat ini</span>
+          <input class="input" type="password" name="old_password" autocomplete="current-password">
+        </label>
+        <div class="form-row grid grid-cols-1 md:grid-cols-2">
+          <label class="field">
+            <span class="field__label">Kata sandi baru</span>
+            <input class="input" type="password" name="new_password1" minlength="8" autocomplete="new-password" required>
+            <span class="field__hint">Minimal 8 karakter</span>
+          </label>
+          <label class="field">
+            <span class="field__label">Ulangi kata sandi baru</span>
+            <input class="input" type="password" name="new_password2" minlength="8" autocomplete="new-password" required>
+          </label>
+        </div>
+        <div class="dialog__actions">
+          <button class="btn btn--outline" type="button" data-modal-close="modal-password">Batal</button>
+          <button class="btn btn--primary" type="submit">Simpan kata sandi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal AJAX / Konfirmasi: Hapus Akun -->
+  <div class="overlay" id="hapus-akun" role="dialog" aria-modal="true" aria-labelledby="hapus-akun-title">
+    <div class="dialog">
+      <h2 class="dialog__title" id="hapus-akun-title">Hapus akun <em>Sayangin</em>?</h2>
+      <p class="text-soft">Tindakan ini bersifat permanen. Seluruh data profil, alamat tersimpan, dan riwayat lemari digitalmu akan dihapus.</p>
+      <div class="alert" data-delete-modal-error hidden role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span data-delete-modal-error-text></span>
+      </div>
+      <form class="dialog__form" id="form-ajax-delete-account" method="POST" action="{% url 'main:delete_account' %}" novalidate>
+        {% csrf_token %}
+        {% if has_usable_password %}
+          <label class="field" data-delete-password-field>
+            <span class="field__label">Masukkan kata sandi untuk konfirmasi</span>
+            <input class="input" type="password" name="password" autocomplete="current-password" placeholder="Kata sandi akunmu" required>
+          </label>
+        {% else %}
+          <label class="field">
+            <span class="field__label">Ketik HAPUS untuk konfirmasi</span>
+            <input class="input" type="text" name="confirm_text" placeholder="HAPUS" required>
+          </label>
+        {% endif %}
+        <div class="dialog__actions">
+          <button class="btn btn--outline" type="button" data-modal-close="hapus-akun">Batal</button>
+          <button class="btn btn--danger" type="submit">Ya, hapus akun</button>
         </div>
       </form>
     </div>

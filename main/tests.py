@@ -384,4 +384,123 @@ class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
         self.assertTrue(pref_data['email_newsletter'])
 
 
+class SecurityAndGoogleAuthTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='nadia.r',
+            email='nadia@email.com',
+            password='password123',
+        )
+        profile = self.user.profile # type: ignore
+        profile.full_name = 'Nadia Rahma'
+        profile.save()
 
+    def test_change_password_validates_and_keeps_session_active(self):
+        self.client.login(username='nadia.r', password='password123')
+
+        # Wrong current password fails
+        bad_res = self.client.post(reverse('main:api_change_password'), {
+            'old_password': 'wrongpassword',
+            'new_password1': 'newsecurepass123',
+            'new_password2': 'newsecurepass123',
+        })
+        self.assertEqual(bad_res.status_code, 400)
+        self.assertEqual(bad_res.json()['status'], 'error')
+
+        # Valid password change succeeds and keeps user logged in
+        ok_res = self.client.post(reverse('main:api_change_password'), {
+            'old_password': 'password123',
+            'new_password1': 'newsecurepass123',
+            'new_password2': 'newsecurepass123',
+        })
+        self.assertEqual(ok_res.status_code, 200)
+        self.assertEqual(ok_res.json()['status'], 'ok')
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('newsecurepass123'))
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
+
+    def test_google_login_and_register_personal_and_lembaga(self):
+        # 1. Google OAuth page renders
+        get_res = self.client.get(reverse('main:google_login') + '?mode=chooser')
+        self.assertEqual(get_res.status_code, 200)
+        self.assertTemplateUsed(get_res, 'google_oauth.html')
+        state_personal = get_res.context['state']
+
+        # 2. Register new PERSONAL user via Google callback
+        cb_res = self.client.post(reverse('main:google_callback'), {
+            'state': state_personal,
+            'email': 'budi.google@gmail.com',
+            'full_name': 'Budi Raharjo',
+            'jenis': 'pribadi',
+        })
+
+        self.assertRedirects(cb_res, reverse('main:edit_profile'))
+        budi = User.objects.get(email='budi.google@gmail.com')
+        self.assertTrue(budi.profile.google_connected) # type: ignore
+        self.assertEqual(budi.profile.google_email, 'budi.google@gmail.com') # type: ignore
+        self.assertFalse(budi.has_usable_password())
+
+        # Cannot disconnect Google before setting a password
+        disc_fail = self.client.post(reverse('main:api_disconnect_google'))
+        self.assertEqual(disc_fail.status_code, 400)
+
+        # Set password without needing old_password (since created via Google)
+        set_pw = self.client.post(reverse('main:api_change_password'), {
+            'new_password1': 'budipassword123',
+            'new_password2': 'budipassword123',
+        })
+        self.assertEqual(set_pw.status_code, 200)
+
+        # Now disconnecting Google succeeds
+        disc_ok = self.client.post(reverse('main:api_disconnect_google'))
+        self.assertEqual(disc_ok.status_code, 200)
+        budi.profile.refresh_from_db() # type: ignore
+        self.assertFalse(budi.profile.google_connected) # type: ignore
+
+        self.client.logout()
+
+        # 3. Register new LEMBAGA user via Google callback -> routes to edit_institution_profile
+        lembaga_init = self.client.get(reverse('main:google_login') + '?mode=chooser&jenis=lembaga')
+        state_lembaga = lembaga_init.context['state']
+        lembaga_cb = self.client.post(reverse('main:google_callback'), {
+            'state': state_lembaga,
+            'email': 'yayasan.cahaya@gmail.com',
+            'full_name': 'Yayasan Cahaya',
+            'jenis': 'lembaga',
+        })
+        self.assertRedirects(lembaga_cb, reverse('main:edit_institution_profile'))
+        yayasan = User.objects.get(email='yayasan.cahaya@gmail.com')
+        self.assertEqual(yayasan.profile.role, 'LEMBAGA') # type: ignore
+        self.assertTrue(yayasan.profile.google_connected) # type: ignore
+
+    def test_delete_account_validates_password_and_removes_user(self):
+        self.client.login(username='nadia.r', password='password123')
+
+        # Wrong password rejected
+        bad_del = self.client.post(reverse('main:api_delete_account'), {
+            'password': 'wrongpassword',
+        })
+        self.assertEqual(bad_del.status_code, 400)
+        self.assertTrue(User.objects.filter(username='nadia.r').exists())
+
+        # Correct password deletes user and logs out
+        ok_del = self.client.post(reverse('main:api_delete_account'), {
+            'password': 'password123',
+        })
+        self.assertEqual(ok_del.status_code, 200)
+        self.assertEqual(ok_del.json()['redirect_url'], reverse('main:show_main'))
+        self.assertFalse(User.objects.filter(username='nadia.r').exists())
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_delete_account_requires_pass_when_empty_payload(self):
+        self.client.login(username='nadia.r', password='password123')
+        empty_res = self.client.post(reverse('main:api_delete_account'), data={},)
+
+        self.assertEqual(empty_res.status_code, 400)
+        self.assertIn("Masukkan kata sandi", empty_res.json()['message'])
+        self.assertTrue(User.objects.filter(username='nadia.r').exists())
+
+        bypass_res = self.client.post(reverse('main:api_delete_account'), data={'confirm_text': 'HAPUS'},)
+
+        self.assertEqual(bypass_res.status_code, 400)
+        self.assertTrue(User.objects.filter(username='nadia.r').exists())

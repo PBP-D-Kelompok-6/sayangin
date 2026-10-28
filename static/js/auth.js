@@ -122,6 +122,19 @@
     });
   });
 
+  /* ---------- Sinkronisasi pilihan jenis akun (Pribadi / Lembaga) ke tombol Google ---------- */
+  const googleRegisterLink = document.querySelector('[data-google-register-link]');
+  if (googleRegisterLink) {
+    const baseUrl = googleRegisterLink.getAttribute('data-base-url') || '/auth/google/';
+    document.querySelectorAll('input[name="jenis"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        if (radio.checked) {
+          googleRegisterLink.setAttribute('href', `${baseUrl}?jenis=${encodeURIComponent(radio.value)}`);
+        }
+      });
+    });
+  }
+
   /* ---------- Umpan balik unggah dokumen (.dropzone) ---------- */
   document.querySelectorAll('[data-file-input]').forEach(fileInput => {
     const labelSpan = fileInput.closest('.dropzone')?.querySelector('[data-file-label]');
