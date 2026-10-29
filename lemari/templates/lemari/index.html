@@ -11,13 +11,7 @@
       <div class="stack" style="--stack-gap: 6px"><span class="eyebrow">Lemari digital<span class="only-mobile"> · {{ wardrobe_count|default:0 }} barang</span></span><h1 class="page-title only-desktop">Lemari <em>kamu</em></h1><span class="text-soft only-desktop">{{ wardrobe_count|default:0 }} barang</span></div>
       <span class="row" style="--row-gap: 8px"><a class="btn btn--primary btn--sm only-mobile" href="{% url 'lemari:tambah_barang' %}">+ Tambah barang</a><a class="btn btn--primary only-desktop" href="{% url 'lemari:tambah_barang' %}">+ Tambah barang</a></span>
     </div>
-    <section class="reminder dark-panel" aria-label="Pengingat">
-      <span class="reminder__img" style="--img: url({% static 'img/blazer-abu.jpg' %})"></span>
-      <div class="reminder__copy"><span class="eyebrow">Pengingat · 1 dari 3</span><b class="serif reminder__title">Blazer wol abu belum dipakai 6 bulan</b><span class="reminder__text">Ada 2 lembaga yang sedang butuh blazer ukuran M.</span></div>
-      <div class="reminder__actions"><a class="btn btn--primary btn--sm" href="{% url 'lemari:jual' %}">Jual</a><a class="btn btn--sm btn--on-dark" href="#">Donasi</a><button class="btn btn--sm btn--on-dark" type="button">Simpan</button></div>
-      <button class="icon-btn reminder__next only-desktop" type="button" aria-label="Pengingat berikutnya">→</button>
-      <span class="reminder__dots only-mobile" aria-hidden="true"><span class="is-active"></span><span></span><span></span></span>
-    </section>
+    {% if reminder_items %}<section class="reminder dark-panel" id="reminder-carousel" aria-label="Pengingat">{% for item in reminder_items %}<div class="reminder-slide" data-reminder-slide{% if not forloop.first %} hidden{% endif %}><span class="reminder__img"{% if item.photo %} style="--img: url('{% url 'lemari:wardrobe_photo' item.pk %}')"{% endif %}></span><div class="reminder__copy"><span class="eyebrow">Pengingat · {{ forloop.counter }} dari {{ reminder_items|length }}</span><b class="serif reminder__title">{% if item.last_used == 'Lupa' %}{{ item.name }} sudah lama belum dipakai{% else %}{{ item.name }} belum dipakai {{ item.last_used|lower }}{% endif %}</b><span class="reminder__text">Kami akan mengingatkanmu untuk menentukan langkah berikutnya.</span></div><div class="reminder__actions"><a class="btn btn--primary btn--sm" href="{% url 'lemari:jual' %}?item={{ item.pk }}">Jual</a><a class="btn btn--sm btn--on-dark" href="#">Donasi</a><form method="post" action="{% url 'lemari:toggle_reminder' item.pk %}">{% csrf_token %}<button class="btn btn--sm btn--on-dark" type="submit">Simpan</button></form></div></div>{% endfor %}<button class="icon-btn reminder__next" id="reminder-next" type="button" aria-label="Pengingat berikutnya">→</button><span class="reminder__dots only-mobile" aria-hidden="true">{% for item in reminder_items %}<span class="{% if forloop.first %}is-active{% endif %}" data-reminder-dot></span>{% endfor %}</span></section>{% endif %}
     <div class="wardrobe__bar">
       <div class="tabs" role="tablist" aria-label="Filter lemari"><a class="tab is-active" role="tab" aria-selected="true" href="#">Semua ({{ wardrobe_count|default:0 }})</a><a class="tab" role="tab" aria-selected="false" href="#">Dijual</a><a class="tab only-desktop" role="tab" aria-selected="false" href="#">Didonasikan</a></div>
       <form class="sort" method="get"><label>Urutkan <select class="select select--pill" name="sort" onchange="this.form.submit()"><option value="listed" {% if current_sort == 'listed' %}selected{% endif %}>List</option><option value="usage" {% if current_sort == 'usage' %}selected{% endif %}>Pemakaian</option><option value="category" {% if current_sort == 'category' %}selected{% endif %}>Kategori</option></select></label></form>
@@ -29,4 +23,13 @@
   </main>
   {% include 'lemari/_bottom_nav.html' %}
 </div>
+{% if reminder_items %}<script>
+(() => {
+  const slides = [...document.querySelectorAll('[data-reminder-slide]')], dots = [...document.querySelectorAll('[data-reminder-dot]')], next = document.getElementById('reminder-next');
+  let current = 0;
+  const show = (index) => { current = (index + slides.length) % slides.length; slides.forEach((slide, n) => slide.hidden = n !== current); dots.forEach((dot, n) => dot.classList.toggle('is-active', n === current)); };
+  next?.addEventListener('click', () => show(current + 1));
+  if (slides.length > 1) window.setInterval(() => show(current + 1), 5000);
+})();
+</script>{% endif %}
 {% endblock %}

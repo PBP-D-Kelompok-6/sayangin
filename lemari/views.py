@@ -35,6 +35,7 @@ def index(request):
     wardrobe_items = WardrobeItem.objects.filter(owner=request.user)
     if not wardrobe_items.exists():
         return render(request, "lemari/kosong.html")
+    reminder_items = WardrobeItem.objects.filter(owner=request.user, reminder_enabled=True)
     sort = request.GET.get("sort", "listed")
     usage_order = Case(
         When(last_used="Lebih dari 6 bulan", then=0),
@@ -61,6 +62,7 @@ def index(request):
             "wardrobe_items": wardrobe_items,
             "wardrobe_count": wardrobe_items.count(),
             "current_sort": sort,
+            "reminder_items": reminder_items,
         },
     )
 
@@ -187,6 +189,15 @@ def wardrobe_photo(request, item_id):
 def hapus_item(request, item_id):
     if request.method == "POST":
         get_object_or_404(WardrobeItem, pk=item_id, owner=request.user).delete()
+    return redirect("lemari:index")
+
+
+@login_required(login_url="/login/")
+def toggle_reminder(request, item_id):
+    if request.method == "POST":
+        item = get_object_or_404(WardrobeItem, pk=item_id, owner=request.user)
+        item.reminder_enabled = not item.reminder_enabled
+        item.save(update_fields=["reminder_enabled"])
     return redirect("lemari:index")
 
 

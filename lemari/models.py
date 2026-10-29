@@ -46,6 +46,7 @@ class WardrobeItem(models.Model):
     color = models.CharField(max_length=80, blank=True)
     purchased_at = models.CharField(max_length=40, blank=True)
     notes = models.TextField(blank=True, max_length=2000)
+    reminder_enabled = models.BooleanField(default=True)
     photo = models.FileField(upload_to="lemari/wardrobe/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

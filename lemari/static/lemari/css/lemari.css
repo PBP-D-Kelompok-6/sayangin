@@ -45,6 +45,10 @@
 .wardrobe .page-title { font-size: 44px; }
 .reminder { display: flex; gap: 20px; align-items: center; padding: 18px; border-radius: 16px;
   background: radial-gradient(50% 120% at 90% 0%, rgba(122,30,42,.6), rgba(122,30,42,0) 70%), var(--night); }
+.reminder-slide { display: flex; min-width: 0; flex: 1; align-items: center; gap: 20px; }
+.reminder-slide[hidden] { display: none; }
+.reminder-slide form { margin: 0; }
+.reminder-toggle { margin-top: -4px; }
 .reminder__img { width: 96px; height: 96px; flex: none; border-radius: var(--radius-md); background: var(--photo-bg) var(--img) center / auto 84% no-repeat; background-blend-mode: multiply; }
 .reminder__copy { flex: 1; display: flex; flex-direction: column; gap: 6px; }
 .reminder__title { font-size: 26px; font-weight: 400; line-height: 1.1; }
@@ -77,6 +81,7 @@
 @media (max-width: 767px) {
   .wardrobe { padding-block: 16px; gap: 16px; }
   .reminder { flex-wrap: wrap; gap: 14px; padding: 14px; }
+  .reminder-slide { flex-wrap: wrap; gap: 14px; }
   .reminder__img { width: 56px; height: 56px; }
   .reminder__copy { flex: 1 1 0; }
   .reminder__title { font-size: 22px; }
