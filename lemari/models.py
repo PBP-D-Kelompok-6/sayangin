@@ -17,7 +17,7 @@ class SaleListing(models.Model):
     category = models.CharField(max_length=80, blank=True)
     size = models.CharField(max_length=40, blank=True)
     condition = models.CharField(max_length=30, blank=True)
-    condition_notes = models.TextField(blank=True)
+    condition_notes = models.TextField(blank=True, max_length=2000)
     price = models.PositiveIntegerField(null=True, blank=True)
     weight = models.PositiveIntegerField(null=True, blank=True)
     shipped_from = models.CharField(max_length=120, blank=True, default="Depok")
@@ -45,7 +45,7 @@ class WardrobeItem(models.Model):
     last_used = models.CharField(max_length=40)
     color = models.CharField(max_length=80, blank=True)
     purchased_at = models.CharField(max_length=40, blank=True)
-    notes = models.TextField(blank=True)
+    notes = models.TextField(blank=True, max_length=2000)
     photo = models.FileField(upload_to="lemari/wardrobe/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

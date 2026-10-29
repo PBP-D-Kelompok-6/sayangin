@@ -26,6 +26,10 @@ def _listing_values(request):
     }
 
 
+def _length_error(value, limit, label):
+    return f"{label} maksimal {limit} karakter." if len(value) > limit else ""
+
+
 @login_required(login_url="/login/")
 def index(request):
     wardrobe_items = WardrobeItem.objects.filter(owner=request.user)
@@ -83,6 +87,8 @@ def awal(request):
                 errors[number] = "Isi nama barang."
             elif not category or not last_used:
                 errors[number] = "Lengkapi kategori dan terakhir dipakai."
+            elif len(name) > 160:
+                errors[number] = "Nama barang maksimal 160 karakter."
             entries.append((number, name, category, last_used))
         if not entries:
             errors[1] = "Tambahkan setidaknya satu barang ke lemarimu."
@@ -116,12 +122,14 @@ def tambah_barang(request):
         purchased_at = request.POST.get("kapan_dibeli", "").strip()
         notes = request.POST.get("catatan", "").strip()
         photo = request.FILES.get("foto")
-        if not name or not category or not last_used or (not item and not photo):
+        text_limits = ((name, 160, "Nama barang"), (category, 80, "Kategori"), (size, 40, "Ukuran"), (last_used, 40, "Terakhir dipakai"), (color, 80, "Warna"), (purchased_at, 40, "Kapan dibeli"), (notes, 2000, "Catatan"))
+        too_long = next((f"{label} maksimal {limit} karakter." for value, limit, label in text_limits if len(value) > limit), "")
+        if too_long or not name or not category or not last_used or (not item and not photo):
             return render(
                 request,
                 "lemari/tambah_barang.html",
                 {
-                    "errors": "Lengkapi foto, nama barang, kategori, dan terakhir dipakai.",
+                    "errors": too_long or "Lengkapi foto, nama barang, kategori, dan terakhir dipakai.",
                     "values": {"name": name, "category": category, "size": size, "last_used": last_used, "color": color, "purchased_at": purchased_at, "notes": notes},
                     "item": item,
                 },
@@ -203,6 +211,19 @@ def jual(request):
     if request.method == "POST":
         values = _listing_values(request)
         errors = {}
+        text_limits = {
+            "title": (160, "Judul"),
+            "category": (80, "Kategori"),
+            "size": (40, "Ukuran"),
+            "condition": (30, "Kondisi"),
+            "condition_notes": (2000, "Catatan kondisi"),
+            "shipped_from": (120, "Alamat pengiriman"),
+        }
+        for field, (limit, label) in text_limits.items():
+            if values[field]:
+                message = _length_error(values[field], limit, label)
+                if message:
+                    errors[field] = message
         if not values["title"]:
             errors["judul"] = "Isi judul barang."
         if not values["category"]:
