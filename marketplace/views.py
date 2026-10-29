@@ -14,7 +14,7 @@ from django.utils.crypto import get_random_string
 from django.views.decorators.http import require_POST
 from django.views.static import serve
 
-from .forms import ProductForm
+from .forms import PHOTO_TYPES, ProductForm
 from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product, ProductPhoto
 from .ongkir import ongkir
 from .templatetags.rupiah import rupiah
@@ -204,7 +204,7 @@ def _save_product(request, form):
     product.seller = request.user
     product.is_draft = request.POST.get('action') == 'draft'
     if photos := form.cleaned_data['photos']:  # foto baru menggantikan semua foto lama
-        paths = [PHOTOS.url(PHOTOS.save(f'{get_random_string(16)}{Path(f.name).suffix.lower()}', f)) for f in photos]
+        paths = [PHOTOS.url(PHOTOS.save(f'{get_random_string(16)}{PHOTO_TYPES[Path(f.name).suffix.lower()]}', f)) for f in photos]
         product.image = paths[0]
         product.save()
         product.extra_photos.all().delete()

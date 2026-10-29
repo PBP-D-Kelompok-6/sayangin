@@ -6,7 +6,9 @@ from .models import Product
 
 MAX_PHOTOS = 4
 MAX_PHOTO_MB = 5
-PHOTO_TYPES = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}  # hanya gambar: file lain (mis. .html) bisa berbahaya kalau disajikan
+# Hanya gambar: file lain (mis. .html) bisa berbahaya kalau disajikan. Nilai = ekstensi saat disimpan
+# (.jpe/.jfif juga JPEG; disimpan .jpg supaya browser pasti menampilkannya).
+PHOTO_TYPES = {'.jpg': '.jpg', '.jpeg': '.jpg', '.jpe': '.jpg', '.jfif': '.jpg', '.png': '.png', '.webp': '.webp', '.gif': '.gif'}
 SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'All size'] + [str(n) for n in range(36, 46)]  # baju + sepatu
 
 

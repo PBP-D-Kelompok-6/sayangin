@@ -128,12 +128,13 @@ class MarketplaceFlowTest(TestCase):
     def test_seller_can_create_edit_delete_product(self):
         self.client.login(username='ira', password='x')
         r = self.client.post(reverse('marketplace:product_create'),
-                             self.product_data(photos=[self.photo('a.gif'), self.photo('b.png')]))
+                             self.product_data(photos=[self.photo('a.jpe'), self.photo('b.png')]))
         product = Product.objects.get(name='Kemeja flanel')
         self.assertRedirects(r, reverse('marketplace:product_published', args=[product.pk]))
         self.assertContains(self.client.get(r.url), 'sudah <em>masuk Marketplace</em>')
         self.assertEqual(product.seller, self.buyer)
         self.assertTrue(product.photo.startswith('/marketplace/foto/'))
+        self.assertTrue(product.photo.endswith('.jpg'))  # .jpe disimpan sebagai .jpg
         self.assertEqual(len(product.photos), 2)  # foto utama + 1 foto tambahan
         served = self.client.get(product.photo)
         self.assertEqual(served.status_code, 200)  # foto upload bisa dibuka
