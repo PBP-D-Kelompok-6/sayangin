@@ -9,7 +9,7 @@
   <main class="page__main container wardrobe" id="konten">
     <div class="wardrobe__head">
       <div class="stack" style="--stack-gap: 6px"><span class="eyebrow">Lemari digital<span class="only-mobile"> · {{ wardrobe_count|default:0 }} barang</span></span><h1 class="page-title only-desktop">Lemari <em>kamu</em></h1><span class="text-soft only-desktop">{{ wardrobe_count|default:0 }} barang</span></div>
-      <span class="row" style="--row-gap: 8px"><a class="btn btn--primary btn--sm only-mobile" href="{% url 'lemari:awal' %}">+ Tambah barang</a><a class="btn btn--primary only-desktop" href="{% url 'lemari:awal' %}">+ Tambah barang</a></span>
+      <span class="row" style="--row-gap: 8px"><a class="btn btn--primary btn--sm only-mobile" href="{% url 'lemari:tambah_barang' %}">+ Tambah barang</a><a class="btn btn--primary only-desktop" href="{% url 'lemari:tambah_barang' %}">+ Tambah barang</a></span>
     </div>
     <section class="reminder dark-panel" aria-label="Pengingat">
       <span class="reminder__img" style="--img: url({% static 'img/blazer-abu.jpg' %})"></span>
@@ -24,8 +24,7 @@
     </div>
     <div class="items">
       {% for item in wardrobe_items %}<div class="item item-card"><button class="item-card__toggle" type="button" aria-expanded="false"><span class="item__img"{% if item.photo %} style="--img: url('{% url 'lemari:wardrobe_photo' item.pk %}')"{% else %} style="--img: url({% static 'img/blazer-abu.jpg' %})"{% endif %}></span><b>{{ item.name }}</b><span class="text-sm text-muted">{{ item.category }} · {{ item.last_used }}</span></button><div class="item-card__actions" hidden><a class="btn btn--primary btn--sm" href="{% url 'lemari:jual' %}?item={{ item.pk }}">Jual</a><form method="post" action="{% url 'lemari:hapus_item' item.pk %}" data-delete-form>{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Hapus</button></form></div></div>{% endfor %}
-      {% if not wardrobe_items %}<p class="text-soft">Belum ada barang di lemarimu. Tambahkan barang pertamamu.</p>{% endif %}
-      <a class="btn btn--dashed items__add" href="{% url 'lemari:awal' %}">+ Tambah barang</a>
+      <a class="btn btn--dashed items__add" href="{% url 'lemari:tambah_barang' %}">+ Tambah barang</a>
     </div>
   </main>
   {% include 'lemari/_bottom_nav.html' %}

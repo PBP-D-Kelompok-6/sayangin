@@ -1,5 +1,6 @@
 from django.http import FileResponse, Http404
 from django.db.models import Case, IntegerField, When
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import ListingPhoto, SaleListing, WardrobeItem
 from django.contrib.auth.decorators import login_required
@@ -97,6 +98,36 @@ def awal(request):
             item.save()
         return redirect("lemari:index")
     return render(request, "lemari/awal.html")
+
+
+@login_required(login_url="/login/")
+def tambah_barang(request):
+    if request.method == "POST":
+        name = request.POST.get("nama", "").strip()
+        category = request.POST.get("kategori", "").strip()
+        last_used = request.POST.get("terakhir_dipakai", "").strip()
+        photo = request.FILES.get("foto")
+        if not name or not category or not last_used or not photo:
+            return render(
+                request,
+                "lemari/tambah_barang.html",
+                {
+                    "errors": "Lengkapi foto, nama barang, kategori, dan terakhir dipakai.",
+                    "values": {"name": name, "category": category, "last_used": last_used},
+                },
+            )
+        WardrobeItem.objects.create(
+            owner=request.user,
+            name=name,
+            category=category,
+            last_used=last_used,
+            photo=photo,
+        )
+        if request.POST.get("action") == "save_add":
+            messages.success(request, f"{name} berhasil ditambahkan ke lemarimu.")
+            return redirect("lemari:tambah_barang")
+        return redirect("lemari:index")
+    return render(request, "lemari/tambah_barang.html")
 
 
 @login_required(login_url="/login/")
