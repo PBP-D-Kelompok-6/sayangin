@@ -4,16 +4,16 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.template.loader import render_to_string 
 from django.utils.dateparse import parse_date
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import require_POST,require_GET, require_http_methods
 
 from .forms import KebutuhanForm, PenawaranForm
 from .models import Kategori, Kebutuhan, Kondisi, Penawaran
-from .permissions import lembaga_required, donatur_required
+from .permissions import lembaga_required, donatur_required, is_lembaga
 
 URUTAN = {
     "tenggat": "Tenggat terdekat",
@@ -306,3 +306,78 @@ def penawaran_tolak(request, pk):
 @require_POST
 def penawaran_selesai(request, pk):
     return _aksi_penawaran(request, pk, "selesaikan")
+
+
+# ---------------------------------------------------------------------------
+# Data delivery (JSON)
+# ---------------------------------------------------------------------------
+def _kebutuhan_dict(k, login=False):
+    data = {
+        "id": k.pk,
+        "lembaga": k.nama_lembaga,
+        "nama_barang": k.nama_barang,
+        "kategori": k.kategori,
+        "jumlah": k.jumlah,
+        "terpenuhi": k.terpenuhi,
+        "sisa": k.sisa,
+        "persen": k.persen,
+        "ukuran": k.ukuran_list,
+        "kondisi_min": k.kondisi_min,
+        "tenggat": k.tenggat.isoformat() if k.tenggat else None,
+        "foto_url": k.foto_url,
+        "cerita": k.cerita,
+    }
+    if login:
+        data["jumlah_tawaran_menunggu"] = (
+            k.penawaran.filter(status=Penawaran.Status.MENUNGGU).count()
+        )
+    return data
+
+
+def _penawaran_dict(p):
+    return {
+        "id": p.pk,
+        "kebutuhan_id": p.kebutuhan_id,
+        "lembaga": p.lembaga.get_full_name() or p.lembaga.username,
+        "donatur": p.donatur.username,
+        "nama_barang": p.nama_barang,
+        "jumlah": p.jumlah,
+        "kondisi": p.kondisi,
+        "metode": p.metode,
+        "tanggal_rencana": p.tanggal_rencana.isoformat() if p.tanggal_rencana else None,
+        "status": p.status,
+        "dibuat": p.dibuat.isoformat(),
+    }
+
+
+@require_GET
+def kebutuhan_json(request):
+    daftar = Kebutuhan.objects.aktif().select_related("lembaga")
+    kategori = request.GET.get("kategori", "")
+    q = request.GET.get("q", "").strip()
+    if kategori in Kategori.values:
+        daftar = daftar.filter(kategori=kategori)
+    if q:
+        daftar = daftar.filter(nama_barang__icontains=q)
+    login = request.user.is_authenticated
+    hasil = [_kebutuhan_dict(k, login) for k in daftar]
+    return JsonResponse({"count": len(hasil), "results": hasil})
+
+
+@require_GET
+def kebutuhan_json_by_id(request, pk):
+    k = get_object_or_404(Kebutuhan.objects.aktif().select_related("lembaga"), pk=pk)
+    return JsonResponse(_kebutuhan_dict(k, request.user.is_authenticated))
+
+
+@require_GET
+def penawaran_json(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "Login diperlukan."}, status=401)
+    if is_lembaga(request.user):
+        daftar = Penawaran.objects.filter(lembaga=request.user)
+    else:
+        daftar = Penawaran.objects.filter(donatur=request.user)
+    daftar = daftar.select_related("donatur", "lembaga")
+    hasil = [_penawaran_dict(p) for p in daftar]
+    return JsonResponse({"count": len(hasil), "results": hasil})

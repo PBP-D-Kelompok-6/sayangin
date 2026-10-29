@@ -30,4 +30,11 @@ urlpatterns = [
     path("lembaga/tawaran/<int:pk>/terima/", views.penawaran_terima, name="penawaran_terima"),
     path("lembaga/tawaran/<int:pk>/tolak/", views.penawaran_tolak, name="penawaran_tolak"),
     path("lembaga/tawaran/<int:pk>/selesai/", views.penawaran_selesai, name="penawaran_selesai"),
+
+    # ---------------------------------------------------------------------------
+    # Data delivery (JSON)
+    # ---------------------------------------------------------------------------
+    path("api/kebutuhan/", views.kebutuhan_json, name="kebutuhan_json"),
+    path("api/kebutuhan/<int:pk>/", views.kebutuhan_json_by_id, name="kebutuhan_json_by_id"),
+    path("api/tawaran/", views.penawaran_json, name="penawaran_json"),
 ]
