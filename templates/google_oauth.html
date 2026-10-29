@@ -1,0 +1,123 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Masuk dengan Google — Sayangin</title>
+  {% include 'includes/fonts.html' %}
+  {% include 'includes/tailwind.html' %}
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/onboarding.css' %}">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body class="">
+  <a class="skip-link" href="#konten">Lewati ke konten</a>
+  {% include 'includes/svg_filters.html' %}
+
+  <div class="onboard onboard--split min-h-screen">
+    <aside class="onboard__aside dark-panel only-desktop hidden md:flex flex-col justify-between">
+      <svg class="caustics" viewBox="0 0 420 320" preserveAspectRatio="none" aria-hidden="true"><rect width="420" height="320" filter="url(#sgcaus)"/></svg>
+      <div class="onboard__aside-logo">
+        <a class="logo logo--light" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo-light.svg' %}" alt="" width="35" height="35">sayangin</a>
+      </div>
+      <div class="onboard__art" aria-hidden="true">
+        <svg class="onboard__chrome" viewBox="0 0 420 320" aria-hidden="true"><path filter="url(#sgliq2)" fill="url(#sgbands)" d="M50 210C80 120 170 84 236 126S344 196 384 118C404 84 418 156 386 198S272 266 208 226S96 270 50 210Z"/></svg>
+        <img class="cutout onboard__img onboard__img--jacket" src="{% static 'img/jaket-track-zaitun-cut.png' %}" alt="">
+        <img class="cutout onboard__img onboard__img--jeans" src="{% static 'img/jeans-lukis-cut.png' %}" alt="">
+      </div>
+      <div class="onboard__caption">
+        <span class="eyebrow">Otentikasi Google</span>
+        <p class="onboard__title">Satu klik, langsung <em>masuk</em>.</p>
+        <p class="onboard__text">Akun Google-mu dihubungkan dengan aman untuk masuk atau mendaftar di Sayangin.</p>
+      </div>
+    </aside>
+
+    <header class="app-bar app-bar--back only-mobile flex md:hidden items-center">
+      <a class="icon-btn" href="{% url 'main:show_login' %}" aria-label="Kembali">←</a>
+      <a class="logo" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
+    </header>
+
+    <main class="onboard__main onboard__main--center flex-1 flex items-center justify-center" id="konten">
+      <form class="stack auth-stack auth-form w-full" method="POST" action="{% url 'main:google_callback' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="state" value="{{ state }}">
+        <input type="hidden" name="action" value="{{ action|default:'login' }}">
+        {% if next_url %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+        {% endif %}
+
+        <div class="stack auth-heading-stack">
+          <h1 class="page-title">
+            <span class="eyebrow">Google OAuth · Sayangin</span>
+            {% if action == 'connect' %}
+              Hubungkan <em>Akun Google</em>
+            {% else %}
+              Lanjut dengan <em>Google</em>
+            {% endif %}
+          </h1>
+          <span class="text-soft text-sm">Masukkan atau pilih akun Google yang ingin digunakan untuk Sayangin.</span>
+        </div>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert" role="alert">
+              <span class="alert-icon" aria-hidden="true">!</span>
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        {% if action != 'connect' %}
+          <fieldset class="stack auth-fieldset-stack">
+            <legend class="field__label">Masuk / daftar sebagai</legend>
+            <div class="choice-grid grid grid-cols-1 md:grid-cols-2">
+              <label class="choice">
+                <input type="radio" name="jenis" value="pribadi" {% if not is_lembaga %}checked{% endif %}>
+                <span><b>Pribadi</b><br><span class="text-soft">Jual, beli, donasi, dan Lemari Digital</span></span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="jenis" value="lembaga" {% if is_lembaga %}checked{% endif %}>
+                <span><b>Lembaga mitra</b><br><span class="text-soft">Panti, sekolah, atau komunitas penerima donasi</span></span>
+              </label>
+            </div>
+          </fieldset>
+        {% endif %}
+
+        <label class="field">
+          <span class="field__label">Email Google</span>
+          <input
+            class="input"
+            id="google-email"
+            type="email"
+            name="email"
+            value="{% if user.is_authenticated %}{{ user.email }}{% endif %}"
+            placeholder="nama@gmail.com"
+            autocomplete="email"
+            required>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Nama profil Google</span>
+          <input
+            class="input"
+            id="google-name"
+            type="text"
+            name="full_name"
+            value="{% if user.is_authenticated %}{{ user.profile.full_name }}{% endif %}"
+            placeholder="Nama lengkap Anda"
+            autocomplete="name">
+        </label>
+
+        <div class="form-actions flex items-center justify-between">
+          <a class="btn btn--outline btn--lg" href="{% if action == 'connect' %}{% url 'main:show_profile' %}{% else %}{% url 'main:show_login' %}{% endif %}">Batal</a>
+          <button class="btn btn--primary btn--lg" type="submit">Lanjutkan dengan Google</button>
+        </div>
+      </form>
+    </main>
+  </div>
+</body>
+</html>
+

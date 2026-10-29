@@ -1,0 +1,62 @@
+/* ==========================================================
+Sayangin — Form Edit Profil (Personal & Lembaga)
+========================================================== */
+
+.profile-form-page {
+    max-width: 760px;
+    margin-inline: auto;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: var(--space-6);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-muted);
+    transition: color var(--duration-fast);
+}
+
+.back-link:hover {
+    color: var(--color-primary);
+}
+
+.profile-form-card {
+    display: grid;
+    gap: var(--space-6);
+}
+
+.profile-form-card__status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-bottom: var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.profile-form {
+    display: grid;
+    gap: var(--space-5);
+}
+
+.profile-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 640px) {
+    .profile-form__actions {
+        flex-direction: column-reverse;
+    }
+
+    .profile-form__actions .btn {
+        width: 100%;
+    }
+}

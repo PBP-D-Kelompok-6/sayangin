@@ -6,11 +6,17 @@
   /* ---------- Tampilkan / sembunyikan kata sandi ---------- */
   document.querySelectorAll('[data-toggle-password]').forEach(btn => {
     const input = document.getElementById(btn.dataset.togglePassword);
+    if (!input) return;
     btn.addEventListener('click', () => {
       const show = input.type === 'password';
       input.type = show ? 'text' : 'password';
       btn.setAttribute('aria-pressed', String(show));
-      btn.setAttribute('aria-label', (show ? 'Sembunyikan' : 'Tampilkan') + btn.getAttribute('aria-label').replace(/^(Tampilkan|Sembunyikan)/, ''));
+      if (!btn.querySelector('svg')) {
+        btn.textContent = show ? 'Sembunyikan' : 'Tampilkan';
+      }
+      if (btn.hasAttribute('aria-label')) {
+        btn.setAttribute('aria-label', (show ? 'Sembunyikan' : 'Tampilkan') + btn.getAttribute('aria-label').replace(/^(Tampilkan|Sembunyikan)/, ''));
+      }
     });
   });
 
@@ -32,7 +38,6 @@
       if (!v) return 'Isi kata sandi.';
       if (form.id === 'register-form') {
         if (v.length < 8) return 'Kata sandi minimal 8 karakter.';
-        if (!/[A-Za-z]/.test(v) || !/\d/.test(v)) return 'Gunakan kombinasi huruf dan angka.';
       }
       return '';
     },
@@ -43,17 +48,35 @@
     },
   };
 
+  const renderFieldError = (err, msg) => {
+    if (!err) return;
+    if (msg) {
+      err.innerHTML = `<span class="alert-icon alert-icon--sm" aria-hidden="true">!</span><span></span>`;
+      err.querySelector('span:last-child').textContent = msg;
+      err.hidden = false;
+    } else {
+      err.innerHTML = '';
+      err.hidden = true;
+    }
+  };
+
   const validateField = (input, form) => {
     const rule = rules[input.name];
     if (!rule) return true;
     const msg = rule(input.value, form);
     const field = input.closest('.field');
     const err = document.getElementById(`${input.id}-error`);
-    field.classList.toggle('is-invalid', !!msg);
-    field.classList.toggle('is-valid', !msg && input.value !== '');
-    input.setAttribute('aria-invalid', String(!!msg));
+    if (field) {
+      field.classList.toggle('is-invalid', !!msg);
+      field.classList.toggle('is-valid', !msg && input.value !== '');
+    }
+    if (msg) {
+      input.setAttribute('aria-invalid', 'true');
+    } else {
+      input.removeAttribute('aria-invalid');
+    }
     if (err) {
-      err.textContent = msg;
+      renderFieldError(err, msg);
       const describedBy = new Set((input.getAttribute('aria-describedby') || '').split(' ').filter(Boolean));
       msg ? describedBy.add(err.id) : describedBy.delete(err.id);
       describedBy.size ? input.setAttribute('aria-describedby', [...describedBy].join(' ')) : input.removeAttribute('aria-describedby');
@@ -62,37 +85,65 @@
   };
 
   document.querySelectorAll('.auth-form').forEach(form => {
-    const inputs = [...form.querySelectorAll('.field__input')];
+    const inputs = [...form.querySelectorAll('.input, .field__input')];
     const alertBox = form.querySelector('[data-form-alert]');
 
     inputs.forEach(input => {
       input.addEventListener('blur', () => { if (input.value) validateField(input, form); });
       input.addEventListener('input', () => {
-        if (input.closest('.field').classList.contains('is-invalid')) validateField(input, form);
+        if (input.getAttribute('aria-invalid') === 'true' || input.closest('.field')?.classList.contains('is-invalid')) {
+          validateField(input, form);
+        }
         if (input.name === 'password' && form.elements.confirm?.value) validateField(form.elements.confirm, form);
       });
     });
 
     form.addEventListener('submit', (e) => {
-      alertBox.hidden = true;
-      
+      if (alertBox) alertBox.hidden = true;
+
       // Run validation checks
       const results = inputs.map(i => validateField(i, form));
       const firstInvalid = inputs[results.indexOf(false)];
-      
+
       // If there are errors, STOP submission
-      if (firstInvalid) { 
-          e.preventDefault(); 
-          firstInvalid.focus(); 
-          return; 
+      if (firstInvalid) {
+        e.preventDefault();
+        firstInvalid.focus();
+        return;
       }
 
-      // IF VALID: Do NOT prevent default. 
+      // IF VALID: Do NOT prevent default.
       // Let the browser send the POST request to Django.
       const btn = form.querySelector('[type="submit"]');
-      const label = btn.textContent;
-      btn.setAttribute('aria-busy', 'true');
-      btn.textContent = 'Memproses…';
+      if (btn) {
+        btn.setAttribute('aria-busy', 'true');
+        btn.textContent = 'Memproses…';
+      }
+    });
+  });
+
+  /* ---------- Sinkronisasi pilihan jenis akun (Pribadi / Lembaga) ke tombol Google ---------- */
+  const googleRegisterLink = document.querySelector('[data-google-register-link]');
+  if (googleRegisterLink) {
+    const baseUrl = googleRegisterLink.getAttribute('data-base-url') || '/auth/google/';
+    document.querySelectorAll('input[name="jenis"]').forEach((radio) => {
+      radio.addEventListener('change', () => {
+        if (radio.checked) {
+          googleRegisterLink.setAttribute('href', `${baseUrl}?jenis=${encodeURIComponent(radio.value)}`);
+        }
+      });
+    });
+  }
+
+  /* ---------- Umpan balik unggah dokumen (.dropzone) ---------- */
+  document.querySelectorAll('[data-file-input]').forEach(fileInput => {
+    const labelSpan = fileInput.closest('.dropzone')?.querySelector('[data-file-label]');
+    if (!labelSpan) return;
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      if (file) {
+        labelSpan.textContent = `Terpilih: ${file.name}`;
+      }
     });
   });
 })();
