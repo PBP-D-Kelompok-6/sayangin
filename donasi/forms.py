@@ -78,6 +78,16 @@ class PenawaranForm(forms.ModelForm):
 
     def clean_tanggal_rencana(self):
         tanggal = self.cleaned_data.get("tanggal_rencana")
-        if tanggal and tanggal < timezone.localdate():
-            raise forms.ValidationError("Pilih tanggal hari ini atau setelahnya.")
+        hari_ini = timezone.localdate()
+
+        if tanggal:
+            if tanggal < hari_ini:
+                raise forms.ValidationError("Pilih tanggal hari ini atau setelahnya.")
+
+            if self.kebutuhan and self.kebutuhan.tenggat and tanggal > self.kebutuhan.tenggat:
+                tenggat_fmt = self.kebutuhan.tenggat.strftime("%d %b %Y")
+                raise forms.ValidationError(
+                    f"Tanggal rencana tidak boleh melebihi tenggat kebutuhan lembaga ({tenggat_fmt})."
+                )
+
         return tanggal
