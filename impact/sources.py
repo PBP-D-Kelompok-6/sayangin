@@ -1,5 +1,5 @@
-# File ini satu-satunya tempat Modul E membaca tabel modul teman.
 from django.apps import apps
+from django.db.models import Count
 
 # jenis aksi: model ("app.Model"), kolom pemilik, kolom tanggal, syarat "sudah selesai"
 SOURCES = {
@@ -40,3 +40,19 @@ def count_for_user(key, user, since=None, until=None):
     if until:
         rows = rows.filter(**{source["date"] + "__lt": until}) # periode tantangan (tanggal < until)
     return rows.count() # cukup jumlah barisnya, isi datanya tidak dipakai
+
+
+# Sama seperti count_for_user, tapi untuk SEMUA user sekaligus -> {id_user: jumlah}
+# Dipanggil get_leaderboard() di views.py (papan peringkat)
+def count_per_user(key, since=None):
+    source = SOURCES[key]
+    try:
+        model = apps.get_model(source["model"])
+    except LookupError:
+        return {} # modul teman belum ada -> belum ada yang punya aksi ini
+    rows = model.objects.filter(**source["filter"]) # syarat "sudah selesai", tanpa filter user
+    if since:
+        rows = rows.filter(**{source["date"] + "__gte": since}) # periode "bulan ini"
+    # values(kolom user) + annotate(Count) = kelompokkan per user, lalu hitung barisnya (GROUP BY di SQL)
+    grouped = rows.values(source["user"]).annotate(total=Count("pk"))
+    return {row[source["user"]]: row["total"] for row in grouped} # mis. {3: 2, 7: 5}

@@ -48,6 +48,18 @@ class HitunganTest(TestCase):
     def test_modul_teman_belum_ada(self):
         with patch.dict(sources.SOURCES, {"lemari": {"model": "lemari.Belum", "user": "u", "date": "d", "filter": {}}}):
             self.assertEqual(sources.count_for_user("lemari", self.user), 0)
+            self.assertEqual(sources.count_per_user("lemari"), {})  # versi semua user juga tidak error
+
+    # hitung aksi semua user sekaligus: hasilnya {id_user: jumlah}, bisa dibatasi periode
+    def test_hitung_per_user(self):
+        ira = make_user("ira")
+        add(self.user, "donasi", times=2)
+        add(ira, "donasi")
+        add(ira, "donasi", days_ago=60)
+        self.assertEqual(sources.count_per_user("donasi"), {self.user.id: 2, ira.id: 2})
+        self.assertEqual(sources.count_per_user("donasi", since=timezone.now() - timedelta(days=30)),
+                         {self.user.id: 2, ira.id: 1})  # donasi ira 60 hari lalu tidak ikut
+        self.assertEqual(sources.count_per_user("terjual"), {})  # belum ada yang menjual
 
     # lencana diraih sesuai jumlah aksi, progres dalam persen, dan tiap lencana punya gambar
     def test_lencana(self):
@@ -123,7 +135,7 @@ class DashboardTest(TestCase):
         self.assertEqual(len(data["badges"]), 6)
 
 
-# ---------------------------------------------------------------- CRUD tantangan pribadi
+# CRUD tantangan pribadi :3
 @patch.dict(sources.SOURCES, FAKE)
 class ChallengeCrudTest(TestCase):
     # 2 tantangan milik rania (berjalan & sudah berakhir) + 1 milik user lain
