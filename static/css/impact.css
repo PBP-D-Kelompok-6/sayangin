@@ -1,6 +1,3 @@
-/* Modul E — Dampak. Warna, font, tombol, form, dan progress bar memakai CSS tim
-   (tokens.css, base.css, components.css). File ini hanya berisi tambahan kecil. */
-
 /* Kerangka halaman: isi disusun ke bawah dengan jarak 20px */
 .dampak { display: flex; flex-direction: column; gap: 20px; padding-block: 24px 64px; }
 .dampak--narrow { max-width: 760px; } /* halaman form dibuat lebih sempit */
@@ -49,3 +46,14 @@
 /* Kartu tantangan kecil di dashboard: garis putus-putus seperti kartu lencana */
 .dampak-mini { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); }
 .dampak-mini .pill { align-self: flex-start; }
+
+/* #summary: judul, kartu angka, dan papan peringkat disusun ke bawah dengan jarak 20px */
+#summary { display: flex; flex-direction: column; gap: 20px; }
+#summary .dampak-head { margin-bottom: 0; } /* jaraknya sudah diatur gap di atas */
+
+/* Papan peringkat: nomor, username, poin */
+.dampak-rank li { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 12px; padding: 10px 8px; border-radius: var(--radius-md); }
+.dampak-rank li + li { border-top: 1px solid var(--color-border); } /* garis pemisah antar baris */
+.dampak-rank li.is-me { background: var(--grey-50); } /* baris milik user yang login */
+.dampak-rank__no { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--grey-100); font-size: 13px; }
+.dampak-rank li:first-child .dampak-rank__no { background: var(--maroon); color: var(--white); } /* juara 1 berwarna maroon */
