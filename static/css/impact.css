@@ -1,29 +1,41 @@
+/* Modul E — Dampak. Warna, font, tombol, form, dan progress bar memakai CSS tim
+   (tokens.css, base.css, components.css). File ini hanya berisi tambahan kecil. */
+
+/* Kerangka halaman: isi disusun ke bawah dengan jarak 20px */
 .dampak { display: flex; flex-direction: column; gap: 20px; padding-block: 24px 64px; }
-.dampak--narrow { max-width: 760px; }
-.dampak em { color: var(--maroon); }
+.dampak--narrow { max-width: 760px; } /* halaman form dibuat lebih sempit */
+.dampak em { color: var(--maroon); } /* kata miring di judul berwarna maroon */
 .dampak h2, .dampak h3 { margin: 0; font-size: 26px; }
 .dampak h3 { font-size: 22px; }
 .dampak p { margin: 0; }
-.dampak-list { margin: 0; padding: 0; list-style: none; }
+.dampak-list { margin: 0; padding: 0; list-style: none; } /* hilangkan titik & indent bawaan <ul> */
 
+/* Judul halaman + tombol di kanan; turun ke bawah kalau layarnya sempit */
 .dampak-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
-.dampak-switch { display: flex; gap: 8px; }
-#summary.htmx-request, #challenge-list.htmx-request { opacity: .5; }
+.dampak-switch { display: flex; gap: 8px; } /* tombol Bulan ini / Sepanjang waktu */
+#summary.htmx-request, #challenge-list.htmx-request { opacity: .5; } /* redup saat HTMX sedang memuat */
 
+/* Kartu putih dasar yang dipakai hampir semua bagian */
 .dampak-card {
   display: flex; flex-direction: column; gap: 10px; padding: 20px;
   border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--white);
 }
-.dampak-card strong.serif { font-size: 44px; line-height: 1; }
-.dampak-points { background: var(--silver); }
+.dampak-card strong.serif { font-size: 44px; line-height: 1; } /* angka besar di kartu angka */
+.dampak-points { background: var(--silver); } /* kartu "Poin dampak" berwarna silver */
+
 /* Langkah berikutnya: kotak maroon, teks putih */
 .dampak-next { background: var(--maroon); border-color: var(--maroon); color: var(--white); }
 .dampak-next .eyebrow, .dampak-next .text-soft { color: rgba(255, 255, 255, .75); }
 .dampak-next em { color: #F3C9CF; }
 .dampak-next .progress { background: rgba(255, 255, 255, .25); }
 .dampak-next .progress > span { background: var(--white); }
-.dampak-next .btn { align-self: flex-start; }
+.dampak-next .btn { align-self: flex-start; } /* tombol tidak melebar selebar kartu */
 
+/* Kartu lencana: garis putus-putus kalau belum diraih, solid kalau sudah */
 .dampak-badge { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); }
 .dampak-badge.is-earned { border-style: solid; background: var(--grey-50); }
 .dampak-badge .pill { align-self: flex-start; }
+
+/* Gambar lencana: bulat 64px; abu-abu & transparan kalau belum diraih */
+.dampak-badge img { width: 64px; height: 64px; border-radius: 50%; }
+.dampak-badge:not(.is-earned) img { filter: grayscale(1); opacity: .4; }

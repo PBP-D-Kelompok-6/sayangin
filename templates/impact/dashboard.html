@@ -1,8 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
+{# load static: supaya {% static %} bisa dipakai untuk gambar lencana #}
 
-{% block title %}Dampak kamu — Sayangin{% endblock %}
+{# Judul tab browser #}
+{% block title %}Dampak Sosial Kamu — Sayangin{% endblock %}
 {% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
 
+{# Bar atas versi HP: tombol kembali ke beranda #}
 {% block app_bar %}
 <header class="app-bar app-bar--back only-mobile">
   <a class="icon-btn" href="{% url 'main:show_main' %}" aria-label="Kembali">←</a>
@@ -13,6 +17,7 @@
 {% block content %}
 <main class="page__main container dampak" id="konten">
   {# Poin & Angka#}
+  {# isi #summary diganti HTMX saat tombol "Bulan ini / Sepanjang waktu" diklik #}
   <div id="summary">
     {% include 'impact/partials/summary.html' %}
   </div>
@@ -21,6 +26,7 @@
   <section class="dampak-card dampak-next">
     <span class="eyebrow">Langkah berikutnya</span>
 
+    {# next_step dari views.get_next_step(); kosong -> ajak buat tantangan pertama #}
     {% if next_step %}
       <h2 class="serif">Tinggal {{ next_step.remaining }} lagi untuk <em>{{ next_step.challenge.title }}</em></h2>
       <div class="progress"><span style="--value: {{ next_step.percent }}%"></span></div>
@@ -28,21 +34,26 @@
       <h2 class="serif">Buat tantangan <em>pribadi</em> pertamamu</h2>
       <p class="text-soft">Pilih target, progresnya dihitung otomatis dari aksimu.</p>
     {% endif %}
-    
+
     <a class="btn btn--primary" href="{% url 'impact:show_impact_challenges' %}">Lihat tantanganku →</a>
   </section>
 
+  {# Lencana: 6 lencana dari views.BADGES, sudah diraih atau belum #}
   <section class="dampak-card">
     <div class="section-head">
       <h2 class="serif">Lencana <em>kamu</em></h2>
       <span class="mono">{{ earned_count }} / {{ badges|length }} diraih</span>
     </div>
+    {# Tailwind: 2 kolom di HP, 3 kolom mulai layar md #}
     <ul class="dampak-list tw-grid tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-3">
 
       {% for badge in badges %}
+      {# is-earned: kartu jadi solid dan gambarnya berwarna (lihat impact.css) #}
       <li class="dampak-badge {% if badge.earned %}is-earned{% endif %}">
+        <img src="{% static badge.image %}" alt="Lencana {{ badge.name }}" width="64" height="64">
         <strong>{{ badge.name }}</strong>
         <span class="text-soft">{{ badge.rule }}</span>
+        {# sudah diraih -> label "Diraih", belum -> progress bar persentase #}
         {% if badge.earned %}
           <span class="pill">Diraih</span>
         {% else %}
