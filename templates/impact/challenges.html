@@ -14,12 +14,16 @@
 <main class="page__main container dampak" id="konten" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   <nav class="breadcrumb"><a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a> / Tantangan pribadi</nav>
 
+  {# toast pesan sukses setelah tambah/ubah/hapus tantangan (posisinya fixed di kanan atas) #}
+  {% include 'impact/partials/messages.html' %}
+
   <div class="dampak-head">
     <h1 class="page-title"><span class="eyebrow">Buat targetmu sendiri</span>Tantangan <em>pribadi</em></h1>
     <a class="btn btn--primary" href="{% url 'impact:create_impact_challenge' %}">+ Tambah tantangan</a>
   </div>
 
-  {# FILTER #}
+  {# FILTER: disembunyikan kalau user belum punya tantangan sama sekali (tidak ada yang bisa difilter) #}
+  {% if has_any %}
   <form class="tw-flex tw-flex-wrap tw-gap-3" method="get"
         hx-get="{% url 'impact:show_impact_challenges' %}" hx-target="#challenge-list" hx-trigger="change" hx-push-url="true">
     <select class="select select--pill" name="jenis" aria-label="Jenis">
@@ -35,9 +39,67 @@
     </select>
     <noscript><button class="btn btn--sm btn--outline" type="submit">Terapkan</button></noscript>
   </form>
+  {% endif %}
 
   <div id="challenge-list">
     {% include 'impact/partials/challenge_list.html' %}
   </div>
 </main>
+
+{# Dialog konfirmasi hapus, gaya sama dengan dialog "Keluar" milik tim (includes/logout_modal.html) #}
+{# cuma ada 1 dialog untuk semua kartu; judul tantangannya diisi script di bawah saat tombol Hapus diklik #}
+{# sengaja di luar <main> supaya tidak kena aturan .dampak h2 #}
+<div class="overlay" id="hapus-tantangan">
+  <section class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="hapus-judul" aria-describedby="hapus-deskripsi">
+    <span class="eyebrow">Hapus tantangan</span>
+    <h2 class="dialog__title" id="hapus-judul">Hapus <em>tantangan</em> ini?</h2>
+    <p class="text-soft" id="hapus-deskripsi">“<span data-confirm-name></span>” akan dihapus permanen. Aksi yang sudah kamu lakukan tetap tercatat dan poinmu tidak berkurang.</p>
+    <div class="dialog__actions">
+      <button class="btn btn--outline" type="button" data-confirm-no>Batal</button>
+      <button class="btn btn--dark" type="button" data-confirm-yes>Ya, hapus</button>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+{# Tombol "Tutup" di toast: hapus toast-nya dari halaman #}
+{# dipasang di document supaya toast baru dari HTMX (setelah hapus) juga bisa ditutup #}
+<script>
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-toast-close]");
+    if (button) button.closest(".toast").remove();
+  });
+
+  // Dialog konfirmasi hapus: menggantikan pop-up confirm() bawaan browser
+  // htmx:confirm muncul sebelum HTMX mengirim request; request ditahan dulu sampai user memilih
+  const dialog = document.getElementById("hapus-tantangan");
+  let pending = null; // { request, button } milik tombol Hapus yang sedang menunggu jawaban
+
+  const closeDialog = () => {
+    dialog.classList.remove("is-open");
+    pending?.button.focus(); // fokus kembali ke tombol Hapus tadi (untuk pengguna keyboard)
+    pending = null;
+  };
+
+  document.body.addEventListener("htmx:confirm", (event) => {
+    const button = event.detail.elt;
+    if (!button.hasAttribute("data-confirm-title")) return; // request HTMX lain (mis. filter) jalan seperti biasa
+    event.preventDefault(); // tahan request-nya
+    pending = { request: event.detail.issueRequest, button };
+    dialog.querySelector("[data-confirm-name]").textContent = button.dataset.confirmTitle;
+    dialog.classList.add("is-open");
+    dialog.querySelector("[data-confirm-no]").focus();
+  });
+
+  dialog.querySelector("[data-confirm-yes]").addEventListener("click", () => {
+    const request = pending?.request;
+    closeDialog();
+    request?.(true); // true = kirim tanpa konfirmasi lagi
+  });
+  dialog.querySelector("[data-confirm-no]").addEventListener("click", closeDialog);
+  dialog.addEventListener("click", (event) => { if (event.target === dialog) closeDialog(); }); // klik area gelap = batal
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && pending) closeDialog(); });
+</script>
 {% endblock %}

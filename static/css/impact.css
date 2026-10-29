@@ -57,8 +57,49 @@
 .dampak-rank li.is-me { background: var(--grey-50); } /* baris milik user yang login */
 .dampak-rank__no { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--grey-100); font-size: 13px; }
 .dampak-rank li:first-child .dampak-rank__no { background: var(--maroon); color: var(--white); } /* juara 1 berwarna maroon */
+.dampak-rank li > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; } /* username panjang turun ke baris baru, tidak mendorong poin keluar kartu */
 
 /* Halaman papan peringkat publik */
 .dampak-me-pill { display: inline-block; margin-left: 12px; padding: 4px 10px; border-radius: 999px; background: #F3C9CF; color: var(--maroon); font-family: var(--font-mono); font-size: 13px; vertical-align: middle; } /* label "Kamu #3" di sebelah judul */
 .dampak-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px; border-radius: var(--radius-lg); background: var(--grey-50); } /* kotak ajakan masuk untuk tamu; tombol turun ke bawah kalau sempit */
 .dampak-cta h2 { font-size: 22px; }
+
+/* Empty state */
+.dampak-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px 16px; text-align: center; }
+.dampak-empty__icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--grey-100); color: var(--maroon); }
+.dampak-empty h2 { font-size: 22px; }
+.dampak-empty p { max-width: 420px; }
+.dampak-empty__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 4px; }
+
+/* Halaman papan peringkat versi HP (di bawah 768px, sama dengan breakpoint .only-mobile tim) */
+/* .dampak-peringkat hanya ada di leaderboard.html, jadi dashboard & tantangan tidak ikut berubah */
+@media (max-width: 767px) {
+  .dampak-peringkat { gap: 16px; padding-block: 16px 48px; }
+  .dampak-peringkat .dampak-head { align-items: flex-start; gap: 12px; margin-bottom: 4px; } /* tombol periode turun ke bawah judul, rata kiri */
+  .dampak-peringkat .dampak-card { padding: 12px; } /* baris peringkat lebih lebar */
+  .dampak-peringkat .dampak-rank li { gap: 10px; padding: 10px 4px; }
+  .dampak-peringkat .dampak-cta { padding: 20px 16px; } /* teks di atas, tombol di bawah (lewat flex-wrap) */
+  .dampak-peringkat .dampak-empty { padding: 24px 8px; }
+  .dampak-peringkat .dampak-empty__actions .btn { width: 100%; } /* tombol empty state selebar kartu supaya mudah ditekan */
+}
+
+/* Toast pesan sukses di halaman tantangan (templates/impact/partials/messages.html) */
+/* fixed di kanan atas, tepat di bawah header; warna & bentuk dasar dari .toast milik tim (components.css) */
+.dampak-toasts { position: fixed; z-index: 60; top: calc(var(--header-h) + 16px); right: var(--gutter); display: grid; gap: 8px; }
+.dampak-toast { animation: dampak-toast-in 250ms ease-out; font-weight: 600; } /* muncul pelan dari atas */
+.dampak-toast__icon { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(255, 255, 255, .15); } /* ikon centang dalam lingkaran */
+.dampak-toast__close {
+  padding: 6px 12px; border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px;
+  background: transparent; color: var(--on-dark); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.dampak-toast__close:hover { background: rgba(255, 255, 255, .1); }
+@keyframes dampak-toast-in { from { opacity: 0; transform: translateY(-8px); } }
+@media (max-width: 767px) {
+  .dampak-toasts { top: calc(var(--app-bar-h) + 12px); left: 16px; right: 16px; } /* HP: selebar layar, di bawah bar atas */
+}
+
+/* Empty state daftar tantangan (partials/challenge_list.html): kartu bergaris putus-putus */
+.dampak-card--dashed { border-style: dashed; padding-block: 44px; }
+/* Filter yang sedang dipakai (pilihan selain "Semua ...") berwarna gelap, sesuai Figma "Filter tanpa hasil" */
+/* pakai :has() supaya ikut berubah walau form filter tidak dimuat ulang oleh HTMX */
+.select--pill:has(option:checked:not([value=""])) { border-color: var(--ink); background-color: var(--ink); color: var(--on-dark); }

@@ -15,7 +15,7 @@ FAKE = {key: {"model": "admin.LogEntry", "user": "user", "date": "action_time", 
         for key in sources.SOURCES}
 
 
-# Buat user untuk test; role-nya disimpan di profile milik tim (PERSONAL / LEMBAGA)
+# Buat user untuk test: role-nya disimpan di profile milik tim (PERSONAL / LEMBAGA)
 def make_user(username, role="PERSONAL"):
     user = User.objects.create_user(username=username, password="pass12345")
     user.profile.role = role
@@ -24,7 +24,6 @@ def make_user(username, role="PERSONAL"):
 
 
 def add(user, key, days_ago=0, times=1):
-    """Pura-pura user melakukan aksi `key` (mis. donasi) sebanyak `times` kali."""
     for _ in range(times):
         entry = LogEntry.objects.create(user=user, object_repr=key, action_flag=1)
         # action_time otomatis "sekarang", jadi diubah manual supaya bisa pura-pura aksi di masa lalu
@@ -44,7 +43,6 @@ class HitunganTest(TestCase):
         self.assertEqual(sources.count_for_user("donasi", self.user), 2)
         self.assertEqual(sources.count_for_user("donasi", self.user, since=timezone.now() - timedelta(days=30)), 1)
 
-    # model teman yang belum ada tidak bikin error, hasilnya 0
     def test_modul_teman_belum_ada(self):
         with patch.dict(sources.SOURCES, {"lemari": {"model": "lemari.Belum", "user": "u", "date": "d", "filter": {}}}):
             self.assertEqual(sources.count_for_user("lemari", self.user), 0)
@@ -191,6 +189,17 @@ class LeaderboardPageTest(TestCase):
         self.assertContains(response, "Kamu #1")
         self.assertNotContains(response, "Masuk untuk lihat posisimu")
 
+    # empty state: tampil kalau belum ada poin; tombol "Lihat sepanjang waktu" hanya di periode bulan ini
+    def test_peringkat_kosong(self):
+        LogEntry.objects.all().delete()  # hapus semua aksi (belum ada yang punya poin)
+        response = self.client.get(self.url)
+        self.assertContains(response, "bulan ini</h2>")
+        self.assertContains(response, "Lihat sepanjang waktu")
+        self.assertNotContains(response, "Poin dari") 
+        response = self.client.get(self.url + "?periode=semua")
+        self.assertContains(response, "sepanjang waktu</h2>")
+        self.assertNotContains(response, "Lihat sepanjang waktu")
+
     # aturan penyamaran nama, termasuk username 1 huruf
     def test_samarkan_username(self):
         self.assertEqual(views.mask_username("ira2"), "i***2")
@@ -256,14 +265,47 @@ class ChallengeCrudTest(TestCase):
         self.mine.refresh_from_db()
         self.assertEqual(str(self.mine), "Jual 4")
 
-    # DELETE: hanya lewat POST; lewat HTMX balasannya kosong, tanpa HTMX dialihkan ke daftar
+    # DELETE: hanya lewat POST; lewat HTMX balasannya hanya kotak pesan, tanpa HTMX dialihkan ke daftar
     def test_delete(self):
         url = reverse("impact:delete_impact_challenge", args=[self.mine.pk])
         self.assertEqual(self.client.get(url).status_code, 405)  # hapus hanya lewat POST
-        self.assertEqual(self.client.post(url, HTTP_HX_REQUEST="true").content, b"")
+        self.assertTemplateUsed(self.client.post(url, HTTP_HX_REQUEST="true"), "impact/partials/messages.html")
         self.assertRedirects(self.client.post(reverse("impact:delete_impact_challenge", args=[self.old.pk])),
                              reverse("impact:show_impact_challenges"))
         self.assertFalse(Challenge.objects.filter(owner=self.user).exists())
+
+    # pesan sukses: muncul sekali di daftar setelah tambah/ubah/hapus; hapus lewat HTMX langsung membawa pesannya
+    def test_pesan_sukses(self):
+        today = timezone.localdate()
+        data = {"title": "Catat 5 barang", "kind": "lemari", "target": 5, "start_date": today, "end_date": today}
+        response = self.client.post(reverse("impact:create_impact_challenge"), data, follow=True)  # follow: ikuti redirect
+        self.assertContains(response, "Tantangan disimpan.")
+        self.assertNotContains(self.client.get(reverse("impact:show_impact_challenges")), "Tantangan disimpan.")  # hanya sekali
+        response = self.client.post(reverse("impact:edit_impact_challenge", args=[self.mine.pk]), data, follow=True)
+        self.assertContains(response, "Perubahan tantangan disimpan.")
+        response = self.client.post(reverse("impact:delete_impact_challenge", args=[self.old.pk]), HTTP_HX_REQUEST="true")
+        self.assertContains(response, "Tantangan dihapus.")
+        self.assertContains(response, 'hx-swap-oob="true"')  # mengganti kotak pesan, bukan kartu yang dihapus
+
+    # empty state: "filter tanpa hasil" kalau punya tantangan tapi tidak ada yang cocok; "belum ada" kalau sama sekali belum punya
+    def test_empty_state(self):
+        url = reverse("impact:show_impact_challenges")
+        response = self.client.get(url + "?jenis=lemari&status=berakhir", HTTP_HX_REQUEST="true")
+        self.assertContains(response, "Tidak ada yang <em>cocok</em>")
+        self.assertContains(response, "Belum ada tantangan barang dicatat di lemari yang sudah berakhir.")
+        self.assertContains(response, "Hapus filter")
+        Challenge.objects.filter(owner=self.user).delete()
+        response = self.client.get(url)
+        self.assertContains(response, "Belum ada <em>tantangan</em>")
+        self.assertContains(response, "+ Buat tantangan pertama")
+        self.assertNotContains(response, 'name="jenis"')  # filter disembunyikan
+
+    # konfirmasi hapus pakai dialog tim (bukan confirm() browser); judul tantangan dikirim lewat data-confirm-title
+    def test_dialog_konfirmasi_hapus(self):
+        response = self.client.get(reverse("impact:show_impact_challenges"))
+        self.assertContains(response, 'id="hapus-tantangan"')
+        self.assertContains(response, 'data-confirm-title="Jual 3"')
+        self.assertNotContains(response, "hx-confirm")
 
     # tantangan milik orang lain tidak bisa diubah atau dihapus (404)
     def test_milik_orang_lain_tidak_bisa_diubah(self):

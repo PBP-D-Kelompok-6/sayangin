@@ -1,7 +1,8 @@
 from datetime import datetime, time, timedelta
 
+from django.contrib import messages # pesan sukses setelah tambah/ubah/hapus tantangan
 from django.contrib.auth.models import User # untuk mengambil username di papan peringkat
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST # batasi method request (GET saja / POST saja)
@@ -172,6 +173,7 @@ def show_impact_challenges(request):
     kind = request.GET.get("jenis", "")
     status = request.GET.get("status", "")
     rows = Challenge.objects.filter(owner=request.user) # hanya tantangan milik user yang login
+    has_any = rows.exists() # dicek sebelum difilter: "belum punya tantangan" beda dengan "filter tanpa hasil"
     if kind:
         rows = rows.filter(kind=kind)
     today = timezone.localdate()
@@ -184,6 +186,10 @@ def show_impact_challenges(request):
         "kind": kind, # dipakai template untuk menandai pilihan filter yang aktif
         "status": status,
         "kinds": Challenge.KIND_CHOICES, # isi dropdown "Semua jenis"
+        "has_any": has_any, # False: empty state "Belum ada tantangan" & filter disembunyikan
+        # dipakai kalimat empty state "filter tanpa hasil", mis. "donasi diterima lembaga" & "sudah berakhir"
+        "kind_label": dict(Challenge.KIND_CHOICES).get(kind, ""),
+        "status_label": {"berjalan": "masih berjalan", "berakhir": "sudah berakhir"}.get(status, ""),
     }
     # filter berubah lewat HTMX -> cukup kirim potongan daftarnya
     if request.headers.get("HX-Request"):
@@ -200,6 +206,7 @@ def create_impact_challenge(request):
         challenge = form.save(commit=False) # belum disimpan dulu...
         challenge.owner = request.user # ...isi pemiliknya otomatis, bukan dari input user
         challenge.save()
+        messages.success(request, "Tantangan disimpan.")
         return redirect("impact:show_impact_challenges")
     return render(request, "impact/challenge_form.html", {"form": form}) # form tidak valid -> tampil lagi dengan error
 
@@ -210,6 +217,7 @@ def edit_impact_challenge(request, pk):
     form = ChallengeForm(request.POST or None, instance=challenge) # instance: form terisi data lama
     if form.is_valid():
         form.save()
+        messages.success(request, "Perubahan tantangan disimpan.")
         return redirect("impact:show_impact_challenges")
     return render(request, "impact/challenge_form.html", {"form": form, "is_edit": True}) # is_edit: judul jadi "Ubah"
 
@@ -219,7 +227,9 @@ def edit_impact_challenge(request, pk):
 @require_POST
 def delete_impact_challenge(request, pk):
     get_object_or_404(Challenge, pk=pk, owner=request.user).delete() # milik orang lain -> 404
-    # lewat HTMX: balas kosong, kartunya langsung hilang tanpa reload
+    messages.success(request, "Tantangan dihapus.")
+    # lewat HTMX: balasannya hanya kotak pesan (hx-swap-oob), jadi kartunya hilang tanpa reload
+    # dan pesannya langsung muncul, tidak tertunda sampai halaman berikutnya
     if request.headers.get("HX-Request"):
-        return HttpResponse("")
+        return render(request, "impact/partials/messages.html", {"oob": True})
     return redirect("impact:show_impact_challenges")
