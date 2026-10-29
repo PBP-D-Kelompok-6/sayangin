@@ -1,4 +1,4 @@
-<div class="need-row" id="need-{{ k.pk }}">
+<div class="need-row" id="need-{{ k.pk }}"{% if oob %} hx-swap-oob="true"{% endif %}>
   <div class="row"><b class="spacer">{{ k.nama_barang }}</b><span class="mono">{{ k.terpenuhi }} / {{ k.jumlah }}</span></div>
   <div class="progress progress--thin" style="--value: {{ k.persen }}%"><span></span></div>
   <span class="text-sm text-soft">{% if k.tenggat %}Tenggat {{ k.tenggat|date:"j M" }} · {% endif %}{{ k.get_status_display }}</span>

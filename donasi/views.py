@@ -7,6 +7,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.template.loader import render_to_string 
 from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_POST, require_http_methods
 
@@ -265,10 +266,27 @@ def _aksi_penawaran(request, pk, aksi):
     penawaran = get_object_or_404(
         Penawaran.objects.select_related("donatur", "kebutuhan"), pk=pk, lembaga=request.user
     )
-    if not getattr(penawaran, aksi)():
+    berhasil = getattr(penawaran, aksi)()
+    if not berhasil:
         messages.error(request, "Status tawaran ini sudah berubah.")
+
     if _is_htmx(request):
-        return render(request, "donasi/_offer_row.html", {"p": penawaran})
+        html = render_to_string("donasi/_offer_row.html", {"p": penawaran}, request=request)
+
+        jumlah_menunggu = Penawaran.objects.filter(
+            lembaga=request.user, status=Penawaran.Status.MENUNGGU
+        ).count()
+        html += f'<span class="stat__value serif" id="stat-menunggu" hx-swap-oob="true">{jumlah_menunggu}</span>'
+
+        if berhasil and aksi == "selesaikan" and penawaran.kebutuhan:
+            k = penawaran.kebutuhan 
+            if k.status == Kebutuhan.Status.AKTIF:
+                html += render_to_string(
+                    "donasi/_need_row.html", {"k": k, "oob": True}, request=request)
+            else:
+                html += f'<div id="need-{k.pk}" hx-swap-oob="delete"></div>'
+        return HttpResponse(html)
+
     return redirect("donasi:dashboard_lembaga")
 
 
