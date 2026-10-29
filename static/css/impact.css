@@ -16,7 +16,12 @@
 }
 .dampak-card strong.serif { font-size: 44px; line-height: 1; }
 .dampak-points { background: var(--silver); }
-.dampak-next { background: var(--grey-50); }
+/* Langkah berikutnya: kotak maroon, teks putih */
+.dampak-next { background: var(--maroon); border-color: var(--maroon); color: var(--white); }
+.dampak-next .eyebrow, .dampak-next .text-soft { color: rgba(255, 255, 255, .75); }
+.dampak-next em { color: #F3C9CF; }
+.dampak-next .progress { background: rgba(255, 255, 255, .25); }
+.dampak-next .progress > span { background: var(--white); }
 .dampak-next .btn { align-self: flex-start; }
 
 .dampak-badge { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); }
