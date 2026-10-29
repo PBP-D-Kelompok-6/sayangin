@@ -4,12 +4,13 @@ from django.contrib.auth.models import User # untuk mengambil username di papan 
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST # batasi method request (GET saja / POST saja)
 
 from impact import sources
 from impact.forms import ChallengeForm
 from impact.models import Challenge
 from main.decorators import personal_required
+from main.models import UserProfile # role akun (PERSONAL / LEMBAGA) milik modul autentikasi tim
 
 # Create your views here.
 
@@ -83,12 +84,18 @@ def get_leaderboard(since=None):
     return [{"rank": i, "username": u.username, "user_id": u.id, "points": scores[u.id]}
             for i, u in enumerate(ranking, start=1)]
 
+# Baca pilihan periode dari URL (?periode=semua / ?periode=bulan) -> (period, since)
+# dipakai build_dashboard() dan show_impact_leaderboard() supaya aturannya sama
+def get_period(request):
+    period = "semua" if request.GET.get("periode") == "semua" else "bulan" # selain "semua", default-nya bulan ini
+    since = None if period == "semua" else start_of(timezone.localdate().replace(day=1)) # kalau "bulan ini" start dari tanggal 1 bulan tsb
+    return period, since
+
 # tergantung periode: semua/bulan ini
 # dipanggil show_impact_dashboard() dan show_impact_json
 # key nya muncul di summary.html
 def build_dashboard(request):
-    period = "semua" if request.GET.get("periode") == "semua" else "bulan" # selain "semua", default-nya bulan ini
-    since = None if period == "semua" else start_of(timezone.localdate().replace(day=1)) # kalau "bulan ini" start dari tanggal 1 bulan tsb
+    period, since = get_period(request)
     counts = get_counts(request.user, since) # hitung sesuai since/periodenya (untuk angka & poin)
     badges = get_badges(get_counts(request.user)) # lencana selalu dihitung sepanjang waktu (tanpa since)
     leaderboard = get_leaderboard(since) # peringkat ikut periode, sama seperti angka & poin
@@ -106,8 +113,14 @@ def build_dashboard(request):
 
 # menampilkan html page: dashboard.html && summary.html
 # manggil build_dashboard() /di atasnya
-@personal_required
 def show_impact_dashboard(request):
+    # semua link "Dampak" di web mengarah ke sini; tamu & lembaga dialihkan ke papan peringkat publik
+    # (bukan ke halaman login / error 403), karena dashboard hanya untuk akun personal
+    if not request.user.is_authenticated:
+        return redirect("impact:show_impact_leaderboard")
+    profile, _ = UserProfile.objects.get_or_create(user=request.user) # sama seperti personal_required milik tim
+    if profile.role != "PERSONAL":
+        return redirect("impact:show_impact_leaderboard")
     context = build_dashboard(request)
     # tombol periode memakai HTMX -> cukup kirim potongan summary.html, bukan satu halaman
     if request.headers.get("HX-Request"):
@@ -120,6 +133,22 @@ def show_impact_dashboard(request):
 @personal_required
 def show_impact_json(request):
     return JsonResponse(build_dashboard(request)) # sebagai Json
+
+
+# Halaman papan peringkat publik (/dampak/peringkat/)
+# SENGAJA tanpa @personal_required: tamu & lembaga boleh melihat, tapi isinya dibedakan di template
+@require_GET
+def show_impact_leaderboard(request):
+    period, since = get_period(request)
+    leaderboard = get_leaderboard(since)
+    context = {
+        "period": period,
+        "leaderboard": leaderboard[:10], # halaman publik menampilkan 10 teratas
+        # posisi user yang login; tamu (belum login) selalu None
+        "my_rank": next((row for row in leaderboard if row["user_id"] == request.user.id), None)
+                   if request.user.is_authenticated else None,
+    }
+    return render(request, "impact/leaderboard.html", context)
 
 
 # menampilkan html page: challenges.html & challenges_list.html

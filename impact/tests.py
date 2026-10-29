@@ -81,12 +81,14 @@ class DashboardTest(TestCase):
         add(self.user, "donasi")
         add(self.user, "lemari", days_ago=400)
 
-    # belum login -> dialihkan ke login (302); akun lembaga -> ditolak (403)
+    # dashboard khusus personal: tamu & lembaga dialihkan ke papan peringkat publik
     def test_harus_login_dan_bukan_lembaga(self):
         url = reverse("impact:show_impact_dashboard")
-        self.assertEqual(self.client.get(url).status_code, 302)
+        leaderboard = reverse("impact:show_impact_leaderboard")
+        self.assertRedirects(self.client.get(url), leaderboard)  # tamu -> papan peringkat publik
         self.client.force_login(make_user("panti", role="LEMBAGA"))
-        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertRedirects(self.client.get(url), leaderboard)  # lembaga -> papan peringkat publik
+        self.assertEqual(self.client.get(reverse("impact:show_impact_challenges")).status_code, 403)  # tantangan tetap khusus personal
 
     # halaman penuh memakai base.html; request HTMX hanya dibalas potongan summary.html
     def test_dashboard_dan_filter_periode_htmx(self):
@@ -146,6 +148,36 @@ class DashboardTest(TestCase):
         data = self.client.get(reverse("impact:show_impact_json")).json()
         self.assertEqual(data["points"], 30)
         self.assertEqual(len(data["badges"]), 6)
+
+
+# halaman papan peringkat publik
+@patch.dict(sources.SOURCES, FAKE)
+class LeaderboardPageTest(TestCase):
+    # rania: 1 donasi bulan ini (+20) & 1 terjual 60 hari lalu (+10)
+    def setUp(self):
+        self.user = make_user("rania")
+        add(self.user, "donasi")
+        add(self.user, "terjual", days_ago=60)
+        self.url = reverse("impact:show_impact_leaderboard")
+
+    # tamu (belum login) dan akun lembaga sama-sama boleh membuka halaman ini
+    def test_bisa_dibuka_tanpa_login(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "impact/leaderboard.html")
+        self.assertIsNone(response.context["my_rank"])  # tamu tidak punya posisi
+        self.client.force_login(make_user("panti", role="LEMBAGA"))
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    # filter periode: bulan ini hanya donasi (20), sepanjang waktu ikut terjual (30)
+    def test_filter_periode(self):
+        self.assertEqual(self.client.get(self.url).context["leaderboard"][0]["points"], 20)
+        self.assertEqual(self.client.get(self.url + "?periode=semua").context["leaderboard"][0]["points"], 30)
+
+    # user yang login bisa melihat posisinya sendiri
+    def test_posisi_user_login(self):
+        self.client.force_login(self.user)
+        self.assertEqual(self.client.get(self.url).context["my_rank"]["rank"], 1)
 
 
 # CRUD tantangan pribadi :3

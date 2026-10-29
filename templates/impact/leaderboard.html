@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Papan peringkat — Sayangin{% endblock %}
+{% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
+
+{# Bar atas versi HP: tombol kembali ke beranda #}
+{% block app_bar %}
+<header class="app-bar app-bar--back only-mobile">
+  <a class="icon-btn" href="{% url 'main:show_main' %}" aria-label="Kembali">←</a>
+  <span class="app-bar__label">Papan peringkat</span>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="page__main container dampak dampak--narrow" id="konten">
+  <nav class="breadcrumb"><a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a> / Papan peringkat</nav>
+
+  {# Judul + tombol periode (link biasa; reload halaman dengan ?periode=...) #}
+  <div class="dampak-head">
+    <h1 class="page-title"><span class="eyebrow">Komunitas Sayangin</span>Papan <em>peringkat</em></h1>
+    <div class="dampak-switch" role="group" aria-label="Pilih periode">
+      <a href="?periode=bulan" class="chip {% if period == 'bulan' %}chip--on{% endif %}">Bulan ini</a>
+      <a href="?periode=semua" class="chip {% if period == 'semua' %}chip--on{% endif %}">Sepanjang waktu</a>
+    </div>
+  </div>
+
+  {# Daftar 10 teratas dari views.show_impact_leaderboard(); tampilan tamu vs login dibedakan di langkah berikutnya #}
+  <section class="dampak-card">
+    {% if leaderboard %}
+    <ol class="dampak-list dampak-rank">
+      {% for row in leaderboard %}
+      <li>
+        <span class="dampak-rank__no">{{ row.rank }}</span>
+        <span>@{{ row.username }}</span>
+        <strong class="mono">{{ row.points }} poin</strong>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="notice">Belum ada yang mendapat poin pada periode ini.</p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
