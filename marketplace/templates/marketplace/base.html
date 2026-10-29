@@ -33,6 +33,7 @@
     {# HP: pola mobile dari desain marketplace (judul + ikon + cari, navigasi lewat tab bar bawah). #}
     <header class="topbar m-topbar">
         <a href="{% url 'marketplace:catalog' %}" class="m-title">{% block m_title %}Market<em class="em">place</em>{% endblock %}</a>
+        {% if user.is_authenticated %}<a href="{% url 'marketplace:my_products' %}" class="btn m-sell">Jualanku</a>{% endif %}
         <a href="{% url 'marketplace:cart' %}" class="icon-link" aria-label="Keranjang, {{ cart_count }} barang">
             <svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg><span class="badge" data-cart-count{% if not cart_count %} hidden{% endif %}>{{ cart_count }}</span>
         </a>

@@ -1,11 +1,15 @@
+from unittest.mock import Mock, patch
+
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .models import CartItem, Order, Product
+from .ongkir import _destination_id, ongkir
 
 
 @override_settings(STORAGES={'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
+@patch.dict('os.environ', {'RAJAONGKIR_API_KEY': ''})  # tes tidak memanggil RajaOngkir sungguhan
 class MarketplaceFlowTest(TestCase):
     def setUp(self):
         self.seller = User.objects.create_user('nadia', password='x')
@@ -52,6 +56,10 @@ class MarketplaceFlowTest(TestCase):
         self.assertTrue(steps[0]['done'])  # pembayaran langsung tercentang
         self.assertTrue(steps[1]['now'])   # menunggu penjual mengemas
         self.assertRedirects(r, reverse('marketplace:order_detail', args=[order.pk]))
+        mine = self.client.get(reverse('marketplace:orders'))
+        self.assertEqual(mine.context['bought_count'], 2)
+        self.assertEqual(mine.context['order_counts'][0], ('Dibayar', 1))
+        self.assertContains(mine, '1 pesanan · 2 barang dibeli')
         page = self.client.get(reverse('marketplace:order_detail', args=[order.pk]))
         self.assertContains(page, 'Pesanan diterima')
         self.assertContains(page, 'disabled')
@@ -65,6 +73,10 @@ class MarketplaceFlowTest(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.status, 'dibayar')
         self.client.login(username='nadia', password='x')
+        hub = self.client.get(reverse('marketplace:my_products'))
+        self.assertEqual(list(hub.context['to_handle']), [order])  # muncul di "Perlu diproses" penjual
+        self.assertContains(hub, 'Jualanku')
+        self.assertIn(('Dibayar', 1), hub.context['sale_counts'])
         for _ in range(3):
             self.client.post(url, {'action': 'advance'})
         order.refresh_from_db()
@@ -158,3 +170,26 @@ class MarketplaceFlowTest(TestCase):
         self.assertEqual(data['results'][0]['name'], 'Tas mesh')
         self.assertEqual(data['results'][0]['price_label'], 'Rp120.000')
         self.assertEqual(self.client.get(reverse('marketplace:products_api'), {'q': 'blazer'}).json()['count'], 1)
+        r = self.client.get(reverse('marketplace:products_api'), {'id': [self.p1.pk, 'x'], 'limit': '5'})
+        self.assertEqual([p['name'] for p in r.json()['results']], ['Blazer wol abu'])
+        self.assertEqual(self.client.get(reverse('marketplace:products_api'), {'limit': '1'}).json()['count'], 1)
+
+
+class OngkirTest(TestCase):
+    def setUp(self):
+        _destination_id.cache_clear()
+
+    @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': ''})
+    def test_without_key_uses_flat_rate(self):
+        self.assertEqual(ongkir('Jakarta', 'Depok', 500), Order.COURIER_COST)
+
+    @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': 'k'})
+    @patch('marketplace.ongkir.requests')
+    def test_with_key_uses_api_and_falls_back_per_courier(self, req):
+        req.RequestException = Exception
+        req.get.return_value = Mock(json=lambda: {'data': [{'id': 6, 'city_name': 'CIREBON'}, {'id': 7, 'city_name': 'DEPOK'}]})
+        req.post.return_value = Mock(json=lambda: {'data': [{'service': 'REG', 'cost': 11000}]})
+        self.assertEqual(ongkir('Jakarta', 'Depok', 500), {'reguler': 11000, 'kilat': Order.COURIER_COST['kilat']})
+        self.assertEqual(req.post.call_args.kwargs['data']['destination'], 7)
+        req.post.side_effect = Exception('down')
+        self.assertEqual(ongkir('Jakarta', 'Depok', 500), Order.COURIER_COST)

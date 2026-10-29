@@ -256,6 +256,8 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .m-title { flex: 1; }
   .topbar .search { order: 5; flex-basis: 100%; height: 44px; }
   .topbar .avatar { margin-left: 4px; }
+  .topbar .m-sell { height: 36px; padding: 0 14px; flex-shrink: 0; }
+  .m-title { min-width: 0; }
 
   .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; height: 64px; background: var(--bg); border-top: 1px solid var(--line); }
   .tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; color: var(--ink-muted); text-decoration: none; }

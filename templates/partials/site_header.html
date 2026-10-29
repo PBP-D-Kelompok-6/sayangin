@@ -25,6 +25,7 @@ Gaya: static/css/site-header.css. Ikon & logo inline, jadi tidak butuh sprite la
             </label>
         </form>
         {% if user.is_authenticated %}
+            <a href="{% url 'marketplace:my_products' %}" class="sg-link"{% if active == 'jualanku' %} aria-current="page"{% endif %}>Jualanku</a>
             <a href="{% url 'marketplace:cart' %}" class="sg-icon" aria-label="Keranjang, {{ cart_count }} barang">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/></svg><span class="sg-badge" data-cart-count{% if not cart_count %} hidden{% endif %}>{{ cart_count }}</span>
             </a>

@@ -139,6 +139,10 @@ class Order(models.Model):
         return self.subtotal + self.shipping_cost
 
     @property
+    def created_label(self):
+        return tanggal(self.created_at, with_time=False)
+
+    @property
     def status_index(self):
         return [key for key, _ in self.STATUS_CHOICES].index(self.status)
 

@@ -7,10 +7,27 @@
 <div class="catalog-head">
     <div>
         <span class="eyebrow">{{ available|length }} tersedia · {{ sold|length }} terjual</span>
-        <h1>Barang <em>jualanku</em></h1>
+        <h1 class="desk-only">Barang <em>jualanku</em></h1>
     </div>
     <span class="catalog-tools"><a class="btn btn-chrome" href="{% url 'marketplace:product_create' %}">+ Jual barang</a></span>
 </div>
+
+{% if sold %}<h2 class="section-title">Pesanan <em>masuk</em></h2>
+{% include 'marketplace/_status_counts.html' with counts=sale_counts %}{% endif %}
+
+{% if to_handle %}
+<h2 class="section-title">Perlu <em>diproses</em></h2>
+<div class="order-list">
+    {% for o in to_handle %}
+    <a class="order-row" href="{% url 'marketplace:order_detail' o.pk %}">
+        <span class="photo" style="background-image: url('{{ o.items.all.0.photo }}')"></span>
+        <span><b>#{{ o.code }}</b> · untuk @{{ o.buyer.username }}<br><span class="muted">{{ o.items.all|length }} barang · {{ o.get_courier_display }} · {{ o.created_label }}</span></span>
+        <span class="status-pill">{{ o.status_short }}</span>
+    </a>
+    {% endfor %}
+</div>
+<h2 class="section-title">Sedang <em>dijual</em></h2>
+{% endif %}
 
 {% if available %}
 <div class="order-list">

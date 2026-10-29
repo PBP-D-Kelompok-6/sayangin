@@ -17,7 +17,7 @@
     {% endfor %}
     <fieldset class="options-list" {% if g.error %}aria-describedby="err-{{ g.seller.pk }}"{% endif %}>
         <legend>Pilih kurir</legend>
-        {% for key, label, cost in couriers %}
+        {% for key, label, cost in g.couriers %}
         <label class="option">
             <input type="radio" name="courier_{{ g.seller.pk }}" value="{{ key }}" data-cost="{{ cost }}" required {% if g.courier == key %}checked{% endif %}>
             <span>{{ label }}</span><b>{{ cost|rupiah }}</b>
