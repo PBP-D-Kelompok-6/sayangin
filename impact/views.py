@@ -1,5 +1,6 @@
 from datetime import datetime, time, timedelta
 
+from django.contrib.auth.models import User # untuk mengambil username di papan peringkat
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -70,6 +71,18 @@ def get_dashboard_challenges(user):
         "challenge_total": Challenge.objects.filter(owner=user).count(), # angka di link "Lihat semua (N)"
     }
 
+# Papan peringkat: total poin semua pengguna personal, urut dari yang terbesar
+# dipanggil build_dashboard(); since = periode (None -> sepanjang waktu)
+def get_leaderboard(since=None):
+    scores = {} # {id_user: total poin}
+    for key, point in sources.POINTS.items():
+        for user_id, total in sources.count_per_user(key, since).items():
+            scores[user_id] = scores.get(user_id, 0) + total * point # jumlah aksi * poin aksi, ditambahkan per jenis
+    users = User.objects.filter(id__in=scores, profile__role="PERSONAL") 
+    ranking = sorted(users, key=lambda u: (-scores[u.id], u.username)) # poin terbesar dulu: kalau seri, urut username
+    return [{"rank": i, "username": u.username, "user_id": u.id, "points": scores[u.id]}
+            for i, u in enumerate(ranking, start=1)]
+
 # tergantung periode: semua/bulan ini
 # dipanggil show_impact_dashboard() dan show_impact_json
 # key nya muncul di summary.html
@@ -78,6 +91,7 @@ def build_dashboard(request):
     since = None if period == "semua" else start_of(timezone.localdate().replace(day=1)) # kalau "bulan ini" start dari tanggal 1 bulan tsb
     counts = get_counts(request.user, since) # hitung sesuai since/periodenya (untuk angka & poin)
     badges = get_badges(get_counts(request.user)) # lencana selalu dihitung sepanjang waktu (tanpa since)
+    leaderboard = get_leaderboard(since) # peringkat ikut periode, sama seperti angka & poin
     return {
         "period": period,
         "points": sum(counts[key] * sources.POINTS[key] for key in counts), # jumlah aksi * poin aksi
@@ -85,6 +99,9 @@ def build_dashboard(request):
                   for key in counts], # kartu angka: label, angka, dan "+N poin/aksi"
         "badges": badges, # lencana
         "earned_count": sum(1 for badge in badges if badge["earned"]), # JUMLAH LENCANA YANG SUDAH DIRAIH, hitung lencana yang sudah diraih: jumlahkan angka 1 untuk setiap yang earned
+        "leaderboard": leaderboard[:5], # dashboard cukup 5 teratas
+        # posisi user yang login (bisa di luar 5 teratas); None kalau belum punya poin di periode ini
+        "my_rank": next((row for row in leaderboard if row["user_id"] == request.user.id), None),
     }
 
 # menampilkan html page: dashboard.html && summary.html

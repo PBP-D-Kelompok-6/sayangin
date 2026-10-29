@@ -127,6 +127,19 @@ class DashboardTest(TestCase):
                          ["Lemari 1", "Lemari 2", "Lemari 3", "Lemari 4"])  # "Lemari 5" tidak muat, lewat & selesai tidak ikut
         self.assertEqual(context["challenge_total"], 7)  # semua tantangan milik user, termasuk yang lewat & selesai
 
+    # papan peringkat: urut poin terbesar, lembaga tidak ikut, posisi user yang login ketahuan
+    def test_papan_peringkat(self):
+        ira = make_user("ira")
+        add(ira, "donasi", times=2)  
+        add(make_user("panti", role="LEMBAGA"), "donasi", times=5)
+        self.client.force_login(self.user)
+        url = reverse("impact:show_impact_dashboard")
+        context = self.client.get(url).context
+        self.assertEqual([row["username"] for row in context["leaderboard"]], ["ira", "rania"])
+        self.assertEqual(context["my_rank"]["rank"], 2) 
+        context = self.client.get(url + "?periode=semua", HTTP_HX_REQUEST="true").context
+        self.assertEqual(context["my_rank"]["points"], 32)
+
     # /dampak/json/ berisi data yang sama dengan dashboard
     def test_json(self):
         self.client.force_login(self.user)
