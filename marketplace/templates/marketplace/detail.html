@@ -13,8 +13,12 @@
 
 <div class="detail">
     <div class="gallery">
-        {# ponytail: satu foto per barang; tambah model ProductImage + thumbnail kalau penjual unggah banyak foto. #}
-        <div class="photo gallery-main" role="img" aria-label="{{ product.name }}" style="background-image: url('{{ product.photo }}')"></div>
+        <div class="photo gallery-main" role="img" aria-label="{{ product.name }}" style="background-image: url('{{ product.photo }}')" data-gallery-main></div>
+        {% if product.photos|length > 1 %}
+        <div class="gallery-thumbs">
+            {% for url in product.photos %}<button type="button" class="photo{% if forloop.first %} is-active{% endif %}" style="background-image: url('{{ url }}')" data-gallery-thumb="{{ url }}" aria-label="Foto {{ forloop.counter }}"></button>{% endfor %}
+        </div>
+        {% endif %}
         <div class="gallery-actions">
             <a class="btn btn-round" href="{% url 'marketplace:catalog' %}" aria-label="Kembali ke marketplace"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg></a>
             <button type="button" class="btn btn-round" aria-label="Bagikan barang ini" data-share><svg class="icon" aria-hidden="true"><use href="#i-share"/></svg></button>
@@ -90,6 +94,10 @@
 {% block scripts %}
 <script>
 // Bagikan (HP): pakai menu bagikan bawaan HP, kalau tidak ada salin link.
+document.querySelectorAll('[data-gallery-thumb]').forEach(t => t.addEventListener('click', () => {
+    document.querySelector('[data-gallery-main]').style.backgroundImage = `url("${t.dataset.galleryThumb}")`;
+    document.querySelectorAll('[data-gallery-thumb]').forEach(o => o.classList.toggle('is-active', o === t));
+}));
 document.querySelector('[data-share]')?.addEventListener('click', async e => {
     const data = { title: document.title, url: location.href };
     if (navigator.share) { try { await navigator.share(data); } catch (err) {} return; }

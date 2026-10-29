@@ -26,9 +26,22 @@
     </a>
     {% endfor %}
 </div>
-<h2 class="section-title">Sedang <em>dijual</em></h2>
 {% endif %}
 
+{% if drafts %}
+<h2 class="section-title">Draf <em>tersimpan</em></h2>
+<div class="order-list">
+    {% for p in drafts %}
+    <div class="order-row">
+        <span class="photo" style="background-image: url('{{ p.photo }}')"></span>
+        <span><b>{{ p.name }}</b><br><span class="muted">{{ p.price|rupiah }} · draf, belum tampil di marketplace</span></span>
+        <span class="row-actions"><a class="btn btn-chrome" href="{% url 'marketplace:product_edit' p.pk %}">Lanjutkan</a></span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if to_handle or drafts %}<h2 class="section-title">Sedang <em>dijual</em></h2>{% endif %}
 {% if available %}
 <div class="order-list">
     {% for p in available %}

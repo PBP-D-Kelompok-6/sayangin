@@ -13,8 +13,14 @@ BULAN_PANJANG = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
 
 
 def photo_url(image):
-    """Link foto penjual dipakai apa adanya; path data contoh diubah jadi URL static."""
-    return image if image.startswith(('http://', 'https://')) else static(image)
+    """Link foto / foto upload (/media/...) dipakai apa adanya; path data contoh diubah jadi URL static."""
+    return image if image.startswith(('http://', 'https://', '/')) else static(image)
+
+
+class ProductQuerySet(models.QuerySet):
+    def available(self):
+        """Barang yang tampil untuk umum: belum terjual dan bukan draf."""
+        return self.filter(is_sold=False, is_draft=False)
 
 
 def tanggal(dt, with_time=True):
@@ -55,13 +61,34 @@ class Product(models.Model):
     # ponytail: link foto, bukan upload file (upload butuh Pillow + penyimpanan media di server).
     image = models.CharField(max_length=500)
     is_sold = models.BooleanField(default=False)
+    is_draft = models.BooleanField(default=False)  # "Simpan draf": hanya terlihat oleh penjualnya
     created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = ProductQuerySet.as_manager()
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
         return self.name
+
+    @property
+    def photo(self):
+        return photo_url(self.image)
+
+    @property
+    def photos(self):
+        """Foto utama + foto tambahan (maksimal 4 total), untuk galeri di halaman detail."""
+        return [self.photo] + [p.photo for p in self.extra_photos.all()]
+
+
+class ProductPhoto(models.Model):
+    """Foto ke-2 s.d. ke-4. Foto pertama tetap di Product.image supaya kartu katalog cukup satu query."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='extra_photos')
+    image = models.CharField(max_length=500)
+
+    class Meta:
+        ordering = ['pk']
 
     @property
     def photo(self):

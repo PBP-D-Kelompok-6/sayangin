@@ -1,9 +1,13 @@
+import tempfile
 from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
+from django.core.files.storage import FileSystemStorage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from . import views
 from .models import CartItem, Order, Product
 from .ongkir import _destination_id, ongkir
 
@@ -12,6 +16,11 @@ from .ongkir import _destination_id, ongkir
 @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': ''})  # tes tidak memanggil RajaOngkir sungguhan
 class MarketplaceFlowTest(TestCase):
     def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        storage = patch.object(views, 'PHOTOS', FileSystemStorage(location=tmp.name, base_url='/marketplace/foto/'))
+        storage.start()
+        self.addCleanup(storage.stop)
         self.seller = User.objects.create_user('nadia', password='x')
         self.buyer = User.objects.create_user('ira', password='x')
         self.p1 = Product.objects.create(seller=self.seller, name='Blazer wol abu', price=185000, category='atasan',
@@ -104,25 +113,37 @@ class MarketplaceFlowTest(TestCase):
 
     # ---------- CRUD barang oleh penjual ----------
 
-    def product_data(self, **extra):
+    @staticmethod
+    def photo(name='flanel.gif'):
+        gif = b'GIF89a\x01\x00\x01\x00\x00\x00\x00;'
+        return SimpleUploadedFile(name, gif, content_type='image/gif')
+
+    def product_data(self, photos=None, **extra):
         data = {'name': 'Kemeja flanel', 'price': '40000', 'category': 'atasan', 'condition': 'terawat',
-                'condition_note': '', 'size': 'L', 'city': 'Depok', 'weight_grams': '400',
-                'used_duration': '1 tahun', 'description': 'Masih tebal.', 'image': 'https://example.com/flanel.jpg'}
+                'condition_note': '', 'size': 'L', 'city': 'Depok', 'weight_grams': '400', 'action': 'publish',
+                'photos': [self.photo()] if photos is None else photos}
         data.update(extra)
         return data
 
     def test_seller_can_create_edit_delete_product(self):
         self.client.login(username='ira', password='x')
-        r = self.client.post(reverse('marketplace:product_create'), self.product_data())
+        r = self.client.post(reverse('marketplace:product_create'),
+                             self.product_data(photos=[self.photo('a.gif'), self.photo('b.png')]))
         product = Product.objects.get(name='Kemeja flanel')
-        self.assertRedirects(r, reverse('marketplace:detail', args=[product.pk]))
+        self.assertRedirects(r, reverse('marketplace:product_published', args=[product.pk]))
+        self.assertContains(self.client.get(r.url), 'sudah <em>masuk Marketplace</em>')
         self.assertEqual(product.seller, self.buyer)
-        self.assertEqual(product.photo, 'https://example.com/flanel.jpg')
+        self.assertTrue(product.photo.startswith('/marketplace/foto/'))
+        self.assertEqual(len(product.photos), 2)  # foto utama + 1 foto tambahan
+        served = self.client.get(product.photo)
+        self.assertEqual(served.status_code, 200)  # foto upload bisa dibuka
+        served.close()
         self.assertContains(self.client.get(reverse('marketplace:my_products')), 'Kemeja flanel')
 
-        self.client.post(reverse('marketplace:product_edit', args=[product.pk]), self.product_data(price='35000'))
+        # Edit tanpa foto baru: foto lama tetap dipakai.
+        self.client.post(reverse('marketplace:product_edit', args=[product.pk]), self.product_data(photos=[], price='35000'))
         product.refresh_from_db()
-        self.assertEqual(product.price, 35000)
+        self.assertEqual((product.price, len(product.photos)), (35000, 2))
 
         r = self.client.post(reverse('marketplace:product_delete', args=[product.pk]))
         self.assertRedirects(r, reverse('marketplace:my_products'))
@@ -130,11 +151,34 @@ class MarketplaceFlowTest(TestCase):
 
     def test_product_form_validation(self):
         self.client.login(username='ira', password='x')
-        r = self.client.post(reverse('marketplace:product_create'), self.product_data(price='500'))
-        self.assertContains(r, 'Harga minimal Rp1.000.')
+        r = self.client.post(reverse('marketplace:product_create'), self.product_data(price='500', condition=''))
+        self.assertContains(r, 'Isi harga, minimal Rp1.000.')
+        self.assertContains(r, '2 kolom perlu diperbaiki')  # banner error seperti di Figma
         r = self.client.post(reverse('marketplace:product_create'), self.product_data(condition='cacat'))
         self.assertContains(r, 'Jelaskan cacatnya')
+        r = self.client.post(reverse('marketplace:product_create'), self.product_data(photos=[]))
+        self.assertContains(r, 'Tambahkan minimal 1 foto')
+        fake = SimpleUploadedFile('x.html', b'<script>alert(1)</script>', content_type='image/gif')
+        r = self.client.post(reverse('marketplace:product_create'), self.product_data(photos=[fake]))
+        self.assertContains(r, 'bukan file gambar')  # file selain gambar ditolak
+        r = self.client.post(reverse('marketplace:product_create'), self.product_data(photos=[self.photo() for _ in range(5)]))
+        self.assertContains(r, 'Maksimal 4 foto')
         self.assertFalse(Product.objects.filter(name='Kemeja flanel').exists())
+
+    def test_draft_is_hidden_until_published(self):
+        self.client.login(username='ira', password='x')
+        self.client.post(reverse('marketplace:product_create'), self.product_data(action='draft'))
+        draft = Product.objects.get(name='Kemeja flanel')
+        self.assertTrue(draft.is_draft)
+        self.assertNotIn(draft, self.client.get(reverse('marketplace:catalog')).context['products'])
+        self.assertEqual(self.client.get(reverse('marketplace:products_api'), {'q': 'flanel'}).json()['count'], 0)
+        self.assertContains(self.client.get(reverse('marketplace:my_products')), 'Draf <em>tersimpan</em>')
+        self.client.login(username='nadia', password='x')
+        self.assertEqual(self.client.get(reverse('marketplace:detail', args=[draft.pk])).status_code, 404)
+        self.client.login(username='ira', password='x')
+        r = self.client.post(reverse('marketplace:product_edit', args=[draft.pk]), self.product_data(photos=[]))
+        self.assertRedirects(r, reverse('marketplace:product_published', args=[draft.pk]))
+        self.assertIn(draft, self.client.get(reverse('marketplace:catalog')).context['products'])
 
     def test_only_owner_can_edit_or_delete(self):
         self.client.login(username='ira', password='x')  # p1 milik nadia

@@ -166,13 +166,66 @@ html { scroll-padding-top: 88px; }
 .input[aria-invalid="true"] { border-color: var(--danger); }
 textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 .err { font-size: 13px; color: var(--danger); font-weight: 400; }
-/* Form jual/edit barang: input dari Django Form diberi gaya sama dengan .input */
-.product-form { max-width: 760px; display: flex; flex-direction: column; gap: 20px; }
-.product-form :is(input, select, textarea) { height: 44px; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); font: inherit; font-weight: 400; }
-.product-form textarea { height: auto; padding: 12px 14px; resize: vertical; }
-.product-form :is(input, select, textarea):focus { outline: 0; border-color: var(--ink); }
-.product-form small { font-weight: 400; font-size: 12px; }
-.form-actions { display: flex; gap: 10px; justify-content: flex-end; }
+/* B4 Jual barang (Figma): foto di kiri, isian di kanan. Input dari Django Form diberi gaya sama dengan .input */
+.sell-title { font-size: 48px; margin-top: -6px; }
+.sell-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius); background: var(--accent-soft); font-size: 14px; color: var(--ink-muted); }
+.sell-banner b { color: var(--ink); }
+.sell-banner > a { margin-left: auto; color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.sell-banner span a { color: inherit; } /* link nama kolom di banner error */
+.sell-banner-icon, .err i { flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--accent); color: #FFF; font-style: normal; font-weight: 700; }
+.sell-banner-icon { width: 20px; height: 20px; font-size: 12px; }
+.err { display: flex; align-items: center; gap: 6px; color: var(--accent); }
+.err i { width: 14px; height: 14px; font-size: 9px; }
+.sell { display: grid; grid-template-columns: 400px 1fr; gap: 40px; align-items: start; }
+.sell-photos { display: flex; flex-direction: column; gap: 12px; }
+.sell-photos .photo { border: 1px dashed rgba(26,18,16,.32); background-color: var(--surface); background-size: 80%; cursor: pointer; font: inherit; color: var(--ink); padding: 0; }
+.sell-photos .photo.has-photo { border: 0; background-color: var(--photo); }
+.sell-photos .photo.has-photo .photo-empty { visibility: hidden; }
+.photo-drop { width: 100%; height: 340px; border-radius: var(--radius-lg) !important; }
+.photo-drop.is-over { border-color: var(--ink); background-color: var(--selected); }
+.photo-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 13px; }
+.photo-empty .icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.photo-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.photo-slot { height: 82px; }
+.photo-plus { font-size: 18px; color: var(--ink-faint); }
+.sell-photos > small, .sell-fields small { font-size: 12px; }
+.sell-fields { display: flex; flex-direction: column; gap: 18px; }
+.sell-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.f { display: flex; flex-direction: column; gap: 8px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.f > label, .f > legend { font-size: 14px; font-weight: 600; padding: 0; }
+.f :is(input, select, textarea) { height: 44px; width: 100%; padding: 0 14px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); font: inherit; font-size: 14px; color: var(--ink); }
+.f textarea { height: auto; padding: 12px 14px; resize: vertical; }
+.f :is(input, select, textarea):focus { outline: 0; border-color: var(--ink); }
+.f--err :is(input, select, textarea) { border-color: var(--accent); }
+.condition-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { position: relative; }
+.pill input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.pill span { height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); font-size: 13px; display: inline-flex; align-items: center; }
+.pill input:checked + span { background: var(--ink); color: #FFF; border-color: var(--ink); }
+.pill input:focus-visible + span { outline: 2px solid rgba(107,20,32,.55); outline-offset: 2px; }
+.sell-ship { padding-top: 16px; border-top: 1px solid var(--line); }
+.sell-ship-view { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.sell-ship-view .link-btn { color: var(--ink); font-size: 14px; }
+.sell-ship-edit, .sell-ship.is-editing .sell-ship-view { display: none; }
+.sell-ship.is-editing .sell-ship-edit { display: block; }
+.sell-actions { display: flex; gap: 10px; align-items: center; justify-content: flex-end; padding-top: 8px; }
+.sell-cancel { margin-right: auto; color: var(--ink); font-size: 14px; padding: 0 4px; }
+/* B4 sukses */
+.published { display: flex; gap: 64px; align-items: center; justify-content: center; min-height: 560px; }
+.published-photo { width: 400px; height: 480px; flex: none; border-radius: var(--radius-lg); background-size: 80%; }
+.published-info { max-width: 480px; display: flex; flex-direction: column; gap: 10px; }
+.published-check { width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: #FFF; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+.published-check .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+.published h1 { font-size: 48px; line-height: 1.02; }
+.published-facts { margin: 6px 0 10px; }
+.published-facts div { display: grid; grid-template-columns: 140px 1fr; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.published-facts dt { color: var(--ink-faint); }
+.published-facts dd { margin: 0; }
+.published-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.published-actions .btn-lg { height: 44px; padding: 0 20px; }
+.gallery-thumbs { display: flex; gap: 10px; margin-top: 10px; }
+.gallery-thumbs .photo { width: 92px; height: 82px; border: 1px solid transparent; cursor: pointer; padding: 0; }
+.gallery-thumbs .photo.is-active { border: 2px solid var(--ink); }
 .owner-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .owner-row form { display: flex; }
 .row-actions { display: flex; gap: 8px; align-items: center; }
@@ -257,6 +310,26 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
   .topbar .search { order: 5; flex-basis: 100%; height: 44px; }
   .topbar .avatar { margin-left: 4px; }
   .topbar .m-sell { height: 36px; padding: 0 14px; flex-shrink: 0; }
+  .sell { grid-template-columns: 1fr; gap: 18px; }
+  .sell-banner { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .sell-banner > a { margin-left: 0; }
+  .sell-photos { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; overflow-x: auto; }
+  .sell-photos > :is(small, .err) { grid-column: 1 / -1; }
+  .photo-drop { height: 110px; }
+  .photo-drop .photo-empty .soft { display: none; }
+  .photo-slots { display: contents; }
+  .photo-slot { height: 110px; }
+  .photo-slot:is(:first-child, :last-child) { display: none; } /* HP: kotak besar + 2 kotak kecil, sesuai desain */
+  .sell-row:not(.sell-row--size) { grid-template-columns: 1fr; }
+  .sell-row--size { grid-template-columns: 1.6fr 1fr; }
+  .sell-actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 12px 16px; background: var(--bg); border-top: 1px solid var(--line); }
+  .sell-actions .btn { flex: 1; }
+  .sell-actions .btn-chrome { flex: 1.6; }
+  .published { flex-direction: column; gap: 20px; min-height: 0; }
+  .published-photo { width: 100%; height: 300px; }
+  .published h1 { font-size: 36px; }
+  .published-facts div { grid-template-columns: 110px 1fr; }
+  .gallery-thumbs { padding: 0 16px; }
   .m-title { min-width: 0; }
 
   .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; height: 64px; background: var(--bg); border-top: 1px solid var(--line); }

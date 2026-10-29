@@ -1,19 +1,32 @@
 from itertools import groupby
+from pathlib import Path
 
 from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.files.storage import FileSystemStorage
 from django.db import transaction
-from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.db.models import Count, Max, Min, Q
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views.decorators.http import require_POST
+from django.views.static import serve
 
 from .forms import ProductForm
-from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product
+from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product, ProductPhoto
 from .ongkir import ongkir
 from .templatetags.rupiah import rupiah
+
+# Foto upload penjual disimpan di <proyek>/media/marketplace dan disajikan lewat /marketplace/foto/<nama>.
+# Sengaja tidak memakai MEDIA_ROOT bersama: nilainya BASE_DIR / '/media/' menunjuk ke /media di root disk.
+PHOTOS = FileSystemStorage(location=settings.BASE_DIR / 'media' / 'marketplace', base_url='/marketplace/foto/')
+
+def photo(request, path):
+    """Sajikan foto upload penjual (juga di PWS, tempat WhiteNoise hanya melayani file static)."""
+    return serve(request, path, document_root=PHOTOS.location)
+
 
 SORTS = {'terbaru': '-created_at', 'termurah': 'price', 'termahal': '-price'}
 ADDRESS_FIELDS = ('recipient', 'phone', 'address', 'city')
@@ -45,12 +58,12 @@ def _similar_by_name(q, limit=4):
     match = Q()
     for t in terms:
         match |= Q(name__icontains=t)
-    return list(Product.objects.filter(is_sold=False).filter(match)[:limit])
+    return list(Product.objects.available().filter(match)[:limit])
 
 
 def _related_products(q, limit=4):
     """C2b "Mungkin cocok juga": padanan nama dulu, lalu barang sekategori, baru barang terbaru."""
-    base = Product.objects.filter(is_sold=False)
+    base = Product.objects.available()
     found = _similar_by_name(q, limit)
     if found and len(found) < limit:
         same_kind = base.filter(category__in={p.category for p in found}).exclude(pk__in=[p.pk for p in found])
@@ -70,7 +83,7 @@ def _other_keywords(q):
 
 
 def catalog(request):
-    products = Product.objects.filter(is_sold=False).select_related('seller')
+    products = Product.objects.available().select_related('seller')
     q = request.GET.get('q', '').strip()
     categories = request.GET.getlist('kategori')
     conditions = request.GET.getlist('kondisi')
@@ -126,14 +139,14 @@ def catalog(request):
         'nothing_found': nothing_found,
         'related': _related_products(q) if nothing_found else [],
         'other_keywords': _other_keywords(q) if nothing_found else [],
-        'total_available': Product.objects.filter(is_sold=False).count(),
+        'total_available': Product.objects.available().count(),
         'q': q,
         'searching': bool(q or active),
         'active_filters': active,
         'categories': Product.CATEGORY_CHOICES,
         'conditions': Product.CONDITION_CHOICES,
         'sizes': ['S', 'M', 'L', 'XL'],
-        'cities': Product.objects.filter(is_sold=False).values_list('city', flat=True).distinct().order_by('city'),
+        'cities': Product.objects.available().values_list('city', flat=True).distinct().order_by('city'),
         'selected': {'kategori': categories, 'kondisi': conditions, 'ukuran': sizes, 'lokasi': city,
                      'penjual': seller, 'min': request.GET.get('min', ''), 'maks': request.GET.get('maks', '')},
         'sort': sort,
@@ -141,8 +154,10 @@ def catalog(request):
 
 
 def product_detail(request, pk):
-    product = get_object_or_404(Product.objects.select_related('seller'), pk=pk)
-    similar = Product.objects.filter(category=product.category, is_sold=False).exclude(pk=pk)[:6]
+    product = get_object_or_404(Product.objects.select_related('seller').prefetch_related('extra_photos'), pk=pk)
+    if product.is_draft and product.seller != request.user:
+        raise Http404('Barang ini belum tayang.')  # draf hanya bisa dilihat penjualnya
+    similar = Product.objects.available().filter(category=product.category).exclude(pk=pk)[:6]
     in_cart = request.user.is_authenticated and CartItem.objects.filter(user=request.user, product=product).exists()
     joined = product.seller.date_joined
     return render(request, 'marketplace/detail.html', {
@@ -161,7 +176,8 @@ def product_detail(request, pk):
 def my_products(request):
     items = Product.objects.filter(seller=request.user)
     return render(request, 'marketplace/my_products.html', {
-        'available': items.filter(is_sold=False), 'sold': items.filter(is_sold=True), 'nav_active': 'jualanku',
+        'available': items.available(), 'sold': items.filter(is_sold=True), 'drafts': items.filter(is_draft=True),
+        'nav_active': 'jualanku',
         'sale_counts': _status_counts(Order.objects.filter(seller=request.user)),
         # Pesanan yang masih menunggu tombol penjual (kemas → kirim → tiba); setelah tiba giliran pembeli.
         'to_handle': Order.objects.filter(seller=request.user, status__in=['dibayar', 'dikemas', 'dikirim'])
@@ -169,16 +185,54 @@ def my_products(request):
     })
 
 
+def _price_ranges():
+    """Kisaran harga barang serupa per kategori, untuk saran harga di form jual: {'atasan': [40000, 150000]}."""
+    rows = Product.objects.available().values('category').annotate(low=Min('price'), high=Max('price'))
+    return {r['category']: [r['low'], r['high']] for r in rows}
+
+
+def _product_form_page(request, form, product=None):
+    return render(request, 'marketplace/product_form.html', {
+        'form': form, 'editing': product is not None, 'product': product, 'price_ranges': _price_ranges(),
+        'nav_active': 'jualanku', 'bad_fields': [field for field in form if field.errors],
+    })
+
+
+def _save_product(request, form):
+    """Simpan barang + foto upload. Tombol "Simpan draf" menyimpan tanpa menayangkan."""
+    product = form.save(commit=False)
+    product.seller = request.user
+    product.is_draft = request.POST.get('action') == 'draft'
+    if photos := form.cleaned_data['photos']:  # foto baru menggantikan semua foto lama
+        paths = [PHOTOS.url(PHOTOS.save(f'{get_random_string(16)}{Path(f.name).suffix.lower()}', f)) for f in photos]
+        product.image = paths[0]
+        product.save()
+        product.extra_photos.all().delete()
+        ProductPhoto.objects.bulk_create([ProductPhoto(product=product, image=path) for path in paths[1:]])
+    else:
+        product.save()
+    return product
+
+
 @login_required
 def product_create(request):
-    form = ProductForm(request.POST or None)
+    last = Product.objects.filter(seller=request.user).first()
+    form = ProductForm(request.POST or None, request.FILES or None, initial={'city': last.city if last else ''})
     if request.method == 'POST' and form.is_valid():
-        product = form.save(commit=False)
-        product.seller = request.user
-        product.save()
-        messages.success(request, f'{product.name} sudah tampil di marketplace.')
-        return redirect('marketplace:detail', pk=product.pk)
-    return render(request, 'marketplace/product_form.html', {'form': form, 'editing': False})
+        product = _save_product(request, form)
+        if product.is_draft:
+            messages.success(request, f'Draf {product.name} disimpan. Belum tampil di marketplace.')
+            return redirect('marketplace:my_products')
+        return redirect('marketplace:product_published', pk=product.pk)
+    return _product_form_page(request, form)
+
+
+@login_required
+def product_published(request, pk):
+    """Halaman sukses setelah barang dipasang (desain Figma B4 · sukses)."""
+    return render(request, 'marketplace/product_published.html', {
+        'product': _own_product(request, pk), 'nav_active': 'jualanku',
+    })
 
 
 def _own_product(request, pk):
@@ -189,12 +243,18 @@ def _own_product(request, pk):
 @login_required
 def product_edit(request, pk):
     product = _own_product(request, pk)
-    form = ProductForm(request.POST or None, instance=product)
+    was_draft = product.is_draft
+    form = ProductForm(request.POST or None, request.FILES or None, instance=product)
     if request.method == 'POST' and form.is_valid():
-        form.save()
+        product = _save_product(request, form)
+        if product.is_draft:
+            messages.success(request, 'Draf disimpan.')
+            return redirect('marketplace:my_products')
+        if was_draft:  # draf yang baru dijual sekarang
+            return redirect('marketplace:product_published', pk=pk)
         messages.success(request, 'Perubahan disimpan.')
         return redirect('marketplace:detail', pk=pk)
-    return render(request, 'marketplace/product_form.html', {'form': form, 'editing': True, 'product': product})
+    return _product_form_page(request, form, product)
 
 
 @login_required
@@ -220,7 +280,7 @@ def _cart_count(user):
 @login_required
 @require_POST
 def add_to_cart(request, pk):
-    product = get_object_or_404(Product, pk=pk, is_sold=False)
+    product = get_object_or_404(Product.objects.available(), pk=pk)
     if product.seller == request.user:
         if _is_ajax(request):
             return JsonResponse({'ok': False, 'message': 'Ini barangmu sendiri.'}, status=400)
@@ -253,7 +313,7 @@ def products_api(request):
     """GET /marketplace/api/barang/?q=jaket&kategori=atasan&id=3&limit=4 → barang tersedia (terbaru dulu) dalam JSON.
 
     Dipakai juga modul lain (mis. landing "Baru masuk") supaya harga selalu sama dengan marketplace."""
-    products = Product.objects.filter(is_sold=False).select_related('seller')
+    products = Product.objects.available().select_related('seller')
     if q := request.GET.get('q', '').strip():
         products = products.filter(name__icontains=q)
     if categories := request.GET.getlist('kategori'):
