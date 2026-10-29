@@ -135,18 +135,32 @@ def show_impact_json(request):
     return JsonResponse(build_dashboard(request)) # sebagai Json
 
 
+# Samarkan username untuk tamu: huruf pertama + *** + huruf terakhir, mis. "rania" -> "r***a"
+def mask_username(username):
+    return username[0] + "***" + (username[-1] if len(username) > 1 else "")
+
 # Halaman papan peringkat publik (/dampak/peringkat/)
 # SENGAJA tanpa @personal_required: tamu & lembaga boleh melihat, tapi isinya dibedakan di template
 @require_GET
 def show_impact_leaderboard(request):
     period, since = get_period(request)
     leaderboard = get_leaderboard(since)
+    top = leaderboard[:10] # halaman publik menampilkan 10 teratas
+    if request.user.is_authenticated:
+        # sudah login: nama lengkap + tandai baris milik sendiri
+        rows = [{**row, "is_me": row["user_id"] == request.user.id} for row in top]
+        my_rank = next((row for row in leaderboard if row["user_id"] == request.user.id), None)
+    else:
+        # tamu: nama disamarkan DI SERVER, jadi nama asli & id user tidak ikut terkirim ke browser
+        rows = [{"rank": row["rank"], "username": mask_username(row["username"]), "points": row["points"]}
+                for row in top]
+        my_rank = None # tamu tidak punya posisi
     context = {
         "period": period,
-        "leaderboard": leaderboard[:10], # halaman publik menampilkan 10 teratas
-        # posisi user yang login; tamu (belum login) selalu None
-        "my_rank": next((row for row in leaderboard if row["user_id"] == request.user.id), None)
-                   if request.user.is_authenticated else None,
+        "leaderboard": rows,
+        "my_rank": my_rank,
+        # cara dapat poin, untuk kalimat penjelasan di atas daftar
+        "points_info": [(sources.LABELS[key], point) for key, point in sources.POINTS.items()],
     }
     return render(request, "impact/leaderboard.html", context)
 

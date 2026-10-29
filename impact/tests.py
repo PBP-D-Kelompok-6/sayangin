@@ -179,6 +179,23 @@ class LeaderboardPageTest(TestCase):
         self.client.force_login(self.user)
         self.assertEqual(self.client.get(self.url).context["my_rank"]["rank"], 1)
 
+    # tamu: nama disamarkan & ada ajakan masuk; login: nama lengkap, disorot "(kamu)", tanpa ajakan masuk
+    def test_tampilan_tamu_vs_login(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, "@r***a")
+        self.assertNotContains(response, "@rania")  # nama asli tidak terkirim ke tamu
+        self.assertContains(response, "Masuk untuk lihat posisimu")
+        self.client.force_login(self.user)
+        response = self.client.get(self.url)
+        self.assertContains(response, "@rania (kamu)")
+        self.assertContains(response, "Kamu #1")
+        self.assertNotContains(response, "Masuk untuk lihat posisimu")
+
+    # aturan penyamaran nama, termasuk username 1 huruf
+    def test_samarkan_username(self):
+        self.assertEqual(views.mask_username("ira2"), "i***2")
+        self.assertEqual(views.mask_username("a"), "a***")
+
 
 # CRUD tantangan pribadi :3
 @patch.dict(sources.SOURCES, FAKE)
