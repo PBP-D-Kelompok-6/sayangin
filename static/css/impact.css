@@ -39,3 +39,13 @@
 /* Gambar lencana: bulat 64px; abu-abu & transparan kalau belum diraih */
 .dampak-badge img { width: 64px; height: 64px; border-radius: 50%; }
 .dampak-badge:not(.is-earned) img { filter: grayscale(1); opacity: .4; }
+
+/* Tantangan kamu (dashboard): judul di kiri, link + tombol di kanan; turun ke bawah kalau sempit */
+.dampak-section-head { flex-wrap: wrap; gap: 12px; align-items: center; }
+.dampak-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.dampak-link { color: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+.dampak-link:hover { color: var(--maroon); }
+
+/* Kartu tantangan kecil di dashboard: garis putus-putus seperti kartu lencana */
+.dampak-mini { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); }
+.dampak-mini .pill { align-self: flex-start; }
