@@ -1,8 +1,3 @@
-"""Unit test Modul E.  Jalankan:  python manage.py test impact
-
-Model teman belum semuanya ada, jadi SOURCES diarahkan sementara ke tabel bawaan
-Django `admin.LogEntry` (punya kolom user & action_time). Jenis aksi dibedakan lewat object_repr.
-"""
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -36,7 +31,7 @@ def add(user, key, days_ago=0, times=1):
         LogEntry.objects.filter(pk=entry.pk).update(action_time=timezone.now() - timedelta(days=days_ago))
 
 
-# ---------------------------------------------------------------- hitungan (sources.py & lencana)
+# hitungan (sources.py & lencana) :3
 @patch.dict(sources.SOURCES, FAKE) # selama test kelas ini, SOURCES diganti FAKE
 class HitunganTest(TestCase):
     def setUp(self):
@@ -64,7 +59,7 @@ class HitunganTest(TestCase):
         self.assertEqual(badges[3]["image"], "img/lencana-donatur.jpg")  # First Giving
 
 
-# ---------------------------------------------------------------- dashboard & JSON
+# dashboard & JSON :3
 @patch.dict(sources.SOURCES, FAKE)
 class DashboardTest(TestCase):
     # data awal: 1 terjual (+10), 1 donasi (+20), 1 lemari 400 hari lalu (+2, hanya terhitung "sepanjang waktu")
@@ -102,6 +97,23 @@ class DashboardTest(TestCase):
         Challenge.objects.create(owner=self.user, title="Jual 2", kind="terjual", target=2, start_date=today, end_date=today)
         Challenge.objects.create(owner=self.user, title="Donasi 1", kind="donasi", target=1, start_date=today, end_date=today)
         self.assertEqual(self.client.get(url).context["next_step"]["challenge"].title, "Jual 2")  # sisa 1; Donasi 1 sudah selesai
+
+    # tantangan kamu = hanya yang berjalan & belum selesai, urut deadline terdekat, maksimal 4
+    def test_tantangan_kamu(self):
+        self.client.force_login(self.user)
+        url = reverse("impact:show_impact_dashboard")
+        today = timezone.localdate()
+        for i in range(5):  # 5 tantangan lemari, deadline-nya 5, 4, 3, 2, 1 hari lagi
+            Challenge.objects.create(owner=self.user, title=f"Lemari {5 - i}", kind="lemari", target=3,
+                                     start_date=today, end_date=today + timedelta(days=5 - i))
+        Challenge.objects.create(owner=self.user, title="Sudah lewat", kind="lemari", target=3,
+                                 start_date=today - timedelta(days=9), end_date=today - timedelta(days=1))
+        Challenge.objects.create(owner=self.user, title="Sudah selesai", kind="donasi", target=1,
+                                 start_date=today, end_date=today)  # donasi hari ini sudah 1 -> selesai
+        context = self.client.get(url).context
+        self.assertEqual([row["challenge"].title for row in context["challenges"]],
+                         ["Lemari 1", "Lemari 2", "Lemari 3", "Lemari 4"])  # "Lemari 5" tidak muat, lewat & selesai tidak ikut
+        self.assertEqual(context["challenge_total"], 7)  # semua tantangan milik user, termasuk yang lewat & selesai
 
     # /dampak/json/ berisi data yang sama dengan dashboard
     def test_json(self):

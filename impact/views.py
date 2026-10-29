@@ -46,7 +46,7 @@ def get_badges(counts):
         for name, rule, key, minimum, image in BADGES
     ]
 
-# dipanggil get_next_step() /dashboard dan show_impact_challenges() /daftar
+# dipanggil get_dashboard_challenges() /dashboard dan show_impact_challenges() /daftar
 def challenge_progress(challenge, user):
     # hitung aksi di antara tanggal mulai dan selesai; +1 hari supaya tanggal selesai ikut terhitung
     done = sources.count_for_user(challenge.kind, user, since=start_of(challenge.start_date),
@@ -55,12 +55,20 @@ def challenge_progress(challenge, user):
     return {"challenge": challenge, "done": done, "percent": round(done / challenge.target * 100),
             "remaining": challenge.target - done} # remaining = sisa yang belum dikerjakan
 
-# challenges yang sisanya paling dikit (Langkah berikutnya)
-# dipanggil show_impact_dashboard() : di template {% if next_step %}
-def get_next_step(user):
+# Tantangan untuk dashboard: "Langkah berikutnya" + bagian "Tantangan kamu"
+# dipanggil show_impact_dashboard() : di template {% if next_step %} dan {% for row in challenges %}
+def get_dashboard_challenges(user):
     running = Challenge.objects.filter(owner=user, end_date__gte=timezone.localdate()) # hanya yang masih berjalan
     unfinished = [row for row in (challenge_progress(c, user) for c in running) if row["remaining"] > 0] # buang yang sudah selesai
-    return min(unfinished, key=lambda row: row["remaining"]) if unfinished else None # None -> tampil ajakan buat tantangan
+    # langkah berikutnya = sisa paling sedikit; None -> tampil ajakan buat tantangan
+    next_step = min(unfinished, key=lambda row: row["remaining"]) if unfinished else None
+    # tantangan kamu = deadline paling dekat dulu; kalau deadline-nya sama, yang sisanya paling sedikit dulu
+    upcoming = sorted(unfinished, key=lambda row: (row["challenge"].end_date, row["remaining"]))
+    return {
+        "next_step": next_step,
+        "challenges": upcoming[:4], # maksimal 4 kartu, sesuai desain Figma
+        "challenge_total": Challenge.objects.filter(owner=user).count(), # angka di link "Lihat semua (N)"
+    }
 
 # tergantung periode: semua/bulan ini
 # dipanggil show_impact_dashboard() dan show_impact_json
@@ -87,7 +95,7 @@ def show_impact_dashboard(request):
     # tombol periode memakai HTMX -> cukup kirim potongan summary.html, bukan satu halaman
     if request.headers.get("HX-Request"):
         return render(request, "impact/partials/summary.html", context)
-    context["next_step"] = get_next_step(request.user) # hanya perlu saat halaman dibuka penuh
+    context.update(get_dashboard_challenges(request.user)) # next_step, challenges, challenge_total; hanya perlu saat halaman dibuka penuh
     return render(request, "impact/dashboard.html", context)
 
 
