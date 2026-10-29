@@ -15,10 +15,12 @@ from django.utils import timezone
 from impact import sources, views
 from impact.models import Challenge
 
+# SOURCES palsu: semua jenis aksi dibaca dari LogEntry, dibedakan lewat object_repr (mis. "donasi")
 FAKE = {key: {"model": "admin.LogEntry", "user": "user", "date": "action_time", "filter": {"object_repr": key}}
         for key in sources.SOURCES}
 
 
+# Buat user untuk test; role-nya disimpan di profile milik tim (PERSONAL / LEMBAGA)
 def make_user(username, role="PERSONAL"):
     user = User.objects.create_user(username=username, password="pass12345")
     user.profile.role = role
@@ -30,46 +32,56 @@ def add(user, key, days_ago=0, times=1):
     """Pura-pura user melakukan aksi `key` (mis. donasi) sebanyak `times` kali."""
     for _ in range(times):
         entry = LogEntry.objects.create(user=user, object_repr=key, action_flag=1)
+        # action_time otomatis "sekarang", jadi diubah manual supaya bisa pura-pura aksi di masa lalu
         LogEntry.objects.filter(pk=entry.pk).update(action_time=timezone.now() - timedelta(days=days_ago))
 
 
-@patch.dict(sources.SOURCES, FAKE)
+# ---------------------------------------------------------------- hitungan (sources.py & lencana)
+@patch.dict(sources.SOURCES, FAKE) # selama test kelas ini, SOURCES diganti FAKE
 class HitunganTest(TestCase):
     def setUp(self):
         self.user = make_user("rania")
 
+    # since membatasi tanggal: donasi 60 hari lalu tidak ikut kalau batasnya 30 hari terakhir
     def test_hitung_dan_periode(self):
         add(self.user, "donasi")
         add(self.user, "donasi", days_ago=60)
         self.assertEqual(sources.count_for_user("donasi", self.user), 2)
         self.assertEqual(sources.count_for_user("donasi", self.user, since=timezone.now() - timedelta(days=30)), 1)
 
+    # model teman yang belum ada tidak bikin error, hasilnya 0
     def test_modul_teman_belum_ada(self):
         with patch.dict(sources.SOURCES, {"lemari": {"model": "lemari.Belum", "user": "u", "date": "d", "filter": {}}}):
             self.assertEqual(sources.count_for_user("lemari", self.user), 0)
 
+    # lencana diraih sesuai jumlah aksi, progres dalam persen, dan tiap lencana punya gambar
     def test_lencana(self):
         add(self.user, "lemari")
         add(self.user, "donasi", times=2)
         badges = views.get_badges(views.get_counts(self.user))
         self.assertEqual([b["name"] for b in badges if b["earned"]], ["Sayangin Starter", "First Giving"])
         self.assertEqual(badges[4]["percent"], 67)  # Kind Closet: 2 dari 3
+        self.assertEqual(badges[3]["image"], "img/lencana-donatur.jpg")  # First Giving
 
 
+# ---------------------------------------------------------------- dashboard & JSON
 @patch.dict(sources.SOURCES, FAKE)
 class DashboardTest(TestCase):
+    # data awal: 1 terjual (+10), 1 donasi (+20), 1 lemari 400 hari lalu (+2, hanya terhitung "sepanjang waktu")
     def setUp(self):
         self.user = make_user("rania")
         add(self.user, "terjual")
         add(self.user, "donasi")
         add(self.user, "lemari", days_ago=400)
 
+    # belum login -> dialihkan ke login (302); akun lembaga -> ditolak (403)
     def test_harus_login_dan_bukan_lembaga(self):
         url = reverse("impact:show_impact_dashboard")
         self.assertEqual(self.client.get(url).status_code, 302)
         self.client.force_login(make_user("panti", role="LEMBAGA"))
         self.assertEqual(self.client.get(url).status_code, 403)
 
+    # halaman penuh memakai base.html; request HTMX hanya dibalas potongan summary.html
     def test_dashboard_dan_filter_periode_htmx(self):
         self.client.force_login(self.user)
         url = reverse("impact:show_impact_dashboard")
@@ -81,6 +93,7 @@ class DashboardTest(TestCase):
         self.assertTemplateNotUsed(response, "base.html")
         self.assertEqual(response.context["points"], 32)
 
+    # langkah berikutnya = tantangan berjalan yang belum selesai dengan sisa paling sedikit
     def test_langkah_berikutnya(self):
         self.client.force_login(self.user)
         url = reverse("impact:show_impact_dashboard")
@@ -90,6 +103,7 @@ class DashboardTest(TestCase):
         Challenge.objects.create(owner=self.user, title="Donasi 1", kind="donasi", target=1, start_date=today, end_date=today)
         self.assertEqual(self.client.get(url).context["next_step"]["challenge"].title, "Jual 2")  # sisa 1; Donasi 1 sudah selesai
 
+    # /dampak/json/ berisi data yang sama dengan dashboard
     def test_json(self):
         self.client.force_login(self.user)
         data = self.client.get(reverse("impact:show_impact_json")).json()
@@ -97,8 +111,10 @@ class DashboardTest(TestCase):
         self.assertEqual(len(data["badges"]), 6)
 
 
+# ---------------------------------------------------------------- CRUD tantangan pribadi
 @patch.dict(sources.SOURCES, FAKE)
 class ChallengeCrudTest(TestCase):
+    # 2 tantangan milik rania (berjalan & sudah berakhir) + 1 milik user lain
     def setUp(self):
         self.user = make_user("rania")
         self.client.force_login(self.user)
@@ -110,6 +126,7 @@ class ChallengeCrudTest(TestCase):
         self.theirs = Challenge.objects.create(owner=make_user("ira"), title="Punya Ira", kind="donasi", target=1,
                                                start_date=today, end_date=today)
 
+    # CREATE: tersimpan, lalu dialihkan ke daftar; pemiliknya otomatis user yang login
     def test_create(self):
         url = reverse("impact:create_impact_challenge")
         self.assertEqual(self.client.get(url).status_code, 200)
@@ -119,6 +136,7 @@ class ChallengeCrudTest(TestCase):
         self.assertRedirects(response, reverse("impact:show_impact_challenges"))
         self.assertEqual(Challenge.objects.get(title="Catat 5 barang").owner, self.user)
 
+    # form tidak valid: pesan error tampil dan data tidak tersimpan
     def test_create_tidak_valid(self):
         today = timezone.localdate()
         response = self.client.post(reverse("impact:create_impact_challenge"),
@@ -128,6 +146,7 @@ class ChallengeCrudTest(TestCase):
         self.assertContains(response, "Tanggal selesai tidak boleh sebelum tanggal mulai.")
         self.assertFalse(Challenge.objects.filter(title="Salah").exists())
 
+    # READ: hanya milik sendiri, progres terhitung, filter jenis & status (biasa maupun HTMX)
     def test_read_dan_filter(self):
         add(self.user, "terjual")
         url = reverse("impact:show_impact_challenges")
@@ -141,6 +160,7 @@ class ChallengeCrudTest(TestCase):
         response = self.client.get(url + "?status=berjalan")
         self.assertEqual([r["challenge"].title for r in response.context["rows"]], ["Jual 3"])
 
+    # UPDATE: form terisi data lama, lalu perubahan tersimpan
     def test_update(self):
         url = reverse("impact:edit_impact_challenge", args=[self.mine.pk])
         self.assertContains(self.client.get(url), "Jual 3")
@@ -150,6 +170,7 @@ class ChallengeCrudTest(TestCase):
         self.mine.refresh_from_db()
         self.assertEqual(str(self.mine), "Jual 4")
 
+    # DELETE: hanya lewat POST; lewat HTMX balasannya kosong, tanpa HTMX dialihkan ke daftar
     def test_delete(self):
         url = reverse("impact:delete_impact_challenge", args=[self.mine.pk])
         self.assertEqual(self.client.get(url).status_code, 405)  # hapus hanya lewat POST
@@ -158,6 +179,7 @@ class ChallengeCrudTest(TestCase):
                              reverse("impact:show_impact_challenges"))
         self.assertFalse(Challenge.objects.filter(owner=self.user).exists())
 
+    # tantangan milik orang lain tidak bisa diubah atau dihapus (404)
     def test_milik_orang_lain_tidak_bisa_diubah(self):
         self.assertEqual(self.client.get(reverse("impact:edit_impact_challenge", args=[self.theirs.pk])).status_code, 404)
         self.assertEqual(self.client.post(reverse("impact:delete_impact_challenge", args=[self.theirs.pk])).status_code, 404)
