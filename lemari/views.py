@@ -29,6 +29,8 @@ def _listing_values(request):
 @login_required(login_url="/login/")
 def index(request):
     wardrobe_items = WardrobeItem.objects.filter(owner=request.user)
+    if not wardrobe_items.exists():
+        return render(request, "lemari/kosong.html")
     sort = request.GET.get("sort", "listed")
     usage_order = Case(
         When(last_used="Lebih dari 6 bulan", then=0),
