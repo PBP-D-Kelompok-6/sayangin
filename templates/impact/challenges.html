@@ -19,7 +19,7 @@
     <a class="btn btn--primary" href="{% url 'impact:create_impact_challenge' %}">+ Tambah tantangan</a>
   </div>
 
-  # Filter
+  {# FILTER #}
   <form class="tw-flex tw-flex-wrap tw-gap-3" method="get"
         hx-get="{% url 'impact:show_impact_challenges' %}" hx-target="#challenge-list" hx-trigger="change" hx-push-url="true">
     <select class="select select--pill" name="jenis" aria-label="Jenis">

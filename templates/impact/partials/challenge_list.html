@@ -1,6 +1,10 @@
-{% comment %}Daftar tantangan pribadi. Dikirim ulang oleh view saat filter (HTMX) berubah.{% endcomment %}
+{% comment %} Daftar tantangan pribadi. Dikirim ulang oleh view saat filter (HTMX) berubah.{% endcomment %}
+
+{# show_impact_challenges(request), hanya jika HX-Request #}
+
 {% if rows %}
 <ul class="dampak-list tw-grid md:tw-grid-cols-2 tw-gap-3">
+
   {% for row in rows %}
   <li class="dampak-card">
     <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2">
@@ -21,7 +25,9 @@
     </div>
   </li>
   {% endfor %}
+
 </ul>
 {% else %}
 <p class="notice">Belum ada tantangan. Coba ubah filter atau tambah tantangan baru.</p>
+
 {% endif %}

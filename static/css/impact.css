@@ -1,6 +1,3 @@
-/* Modul E — Dampak. Warna, font, tombol, form, progress memakai CSS tim
-   (tokens.css, base.css, components.css). Di sini hanya tambahan kecil. */
-
 .dampak { display: flex; flex-direction: column; gap: 20px; padding-block: 24px 64px; }
 .dampak--narrow { max-width: 760px; }
 .dampak em { color: var(--maroon); }

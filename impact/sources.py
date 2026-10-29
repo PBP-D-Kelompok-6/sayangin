@@ -15,9 +15,12 @@ LABELS = {
     "lemari": "Barang di lemari",
 }
 
+# POIN / aksi
 POINTS = {"terjual": 10, "dibeli": 5, "donasi": 20, "lemari": 2}
 
 
+# Dipanggil get_counts dan challenges_progress (progress tantangan)
+# Tiap labels -> udah berapa || Tiap challenges -> udah terachive berapa 
 def count_for_user(key, user, since=None, until=None):
     source = SOURCES[key]
     try:
@@ -26,7 +29,7 @@ def count_for_user(key, user, since=None, until=None):
         return 0 
     rows = model.objects.filter(**source["filter"]).filter(**{source["user"]: user})
     if since:
-        rows = rows.filter(**{source["date"] + "__gte": since})
+        rows = rows.filter(**{source["date"] + "__gte": since}) # batas awal tantangan. __gte : >=
     if until:
-        rows = rows.filter(**{source["date"] + "__lt": until})
+        rows = rows.filter(**{source["date"] + "__lt": until}) # periode tantangan (tanggal < until)
     return rows.count()

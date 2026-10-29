@@ -1,4 +1,7 @@
 {% comment %}Bagian dashboard yang bergantung periode. Dikirim ulang oleh view saat request HTMX.{% endcomment %}
+
+{# Filter Dashboard based on periode, sekalian dari panggilan show_impact_dashboard() #}
+
 <div class="dampak-head">
   <h1 class="page-title"><span class="eyebrow">Dampak · @{{ user.username }}</span>Dampak kecil, <em>nyata</em>.</h1>
   <div class="dampak-switch" role="group" aria-label="Pilih periode">
@@ -14,6 +17,7 @@
     <span class="eyebrow">Poin dampak</span>
     <strong class="serif">{{ points }}</strong>
   </div>
+  
   {% for stat in stats %}
   <div class="dampak-card">
     <span class="eyebrow">{{ stat.label }}</span>
@@ -21,4 +25,5 @@
     <span class="mono">+{{ stat.points }} poin / aksi</span>
   </div>
   {% endfor %}
+
 </div>

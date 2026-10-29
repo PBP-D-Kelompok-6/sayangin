@@ -2,7 +2,12 @@ from django import forms
 
 from impact.models import Challenge
 
+# dipakai oleh: 
+# 1. create_impact_challenge (views.py),
+# 2. edit_impact_challenge (views.py), 
+# lalu ditampilkan di challenge_form.html.
 
+# Untuk tambah/ubah then save
 class ChallengeForm(forms.ModelForm):
     class Meta:
         model = Challenge
@@ -17,6 +22,7 @@ class ChallengeForm(forms.ModelForm):
             "end_date": forms.DateInput(attrs={"class": "input", "type": "date"}),
         }
 
+    # Validasi tambahan untuk beberapa field. Dijalankan otomatis saat views memanggil form.is.valid
     def clean(self):
         cleaned = super().clean()
         if cleaned.get("target") == 0:
