@@ -265,7 +265,7 @@ def products_api(request):
     products = list(products)
     return JsonResponse({'count': len(products), 'results': [{
         'id': p.pk, 'name': p.name, 'price': p.price, 'price_label': rupiah(p.price),
-        'category': p.category, 'condition': p.get_condition_display(), 'city': p.city,
+        'category': p.category, 'condition': p.get_condition_display(), 'size': p.size, 'city': p.city,
         'seller': p.seller.username, 'photo': request.build_absolute_uri(p.photo),
         'url': request.build_absolute_uri(reverse('marketplace:detail', args=[p.pk])),
     } for p in products]})

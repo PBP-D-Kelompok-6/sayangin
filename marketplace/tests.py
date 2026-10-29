@@ -169,6 +169,7 @@ class MarketplaceFlowTest(TestCase):
         self.assertEqual(data['count'], 1)
         self.assertEqual(data['results'][0]['name'], 'Tas mesh')
         self.assertEqual(data['results'][0]['price_label'], 'Rp120.000')
+        self.assertEqual(self.client.get(reverse('marketplace:products_api'), {'id': self.p1.pk}).json()['results'][0]['size'], 'M')
         self.assertEqual(self.client.get(reverse('marketplace:products_api'), {'q': 'blazer'}).json()['count'], 1)
         r = self.client.get(reverse('marketplace:products_api'), {'id': [self.p1.pk, 'x'], 'limit': '5'})
         self.assertEqual([p['name'] for p in r.json()['results']], ['Blazer wol abu'])
