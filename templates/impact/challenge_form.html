@@ -3,10 +3,11 @@
 {% block title %}{% if is_edit %}Ubah{% else %}Tambah{% endif %} tantangan — Sayangin{% endblock %}
 {% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
 
+{# Bar atas versi HP (form ini khusus akun personal) #}
 {% block app_bar %}
-<header class="app-bar app-bar--back only-mobile">
-  <a class="icon-btn" href="{% url 'impact:show_impact_challenges' %}" aria-label="Kembali">←</a>
-  <span class="app-bar__label">{% if is_edit %}Ubah{% else %}Tambah{% endif %} tantangan</span>
+<header class="app-bar only-mobile">
+  <span class="app-bar__title">{% if is_edit %}Ubah{% else %}Tambah{% endif %} tantangan</span>
+  <a class="avatar-link" href="{% url 'main:show_profile' %}" aria-label="Profil"><span class="avatar"></span></a>
 </header>
 {% endblock %}
 
@@ -15,14 +16,19 @@
   <nav class="breadcrumb"><a href="{% url 'impact:show_impact_challenges' %}">Tantangan pribadi</a> / {% if is_edit %}Ubah{% else %}Tambah{% endif %}</nav>
   <h1 class="page-title">{% if is_edit %}Ubah{% else %}Tambah{% endif %} <em>tantangan</em></h1>
 
-  <form class="dampak-card" method="post" novalidate>
+  <form class="dampak-card dampak-form" method="post" novalidate>
     {% csrf_token %}
-    <div class="tw-grid sm:tw-grid-cols-2 tw-gap-4">
+    <div class="tw-grid tw-grid-cols-2 tw-gap-4">
       {% for field in form %}
-      <label class="field {% if field.name == 'title' %}sm:tw-col-span-2{% endif %}">
+      <label class="field {% if field.name == 'title' %}tw-col-span-2{% elif field.name == 'kind' or field.name == 'target' %}tw-col-span-2 sm:tw-col-span-1{% endif %}">
         <span class="field__label">{{ field.label }}</span>
         {{ field }}
-        {% for error in field.errors %}<span class="field__error">{{ error }}</span>{% endfor %}
+        {% for error in field.errors %}
+        <span class="field__error">
+          <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg>
+          {{ error }}
+        </span>
+        {% endfor %}
       </label>
       {% endfor %}
     </div>

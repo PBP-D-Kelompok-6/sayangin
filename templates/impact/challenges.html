@@ -3,15 +3,17 @@
 {% block title %}Tantangan pribadi — Sayangin{% endblock %}
 {% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
 
+{# Bar atas versi HP (halaman ini khusus akun personal) #}
 {% block app_bar %}
-<header class="app-bar app-bar--back only-mobile">
-  <a class="icon-btn" href="{% url 'impact:show_impact_dashboard' %}" aria-label="Kembali">←</a>
-  <span class="app-bar__label">Tantangan pribadi</span>
+<header class="app-bar only-mobile">
+  <span class="app-bar__title">Tantangan pribadi</span>
+  <a class="avatar-link" href="{% url 'main:show_profile' %}" aria-label="Profil"><span class="avatar"></span></a>
 </header>
 {% endblock %}
 
 {% block content %}
-<main class="page__main container dampak" id="konten" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+{# dampak-tantangan: penanda untuk aturan CSS versi HP di impact.css #}
+<main class="page__main container dampak dampak-tantangan" id="konten" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   <nav class="breadcrumb"><a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a> / Tantangan pribadi</nav>
 
   {# toast pesan sukses setelah tambah/ubah/hapus tantangan (posisinya fixed di kanan atas) #}
@@ -24,7 +26,7 @@
 
   {# FILTER: disembunyikan kalau user belum punya tantangan sama sekali (tidak ada yang bisa difilter) #}
   {% if has_any %}
-  <form class="tw-flex tw-flex-wrap tw-gap-3" method="get"
+  <form class="dampak-filter tw-flex tw-flex-wrap tw-gap-3" method="get"
         hx-get="{% url 'impact:show_impact_challenges' %}" hx-target="#challenge-list" hx-trigger="change" hx-push-url="true">
     <select class="select select--pill" name="jenis" aria-label="Jenis">
       <option value="">Semua jenis</option>

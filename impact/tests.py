@@ -240,6 +240,9 @@ class ChallengeCrudTest(TestCase):
         self.assertContains(response, "Target minimal 1.")
         self.assertContains(response, "Tanggal selesai tidak boleh sebelum tanggal mulai.")
         self.assertFalse(Challenge.objects.filter(title="Salah").exists())
+        # tampilan error: hanya 2 field yang salah diberi border merah (aria-invalid) dan ikon di pesannya
+        self.assertContains(response, 'aria-invalid="true"', count=2)
+        self.assertContains(response, 'class="field__error"', count=2)
 
     # READ: hanya milik sendiri, progres terhitung, filter jenis & status (biasa maupun HTMX)
     def test_read_dan_filter(self):
@@ -306,6 +309,29 @@ class ChallengeCrudTest(TestCase):
         self.assertContains(response, 'id="hapus-tantangan"')
         self.assertContains(response, 'data-confirm-title="Jual 3"')
         self.assertNotContains(response, "hx-confirm")
+
+    # /dampak/tantangan/json/: hanya milik sendiri, progres terhitung, filter sama dengan halaman HTML
+    def test_json_tantangan(self):
+        add(self.user, "terjual")
+        url = reverse("impact:show_impact_challenges_json")
+        data = self.client.get(url).json()
+        self.assertEqual([c["title"] for c in data["challenges"]], ["Jual 3", "Donasi lama"])  # tanpa "Punya Ira"
+        first = data["challenges"][0]
+        self.assertEqual((first["kind_label"], first["done"], first["target"], first["is_running"]),
+                         ("Barang preloved terjual", 1, 3, True))
+        self.assertEqual(first["start_date"], str(self.mine.start_date))
+        data = self.client.get(url + "?jenis=donasi&status=berakhir").json()
+        self.assertEqual([c["title"] for c in data["challenges"]], ["Donasi lama"])
+        self.assertEqual(self.client.get(url + "?status=berjalan").json()["challenges"][0]["title"], "Jual 3")
+        self.assertEqual(self.client.post(url).status_code, 405)  # hanya GET
+
+    # versi HP: bar atas berisi judul serif (bukan tombol kembali) dan avatar ke profil
+    def test_bar_atas_hp(self):
+        response = self.client.get(reverse("impact:show_impact_challenges"))
+        self.assertContains(response, '<span class="app-bar__title">Tantangan pribadi</span>', html=True)
+        response = self.client.get(reverse("impact:edit_impact_challenge", args=[self.mine.pk]))
+        self.assertContains(response, '<span class="app-bar__title">Ubah tantangan</span>', html=True)
+        self.assertContains(response, reverse("main:show_profile"))
 
     # tantangan milik orang lain tidak bisa diubah atau dihapus (404)
     def test_milik_orang_lain_tidak_bisa_diubah(self):

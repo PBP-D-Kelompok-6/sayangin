@@ -166,6 +166,18 @@ def show_impact_leaderboard(request):
     return render(request, "impact/leaderboard.html", context)
 
 
+# Saring tantangan sesuai filter jenis & status ("" = semua)
+# dipakai show_impact_challenges() (HTML) dan show_impact_challenges_json() (JSON) supaya aturannya sama
+def filter_challenges(rows, kind, status):
+    if kind:
+        rows = rows.filter(kind=kind)
+    today = timezone.localdate()
+    if status == "berjalan":
+        rows = rows.filter(end_date__gte=today) # tanggal selesai hari ini atau nanti
+    elif status == "berakhir":
+        rows = rows.filter(end_date__lt=today) # tanggal selesai sudah lewat
+    return rows
+
 # menampilkan html page: challenges.html & challenges_list.html
 @personal_required
 def show_impact_challenges(request):
@@ -174,13 +186,7 @@ def show_impact_challenges(request):
     status = request.GET.get("status", "")
     rows = Challenge.objects.filter(owner=request.user) # hanya tantangan milik user yang login
     has_any = rows.exists() # dicek sebelum difilter: "belum punya tantangan" beda dengan "filter tanpa hasil"
-    if kind:
-        rows = rows.filter(kind=kind)
-    today = timezone.localdate()
-    if status == "berjalan":
-        rows = rows.filter(end_date__gte=today) # tanggal selesai hari ini atau nanti
-    elif status == "berakhir":
-        rows = rows.filter(end_date__lt=today) # tanggal selesai sudah lewat
+    rows = filter_challenges(rows, kind, status)
     context = {
         "rows": [challenge_progress(challenge, request.user) for challenge in rows], # tiap tantangan + progresnya
         "kind": kind, # dipakai template untuk menandai pilihan filter yang aktif
@@ -195,6 +201,31 @@ def show_impact_challenges(request):
     if request.headers.get("HX-Request"):
         return render(request, "impact/partials/challenge_list.html", context)
     return render(request, "impact/challenges.html", context)
+
+# daftar tantangan yang sama dengan halaman HTML, tapi dalam bentuk JSON (/dampak/tantangan/json/)
+# filter-nya sama: ?jenis=donasi&status=berjalan
+@personal_required
+@require_GET
+def show_impact_challenges_json(request):
+    kind = request.GET.get("jenis", "")
+    status = request.GET.get("status", "")
+    rows = filter_challenges(Challenge.objects.filter(owner=request.user), kind, status) # hanya milik user yang login
+    challenges = []
+    for row in (challenge_progress(challenge, request.user) for challenge in rows):
+        challenge = row["challenge"]
+        challenges.append({
+            "id": challenge.pk,
+            "title": challenge.title,
+            "kind": challenge.kind, # kode jenis, mis. "donasi"
+            "kind_label": challenge.get_kind_display(), # teks jenis, mis. "Donasi diterima lembaga"
+            "target": challenge.target,
+            "done": row["done"], # progres: jumlah aksi selama periode tantangan
+            "percent": row["percent"],
+            "start_date": challenge.start_date, # JsonResponse mengubah tanggal jadi teks "YYYY-MM-DD"
+            "end_date": challenge.end_date,
+            "is_running": challenge.is_running, # True = masih berjalan
+        })
+    return JsonResponse({"jenis": kind, "status": status, "challenges": challenges})
 
 # menampilkan html page: challenges_form.html
 @personal_required

@@ -103,3 +103,18 @@
 /* Filter yang sedang dipakai (pilihan selain "Semua ...") berwarna gelap, sesuai Figma "Filter tanpa hasil" */
 /* pakai :has() supaya ikut berubah walau form filter tidak dimuat ulang oleh HTMX */
 .select--pill:has(option:checked:not([value=""])) { border-color: var(--ink); background-color: var(--ink); color: var(--on-dark); }
+
+/* Error form tantangan (challenge_form.html) */
+.dampak .field__error { align-items: flex-start; }
+.dampak .field__error .icon { margin-top: 2px; }
+.dampak-form .field { min-width: 0; } /* input tanggal tidak mendorong kolom keluar kartu di layar sempit */
+
+/* Halaman tantangan & form versi HP */
+@media (max-width: 767px) {
+  .dampak-tantangan { gap: 16px; padding-block: 16px 48px; }
+  .dampak-tantangan .dampak-head { gap: 16px; margin-bottom: 0; }
+  .dampak-tantangan .dampak-head .btn { width: 100%; } /* "+ Tambah tantangan" selebar layar */
+  .dampak-tantangan .dampak-filter { display: grid; grid-template-columns: 1fr 1fr; } /* lebih spesifik dari tw-flex; 2 dropdown filter sama lebar, berdampingan */
+  .dampak-tantangan .dampak-filter .select { width: 100%; min-width: 0; }
+  .dampak-tantangan .dampak-card, .dampak-form { padding: 16px; }
+}
