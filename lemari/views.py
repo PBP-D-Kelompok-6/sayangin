@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .models import ListingPhoto, SaleListing, WardrobeItem
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from datetime import datetime
 
 
 @login_required(login_url="/login/")
@@ -102,32 +103,66 @@ def awal(request):
 
 @login_required(login_url="/login/")
 def tambah_barang(request):
+    edit_id = request.POST.get("edit_item") or request.GET.get("edit")
+    item = get_object_or_404(WardrobeItem, pk=edit_id, owner=request.user) if edit_id else None
     if request.method == "POST":
         name = request.POST.get("nama", "").strip()
         category = request.POST.get("kategori", "").strip()
+        size = request.POST.get("ukuran", "").strip()
         last_used = request.POST.get("terakhir_dipakai", "").strip()
+        color = request.POST.get("warna", "").strip()
+        purchased_at = request.POST.get("kapan_dibeli", "").strip()
+        notes = request.POST.get("catatan", "").strip()
         photo = request.FILES.get("foto")
-        if not name or not category or not last_used or not photo:
+        if not name or not category or not last_used or (not item and not photo):
             return render(
                 request,
                 "lemari/tambah_barang.html",
                 {
                     "errors": "Lengkapi foto, nama barang, kategori, dan terakhir dipakai.",
-                    "values": {"name": name, "category": category, "last_used": last_used},
+                    "values": {"name": name, "category": category, "size": size, "last_used": last_used, "color": color, "purchased_at": purchased_at, "notes": notes},
+                    "item": item,
                 },
             )
-        WardrobeItem.objects.create(
-            owner=request.user,
-            name=name,
-            category=category,
-            last_used=last_used,
-            photo=photo,
-        )
+        if item:
+            item.name, item.category, item.size = name, category, size
+            item.last_used, item.color = last_used, color
+            item.purchased_at, item.notes = purchased_at, notes
+            if photo:
+                item.photo = photo
+            item.save()
+        else:
+            item = WardrobeItem.objects.create(owner=request.user, name=name, category=category, size=size, last_used=last_used, color=color, purchased_at=purchased_at, notes=notes, photo=photo)
+        if edit_id:
+            return redirect("lemari:detail_barang", item_id=item.pk)
         if request.POST.get("action") == "save_add":
             messages.success(request, f"{name} berhasil ditambahkan ke lemarimu.")
             return redirect("lemari:tambah_barang")
         return redirect("lemari:index")
-    return render(request, "lemari/tambah_barang.html")
+    values = {
+        "name": item.name if item else "",
+        "category": item.category if item else "",
+        "size": item.size if item else "",
+        "last_used": item.last_used if item else "",
+        "color": item.color if item else "",
+        "purchased_at": item.purchased_at if item else "",
+        "notes": item.notes if item else "",
+    }
+    return render(request, "lemari/tambah_barang.html", {"item": item, "values": values})
+
+
+@login_required(login_url="/login/")
+def detail_barang(request, item_id):
+    item = get_object_or_404(WardrobeItem, pk=item_id, owner=request.user)
+    month_name = ""
+    if item.purchased_at:
+        try:
+            purchased_date = datetime.strptime(item.purchased_at, "%Y-%m")
+            months = ("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember")
+            month_name = f"{months[purchased_date.month - 1]} {purchased_date.year}"
+        except ValueError:
+            month_name = item.purchased_at
+    return render(request, "lemari/detail_barang.html", {"item": item, "purchased_label": month_name})
 
 
 @login_required(login_url="/login/")
@@ -224,7 +259,9 @@ def jual(request):
         "size": listing.size if listing else "M",
         "condition": listing.condition if listing else "terawat",
         "condition_notes": (
-            listing.condition_notes if listing else "Kancing kedua sedikit longgar."
+            listing.condition_notes
+            if listing
+            else (source_item.notes if source_item and source_item.notes else "")
         ),
         "price": listing.price if listing else "",
         "weight": listing.weight if listing else 800,

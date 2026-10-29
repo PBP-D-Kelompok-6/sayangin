@@ -23,19 +23,10 @@
       <form class="sort" method="get"><label>Urutkan <select class="select select--pill" name="sort" onchange="this.form.submit()"><option value="listed" {% if current_sort == 'listed' %}selected{% endif %}>List</option><option value="usage" {% if current_sort == 'usage' %}selected{% endif %}>Pemakaian</option><option value="category" {% if current_sort == 'category' %}selected{% endif %}>Kategori</option></select></label></form>
     </div>
     <div class="items">
-      {% for item in wardrobe_items %}<div class="item item-card"><button class="item-card__toggle" type="button" aria-expanded="false"><span class="item__img"{% if item.photo %} style="--img: url('{% url 'lemari:wardrobe_photo' item.pk %}')"{% else %} style="--img: url({% static 'img/blazer-abu.jpg' %})"{% endif %}></span><b>{{ item.name }}</b><span class="text-sm text-muted">{{ item.category }} · {{ item.last_used }}</span></button><div class="item-card__actions" hidden><a class="btn btn--primary btn--sm" href="{% url 'lemari:jual' %}?item={{ item.pk }}">Jual</a><form method="post" action="{% url 'lemari:hapus_item' item.pk %}" data-delete-form>{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">Hapus</button></form></div></div>{% endfor %}
+      {% for item in wardrobe_items %}<a class="item" href="{% url 'lemari:detail_barang' item.pk %}"><span class="item__img"{% if item.photo %} style="--img: url('{% url 'lemari:wardrobe_photo' item.pk %}')"{% else %} style="--img: url({% static 'img/blazer-abu.jpg' %})"{% endif %}></span><b>{{ item.name }}</b><span class="text-sm text-muted">{{ item.category }} · {{ item.last_used }}</span></a>{% endfor %}
       <a class="btn btn--dashed items__add" href="{% url 'lemari:tambah_barang' %}">+ Tambah barang</a>
     </div>
   </main>
   {% include 'lemari/_bottom_nav.html' %}
 </div>
-<script>
-document.querySelectorAll('.item-card').forEach(card => {
-  const toggle = card.querySelector('.item-card__toggle'), actions = card.querySelector('.item-card__actions');
-  toggle.addEventListener('click', () => { const open = toggle.getAttribute('aria-expanded') === 'true'; toggle.setAttribute('aria-expanded', String(!open)); actions.hidden = open; card.classList.toggle('is-open', !open); });
-});
-document.querySelectorAll('[data-delete-form]').forEach(form => form.addEventListener('submit', event => {
-  if (!window.confirm('Hapus barang ini dari lemarimu?')) event.preventDefault();
-}));
-</script>
 {% endblock %}

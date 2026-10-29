@@ -41,7 +41,11 @@ class WardrobeItem(models.Model):
     owner = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=160)
     category = models.CharField(max_length=80)
+    size = models.CharField(max_length=40, blank=True)
     last_used = models.CharField(max_length=40)
+    color = models.CharField(max_length=80, blank=True)
+    purchased_at = models.CharField(max_length=40, blank=True)
+    notes = models.TextField(blank=True)
     photo = models.FileField(upload_to="lemari/wardrobe/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
