@@ -9,9 +9,9 @@ Gaya: static/css/site-header.css. Ikon & logo inline, jadi tidak butuh sprite la
     <a href="{% url 'main:show_main' %}" class="sg-logo" aria-label="Sayangin — beranda">{% include 'partials/logo.html' with id='sg-logo-mark' %}sayangin</a>
     <nav class="sg-nav" aria-label="Utama">
         <a href="{% url 'marketplace:catalog' %}"{% if active == 'marketplace' %} aria-current="page"{% endif %}>Marketplace</a>
-        <a href="{% url 'main:show_main' %}#lemari"{% if active == 'lemari' %} aria-current="page"{% endif %}>Lemari Digital</a>
+        <a href="{% url 'lemari:index' %}"{% if active == 'lemari' %} aria-current="page"{% endif %}>Lemari Digital</a>
         <a href="{% url 'main:show_main' %}#kebutuhan"{% if active == 'donasi' %} aria-current="page"{% endif %}>Donasi</a>
-        <a href="{% url 'main:show_main' %}#dampak"{% if active == 'dampak' %} aria-current="page"{% endif %}>Dampak</a>
+        <a href="{% url 'impact:show_impact_dashboard' %}"{% if active == 'dampak' %} aria-current="page"{% endif %}>Dampak</a>
     </nav>
     <div class="sg-actions">
         {# Kolom cari ada di navbar: tertutup jadi ikon, terbuka jadi kolom (C1 vs C2 di desain). #}
