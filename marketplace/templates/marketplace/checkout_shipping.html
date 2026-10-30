@@ -1,0 +1,35 @@
+{% extends 'marketplace/checkout_base.html' %}
+{% load static rupiah %}
+{% block back_url %}{% url 'marketplace:checkout_address' %}{% endblock %}
+
+{% block steps %}
+{% include 'marketplace/_address_row.html' %}
+
+{% for g in groups %}
+<section class="co-block">
+    <span class="soft">Dari <b style="color: var(--ink)">@{{ g.seller.username }}</b> · {{ g.items.0.product.city }}</span>
+    {% for item in g.items %}
+    <div class="line-item">
+        <div class="photo" style="background-image: url('{{ item.product.photo }}')"></div>
+        <span>{{ item.product.name }}{% if item.product.size %}, {{ item.product.size }}{% endif %}<br><span class="muted">{{ item.product.get_condition_display }}</span></span>
+        <b>{{ item.product.price|rupiah }}</b>
+    </div>
+    {% endfor %}
+    <fieldset class="options-list" {% if g.error %}aria-describedby="err-{{ g.seller.pk }}"{% endif %}>
+        <legend>Pilih kurir</legend>
+        {% for key, label, cost in g.couriers %}
+        <label class="option">
+            <input type="radio" name="courier_{{ g.seller.pk }}" value="{{ key }}" data-cost="{{ cost }}" required {% if g.courier == key %}checked{% endif %}>
+            <span>{{ label }}</span><b>{{ cost|rupiah }}</b>
+        </label>
+        {% endfor %}
+    </fieldset>
+    {% if g.error %}<span class="err" role="alert" id="err-{{ g.seller.pk }}">{{ g.error }}</span>{% endif %}
+</section>
+{% endfor %}
+{% endblock %}
+
+{% block submit %}
+<button type="submit" class="btn btn-lg btn-chrome" id="pay"><span class="desk-only">Lanjut ke pembayaran</span><span class="m-only">Lanjut bayar</span></button>
+<small id="pay-hint">Tombol aktif setelah semua kurir dipilih.</small>
+{% endblock %}

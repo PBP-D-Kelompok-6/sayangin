@@ -24,7 +24,7 @@
         sayangin
       </a>
       <nav class="landing-nav only-desktop hidden md:flex items-center" aria-label="Utama">
-        <a href="#baru-masuk">Marketplace</a>
+        <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
         <a href="#lemari">Lemari Digital</a>
         <a href="#kebutuhan">Donasi</a>
         <a href="#dampak">Dampak</a>
@@ -77,7 +77,7 @@
             <span class="only-mobile md:hidden">Barang lama, <em>disayang</em> lagi.</span>
           </p>
           <div class="hero__ctas flex flex-col md:flex-row">
-            <a class="btn btn--primary btn--lg" href="#baru-masuk">Jelajahi marketplace</a>
+            <a class="btn btn--primary btn--lg" href="{% url 'marketplace:catalog' %}">Jelajahi marketplace</a>
             {% if user.is_authenticated %}
               {% if user.profile.role == 'LEMBAGA' %}
                 <a class="btn btn--lg hero__ghost" href="{% url 'main:show_lembaga_profile' %}">Kelola lembaga</a>
@@ -132,7 +132,7 @@
       </section>
 
       <section class="newin" id="baru-masuk">
-        <div class="newin__head container flex justify-between items-baseline"><h2 class="section-title">Baru <em>masuk</em></h2><a href="#baru-masuk">Lihat semua</a></div>
+        <div class="newin__head container flex justify-between items-baseline"><h2 class="section-title">Baru <em>masuk</em></h2><a href="{% url 'marketplace:catalog' %}">Lihat semua</a></div>
         <div class="newin__feature only-desktop hidden md:grid grid-cols-2">
           <div class="newin__photo">
             <span><span class="serif newin__photo-title">Koleksi <em>kemeja putih</em></span><br>Atasan &amp; blus preloved</span>
@@ -144,19 +144,19 @@
           </div>
         </div>
         <div class="tiles grid grid-cols-2 md:grid-cols-4">
-          <a class="tile flex" href="#baru-masuk">
+          <a class="tile flex" href="{% url 'marketplace:catalog' %}">
             <span class="tile__meta flex"><span class="tile__name">Blus organza</span><span class="tile__price">Rp145.000</span></span>
             <span class="tile__img tile__img--blus-organza" role="img" aria-label="Blus organza"></span>
           </a>
-          <a class="tile flex" href="#baru-masuk">
+          <a class="tile flex" href="{% url 'marketplace:catalog' %}">
             <span class="tile__meta flex"><span class="tile__name">Rok tulle</span><span class="tile__price">Rp165.000</span></span>
             <span class="tile__img tile__img--rok-tulle" role="img" aria-label="Rok tulle"></span>
           </a>
-          <a class="tile flex" href="#baru-masuk">
+          <a class="tile flex" href="{% url 'marketplace:catalog' %}">
             <span class="tile__meta flex"><span class="tile__name">Sweter bintang</span><span class="tile__price">Rp185.000</span></span>
             <span class="tile__img tile__img--sweter-bintang" role="img" aria-label="Sweter bintang"></span>
           </a>
-          <a class="tile flex" href="#baru-masuk">
+          <a class="tile flex" href="{% url 'marketplace:catalog' %}">
             <span class="tile__meta flex"><span class="tile__name">Tas mesh</span><span class="tile__price">Rp120.000</span></span>
             <span class="tile__img tile__img--tas-mesh" role="img" aria-label="Tas mesh"></span>
           </a>

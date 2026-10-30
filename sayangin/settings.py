@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main'
+    'main',
+    'marketplace',
 ]
 
 MIDDLEWARE = [
@@ -76,6 +77,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'marketplace.context_processors.cart_count',
             ],
         },
     },
@@ -163,3 +165,5 @@ MAILERS = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'main:show_login'
