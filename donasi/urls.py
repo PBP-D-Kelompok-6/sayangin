@@ -18,6 +18,7 @@ urlpatterns = [
     # Dashboard & Riwayat
     path("lembaga/", views.dashboard_lembaga, name="dashboard_lembaga"),
     path("lembaga/riwayat/", views.riwayat_lembaga, name="riwayat_lembaga"),
+    path("lembaga/tawaran/", views.tawaran_lembaga, name="tawaran_lembaga"),
     
     # Kelola Kebutuhan
     path("lembaga/kebutuhan/", views.kebutuhan_list, name="kebutuhan_list"),

@@ -162,6 +162,7 @@ def show_register(request):
         'next_url': next_url,
         'show_cart_notice': show_cart_notice,
         'errors': {},
+        'email_value': request.GET.get('email', '').strip(),  # dibawa dari form email di footer
     }
 
     if request.method == 'POST':

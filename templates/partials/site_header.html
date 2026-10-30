@@ -13,7 +13,6 @@ Gaya: static/css/site-header.css. Ikon & logo inline, jadi tidak butuh sprite la
     <nav class="sg-nav" aria-label="Utama">
         <a href="{% url 'donasi:dashboard_lembaga' %}"{% if url_name == 'dashboard_lembaga' %} aria-current="page"{% endif %}>Dashboard</a>
         <a href="{% url 'donasi:kebutuhan_list' %}"{% if url_name == 'kebutuhan_list' or url_name == 'kebutuhan_buat' or url_name == 'kebutuhan_ubah' %} aria-current="page"{% endif %}>Kebutuhan</a>
-        <a href="{% url 'donasi:dashboard_lembaga' %}#tawaran">Tawaran masuk{% if jumlah_menunggu %} ({{ jumlah_menunggu }}){% endif %}</a>
         <a href="{% url 'donasi:riwayat_lembaga' %}"{% if url_name == 'riwayat_lembaga' %} aria-current="page"{% endif %}>Riwayat</a>
     </nav>
     <div class="sg-actions">

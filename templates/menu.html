@@ -40,7 +40,7 @@
           <span class="menu__text"><span class="serif menu__title">Kelola Kebutuhan</span><span class="text-sm text-muted">Buat &amp; perbarui daftar kebutuhan barang</span></span>
           <span class="chevron" aria-hidden="true">→</span>
         </a>
-        <a class="menu__row" href="{% url 'donasi:dashboard_lembaga' %}#tawaran">
+        <a class="menu__row" href="{% url 'donasi:tawaran_lembaga' %}">
           <span class="eyebrow">03</span>
           <span class="menu__text"><span class="serif menu__title">Tawaran Masuk</span><span class="text-sm text-muted">Tinjau dan terima kiriman donatur</span></span>
           <span class="chevron" aria-hidden="true">→</span>
@@ -75,11 +75,6 @@
         <a class="menu__row" href="{% url 'impact:show_impact_dashboard' %}">
           <span class="eyebrow">04</span>
           <span class="menu__text"><span class="serif menu__title">Dampak</span><span class="text-sm text-muted">Lihat jejak barangmu</span></span>
-          <span class="chevron" aria-hidden="true">→</span>
-        </a>
-        <a class="menu__row" href="{% url 'main:show_main' %}#pilihan">
-          <span class="eyebrow">05</span>
-          <span class="menu__text"><span class="serif menu__title">Tunda Beli</span><span class="text-sm text-muted">Pikir dulu sebelum membeli</span></span>
           <span class="chevron" aria-hidden="true">→</span>
         </a>
       {% endif %}

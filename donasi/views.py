@@ -198,6 +198,20 @@ def dashboard_lembaga(request):
 
 
 @lembaga_required
+def tawaran_lembaga(request):
+    milik = Penawaran.objects.filter(lembaga=request.user)
+    tawaran = list(
+        milik.filter(status__in=[Penawaran.Status.MENUNGGU, Penawaran.Status.DITERIMA])
+        .select_related("donatur", "kebutuhan")
+    )
+    tawaran.sort(key=lambda p: p.status != Penawaran.Status.MENUNGGU)
+    return render(request, "donasi/lembaga_tawaran.html", {
+        "tawaran": tawaran,
+        "jumlah_menunggu": milik.filter(status=Penawaran.Status.MENUNGGU).count(),
+    })
+
+
+@lembaga_required
 def riwayat_lembaga(request):
     daftar = Penawaran.objects.filter(
         lembaga=request.user,

@@ -438,6 +438,21 @@ class SisiLembagaTest(DonasiBaseTestCase):
         self.assertContains(response, "Tawaran untuk A")
         self.assertNotContains(response, "Tawaran untuk B")
 
+    def test_tawaran_masuk_punya_halaman_sendiri_tanpa_menu_navbar(self):
+        self.buat_tawaran(nama_barang="Masih Menunggu")
+        ditolak = self.buat_tawaran(nama_barang="Sudah Ditolak")
+        ditolak.tolak()
+        self.buat_tawaran(lembaga=self.lembaga2, kebutuhan=self.sepatu, nama_barang="Tawaran Lain")
+
+        self.lembaga.profile.role = "LEMBAGA"
+        self.lembaga.profile.save()
+        self.client.force_login(self.lembaga)
+        response = self.client.get(reverse("donasi:tawaran_lembaga"))
+        self.assertContains(response, "Masih Menunggu")
+        self.assertNotContains(response, "Sudah Ditolak")
+        self.assertNotContains(response, "Tawaran Lain")
+        self.assertNotContains(response, 'aria-current="page">Tawaran masuk')  # tidak ada lagi di navbar
+
     def test_riwayat_lembaga(self):
         p1 = self.buat_tawaran(nama_barang="Ditolak A")
         p1.tolak()

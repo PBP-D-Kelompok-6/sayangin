@@ -253,6 +253,18 @@ class ProfileAndLogoutTests(TestCase):
         self.assertContains(final_res, 'id="keluar"')
 
 
+class FooterTests(TestCase):
+    def test_form_email_footer_membawa_email_ke_halaman_daftar(self):
+        response = self.client.get(reverse('main:show_register'), {'email': 'baru@email.com'})
+        self.assertContains(response, 'value="baru@email.com"')
+
+    def test_tunda_beli_dan_jadi_mitra_tidak_ada_di_beranda(self):
+        response = self.client.get(reverse('main:show_main'))
+        self.assertNotContains(response, 'Tunda Beli')
+        self.assertNotContains(response, 'TUNDA BELI')
+        self.assertNotContains(response, 'Jadi mitra')
+
+
 class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(

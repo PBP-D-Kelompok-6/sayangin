@@ -77,12 +77,11 @@
           <span class="hero__video-thumb">
             <span class="hero__play"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7l8 5-8 5z" fill="currentColor"/></svg></span>
           </span>
-          <span><b>Tonton cara kerja</b><br><span class="eyebrow">01:00</span></span>
+          <span><b>Lihat cara kerja</b><br><span class="eyebrow">3 langkah</span></span>
         </a>
         <div class="hero__card only-desktop hidden md:flex flex-col">
           <span class="row"><b>Jaket kulit</b><span class="spacer"></span><b>Rp280.000</b></span>
           <span class="text-sm text-soft">Bekas, terawat · L</span>
-          <button class="icon-btn hero__add" type="button" aria-label="Tambah jaket kulit ke keranjang">+</button>
         </div>
         <div class="hero__copy flex flex-col">
           <p class="hero__lead">
@@ -116,14 +115,14 @@
         </div>
       </section>
 
-      <section class="phases container only-mobile flex md:hidden flex-col" id="cara-kerja">
+      <section class="phases container flex flex-col" id="cara-kerja">
         <div class="phases__tabs grid grid-cols-3" role="tablist" aria-label="Cara kerja">
           <a class="btn btn--dark" role="tab" aria-selected="true" href="#cara-kerja" data-phase-tab="0">1 · Catat</a>
           <a class="btn btn--outline" role="tab" aria-selected="false" href="#cara-kerja" data-phase-tab="1">2 · Pilih</a>
           <a class="btn btn--outline" role="tab" aria-selected="false" href="#cara-kerja" data-phase-tab="2">3 · Salurkan</a>
         </div>
         <div class="photo photo--phases" data-phase-photo role="img" aria-label=""></div>
-        <p class="text-soft" data-phase-text>Foto barangmu dan masukkan ke Lemari Digital. Satu menit per barang.</p>
+        <p class="phases__text" data-phase-text>Foto barangmu dan masukkan ke Lemari Digital. Satu menit per barang.</p>
       </section>
 
       <section class="cats container only-desktop hidden md:grid grid-cols-4" aria-label="Kategori">
@@ -235,11 +234,10 @@
       </section>
 
       <section class="choices container only-desktop hidden md:flex flex-col items-center" id="pilihan">
-        <span class="eyebrow">Satu barang, empat pilihan</span>
+        <span class="eyebrow">Satu barang, tiga pilihan</span>
         <span class="choices__word" data-choice-word="jual" data-choice-img="{% static 'img/jaket-kulit.jpg' %}" data-choice-desc="Tayangkan langsung dari Lemari Digital ke marketplace tanpa membuat akun toko terpisah.">JUAL</span>
         <span class="choices__word is-active" data-choice-word="donasi" data-choice-img="{% static 'img/heels-chrome.jpg' %}" data-choice-desc="Pilih satu kata untuk melihat penjelasannya. Gambar di sampingnya ikut berganti.">DONASI</span>
         <span class="choices__word" data-choice-word="simpan" data-choice-img="{% static 'img/kemeja-linen.jpg' %}" data-choice-desc="Tetap simpan di lemarimu dengan catatan alasan, dan kami akan mengingatkan lagi nanti.">SIMPAN</span>
-        <span class="choices__word" data-choice-word="tunda" data-choice-img="{% static 'img/tas-kulit.jpg' %}" data-choice-desc="Masukkan barang baru yang ingin dibeli ke masa tunggu sambil kami carikan padanan preloved-nya.">TUNDA BELI</span>
         <div class="choices__img" data-choice-preview aria-hidden="true"></div>
         <p class="text-soft" data-choice-caption>Pilih satu kata untuk melihat penjelasannya. Gambar di sampingnya ikut berganti.</p>
       </section>
@@ -249,7 +247,6 @@
           <h2 class="section-title">Pertanyaan umum</h2>
           <details class="faq__item" open><summary>Bagaimana kondisi barang dijamin?</summary><p>Penjual wajib memilih kondisi dan menambahkan foto cacat. Kalau barang tidak sesuai, ajukan masalah dari halaman Lacak pesanan.</p></details>
           <details class="faq__item"><summary>Apakah donasi benar-benar sampai?</summary><p>Lembaga mitra mengonfirmasi setiap barang yang diterima, dan statusnya bisa kamu lacak.</p></details>
-          <details class="faq__item"><summary>Apa itu Tunda Beli?</summary><p>Daftar tunggu untuk barang baru yang ingin kamu beli. Selama masa tunggu, kami carikan versi preloved-nya.</p></details>
           <details class="faq__item"><summary>Bagaimana lembaga bisa bergabung?</summary><p>Daftar sebagai lembaga mitra dan unggah akta atau surat izin. Tim kami memverifikasi dalam 2 hari kerja.</p></details>
         </div>
         <div class="faq__art only-desktop hidden md:block">

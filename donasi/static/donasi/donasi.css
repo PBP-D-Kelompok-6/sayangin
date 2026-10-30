@@ -45,14 +45,19 @@
 }
 
 /* ---------- Dashboard lembaga ---------- */
-.org-dash { padding-block: 28px; display: flex; flex-direction: column; gap: 20px; }
+.org-dash { padding-block: 28px; display: flex; flex-direction: column; gap: 28px; }
 .org-dash__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
 .org-dash .page-title { font-size: 44px; }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .stat { padding: 14px 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px; }
 .stat--dark { background: radial-gradient(70% 120% at 90% 0%, rgba(122,30,42,.6), rgba(122,30,42,0) 70%), var(--night); }
+.stat--maroon { background: var(--maroon); }
+.stat--soft { background: #EFE6E2; }
 .stat__value { font-size: 44px; line-height: 1; }
-.org-dash__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+.org-dash__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+.dash-card { padding: 20px; border-radius: 12px; }
+.dash-card--krem { background: #F4ECE8; }
+.dash-card--rose { background: #F1E0E0; }
 .offer { display: flex; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--color-border); }
 .offer__img { width: 48px; height: 48px; flex: none; border-radius: var(--radius-sm); background: var(--photo-bg) var(--img) center / 80% no-repeat; background-blend-mode: multiply; }
 .offer__actions { display: flex; gap: 8px; }
