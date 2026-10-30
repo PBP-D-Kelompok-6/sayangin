@@ -8,7 +8,7 @@
         <span class="eyebrow">{{ orders|length }} pesanan · {{ bought_count }} barang dibeli</span>
         <h1>Pesanan <em>saya</em></h1>
     </div>
-    <span class="catalog-tools"><span class="soft">Masuk sebagai @{{ user.username }}</span><a class="btn" href="{% url 'main:logout_user' %}">Keluar</a></span>
+    <span class="catalog-tools"><span class="soft">Masuk sebagai @{{ user.username }}</span><form method="post" action="{% url 'main:logout_user' %}">{% csrf_token %}<button type="submit" class="btn">Keluar</button></form></span>
 </div>
 
 {% if orders %}

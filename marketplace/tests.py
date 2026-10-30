@@ -69,6 +69,7 @@ class MarketplaceFlowTest(TestCase):
         self.assertEqual(mine.context['bought_count'], 2)
         self.assertEqual(mine.context['order_counts'][0], ('Dibayar', 1))
         self.assertContains(mine, '1 pesanan · 2 barang dibeli')
+        self.assertContains(mine, f'<form method="post" action="{reverse("main:logout_user")}">')  # logout wajib POST
         page = self.client.get(reverse('marketplace:order_detail', args=[order.pk]))
         self.assertContains(page, 'Pesanan diterima')
         self.assertContains(page, 'disabled')
