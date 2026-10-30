@@ -3,6 +3,7 @@ import re
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -71,8 +72,12 @@ def urutkan_kebutuhan(daftar, urut):
 # ---------------------------------------------------------------------------
 # Sisi donatur
 # ---------------------------------------------------------------------------
-@donatur_required
+@login_required(login_url='main:show_login')
 def pilih_lembaga(request):
+    # Link "Donasi" di navbar terlihat semua akun; lembaga diarahkan ke dashboard-nya.
+    if is_lembaga(request.user):
+        return redirect("donasi:dashboard_lembaga")
+
     barang = _barang_dari_request(request)
     urut = request.GET.get("urut", "tenggat")
     if urut not in URUTAN:
@@ -273,6 +278,10 @@ def kebutuhan_pratinjau(request):
         jumlah = max(int(d.get("jumlah") or 0), 0)
     except ValueError:
         jumlah = 0
+    try:
+        tenggat = parse_date(d.get("tenggat", "") or "")
+    except ValueError:
+        tenggat = None
     kebutuhan = Kebutuhan(
         lembaga=request.user,
         nama_barang=d.get("nama_barang", "").strip(),
@@ -280,7 +289,7 @@ def kebutuhan_pratinjau(request):
         jumlah=jumlah,
         ukuran=",".join(d.getlist("ukuran")),
         kondisi_min=d.get("kondisi_min", Kondisi.TERAWAT),
-        tenggat=parse_date(d.get("tenggat", "") or ""),
+        tenggat=tenggat,
         foto_url=d.get("foto_url", "").strip(),
         cerita=d.get("cerita", "").strip(),
     )

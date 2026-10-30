@@ -296,7 +296,15 @@ class SisiDonaturTest(DonasiBaseTestCase):
     def test_lembaga_tidak_boleh_mendonasikan(self):
         self.client.force_login(self.lembaga)
         response = self.client.get(reverse("donasi:pilih_lembaga"))
-        self.assertEqual(response.status_code, 403)
+        self.assertRedirects(response, reverse("donasi:dashboard_lembaga"))
+
+        response_kirim = self.client.get(reverse("donasi:kirim_donasi", args=[self.jaket.pk]))
+        self.assertEqual(response_kirim.status_code, 403)
+
+    def test_link_profil_mobile_tidak_404(self):
+        self.client.force_login(self.donatur)
+        response = self.client.get(reverse("donasi:tawaran_saya"))
+        self.assertContains(response, f'class="avatar-link" href="{reverse("main:show_profile")}"')
 
     def test_pilih_lembaga_menampilkan_kebutuhan_cocok(self):
         self.client.force_login(self.donatur)
@@ -588,6 +596,12 @@ class SisiLembagaTest(DonasiBaseTestCase):
             {"nama_barang": "Test", "jumlah": "abc"},
         )
         self.assertEqual(response_invalid_jumlah.status_code, 200)
+
+        response_invalid_tenggat = self.client.post(
+            reverse("donasi:kebutuhan_pratinjau"),
+            {"nama_barang": "Test", "jumlah": "1", "tenggat": "2026-13-45"},
+        )
+        self.assertEqual(response_invalid_tenggat.status_code, 200)
 
     def test_aksi_penawaran_terima_tolak_selesai(self):
         self.client.force_login(self.lembaga)

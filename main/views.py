@@ -796,7 +796,7 @@ def google_callback(request):
     if profile.role == 'LEMBAGA':
         if not _is_institution_profile_complete(user):
             return redirect('main:edit_institution_profile')
-        return redirect('main:show_lembaga_profile')
+        return redirect('donasi:dashboard_lembaga')
 
     has_address = bool(profile.address.strip() or UserAddress.objects.filter(user=user).exists())
     if is_new_user or not has_address:

@@ -61,7 +61,7 @@
         </div>
       </div>
     </header>
-    <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="javascript:history.back()" aria-label="Kembali">←</a><span class="app-bar__label">{% block appbar_title %}Donasikan{% endblock %}</span><a class="avatar-link" href="/profil/" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
+    <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="javascript:history.back()" aria-label="Kembali">←</a><span class="app-bar__label">{% block appbar_title %}Donasikan{% endblock %}</span><a class="avatar-link" href="{% if user.profile.role == 'LEMBAGA' %}{% url 'main:show_lembaga_profile' %}{% else %}{% url 'main:show_profile' %}{% endif %}" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
     {% endblock %}
     {% if messages %}
     <div class="container" style="padding-top:16px">
