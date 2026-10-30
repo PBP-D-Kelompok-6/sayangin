@@ -1,0 +1,35 @@
+{% extends 'lemari/base.html' %}
+{% load static %}
+{% block title %}{% if item %}Ubah barang{% else %}Tambah barang{% endif %}{% endblock %}
+{% block body %}
+<div class="page has-sticky-actions">
+  {% include 'lemari/_site_header.html' %}
+  <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="{% if item %}{% url 'lemari:detail_barang' item.pk %}{% else %}{% url 'lemari:index' %}{% endif %}" aria-label="Kembali">←</a><h1 class="app-bar__title">{% if item %}Ubah{% else %}Tambah{% endif %} <em>barang</em></h1></header>
+  <main class="page__main container sell add-page" id="konten">
+    <nav class="breadcrumb text-sm only-desktop" aria-label="Breadcrumb"><a href="{% url 'lemari:index' %}">Lemari Digital</a> / Tambah barang</nav>
+    <div class="sell__head only-desktop"><h1 class="page-title">{% if item %}Ubah <em>barang</em>{% else %}Tambah <em>barang</em>{% endif %}</h1><span class="text-soft">Cukup isi detail barang yang ingin kamu simpan.</span></div>
+    <p class="text-soft only-mobile">Cukup isi detail barang yang ingin kamu simpan.</p>
+    {% if messages %}{% for message in messages %}<div class="toast" role="status"><span class="toast__text">{{ message }}</span></div>{% endfor %}{% endif %}
+    {% if errors %}<div class="alert" role="alert"><span class="alert-icon" aria-hidden="true">!</span><span>{{ errors }}</span></div>{% endif %}
+    <form id="add-item-form" class="sell__grid" method="post" enctype="multipart/form-data">
+      {% csrf_token %}{% if item %}<input type="hidden" name="edit_item" value="{{ item.pk }}">{% endif %}
+      <div class="sell-photos">
+        <label class="dropzone sell-photos__main add-page__photo" for="photo-input"><input id="photo-input" class="visually-hidden" type="file" name="foto" accept="image/*" {% if not item %}required{% endif %}><span id="photo-empty"{% if item and item.photo %} hidden{% endif %}>+ Foto barang</span><img id="photo-preview"{% if not item or not item.photo %} hidden{% endif %}{% if item and item.photo %} src="{% url 'lemari:wardrobe_photo' item.pk %}"{% endif %} alt="Pratinjau foto barang"></label>
+        <span class="text-sm text-soft">Tambahkan foto barang yang jelas.</span>
+      </div>
+      <div class="sell-form stack" style="--stack-gap: 16px">
+        <label class="field"><span class="field__label">Nama barang <span class="text-muted">(wajib)</span></span><input class="input" type="text" name="nama" maxlength="160" value="{{ values.name|default:'' }}" placeholder="Contoh: Jaket denim biru" required></label>
+        <div class="form-row form-row--2-1"><label class="field"><span class="field__label">Kategori <span class="text-muted">(wajib)</span></span><select class="select" name="kategori" required><option value="">Pilih kategori</option><option {% if values.category == 'Pakaian · Luaran' %}selected{% endif %}>Pakaian · Luaran</option><option {% if values.category == 'Pakaian' %}selected{% endif %}>Pakaian</option><option {% if values.category == 'Sepatu' %}selected{% endif %}>Sepatu</option><option {% if values.category == 'Aksesori' %}selected{% endif %}>Aksesori</option><option {% if values.category == 'Buku' %}selected{% endif %}>Buku</option><option {% if values.category == 'Elektronik' %}selected{% endif %}>Elektronik</option><option {% if values.category == 'Lainnya' %}selected{% endif %}>Lainnya</option></select></label><label class="field"><span class="field__label">Ukuran</span><select class="select" name="ukuran"><option value="">Pilih</option><option {% if values.size == 'XS' %}selected{% endif %}>XS</option><option {% if values.size == 'S' %}selected{% endif %}>S</option><option {% if values.size == 'M' %}selected{% endif %}>M</option><option {% if values.size == 'L' %}selected{% endif %}>L</option><option {% if values.size == 'XL' %}selected{% endif %}>XL</option><option {% if values.size == 'All size' %}selected{% endif %}>All size</option></select></label></div>
+        <fieldset class="field"><legend class="field__label">Terakhir dipakai <span class="text-muted">(wajib)</span></legend><div class="sell-form__cond"><label><input class="visually-hidden" type="radio" name="terakhir_dipakai" value="Kurang dari 1 bulan" {% if values.last_used == 'Kurang dari 1 bulan' %}checked{% endif %}><span class="chip chip--lg">&lt; 1 bulan</span></label><label><input class="visually-hidden" type="radio" name="terakhir_dipakai" value="1–3 bulan lalu" {% if values.last_used == '1–3 bulan lalu' %}checked{% endif %}><span class="chip chip--lg">1–3 bulan</span></label><label><input class="visually-hidden" type="radio" name="terakhir_dipakai" value="3–6 bulan lalu" {% if values.last_used == '3–6 bulan lalu' %}checked{% endif %}><span class="chip chip--lg">3–6 bulan</span></label><label><input class="visually-hidden" type="radio" name="terakhir_dipakai" value="Lebih dari 6 bulan" {% if values.last_used == 'Lebih dari 6 bulan' %}checked{% endif %}><span class="chip chip--lg">&gt; 6 bulan</span></label><label><input class="visually-hidden" type="radio" name="terakhir_dipakai" value="Lupa" {% if values.last_used == 'Lupa' %}checked{% endif %}><span class="chip chip--lg">Lupa</span></label></div><span class="field__hint">Kira-kira saja.</span></fieldset>
+        <div class="form-row"><label class="field"><span class="field__label">Warna</span><input class="input" type="text" name="warna" maxlength="80" value="{{ values.color|default:'' }}" placeholder="Contoh: abu tua"></label><label class="field"><span class="field__label">Kapan dibeli</span><input class="input" type="month" name="kapan_dibeli" maxlength="40" value="{{ values.purchased_at|default:'' }}"></label></div>
+        <label class="field"><span class="field__label">Catatan</span><textarea class="textarea" name="catatan" maxlength="2000" rows="2" placeholder="Contoh: kancing kedua sedikit longgar">{{ values.notes|default:'' }}</textarea></label>
+        <div class="form-actions sell-form__actions"><a class="text-sm" href="{% if item %}{% url 'lemari:detail_barang' item.pk %}{% else %}{% url 'lemari:index' %}{% endif %}">Batal</a><span class="row" style="--row-gap: 10px">{% if not item %}<button class="btn btn--outline btn--lg" name="action" value="save_add" type="submit">Simpan &amp; tambah lagi</button>{% endif %}<button class="btn btn--primary btn--lg" name="action" value="save" type="submit">{% if item %}Simpan perubahan{% else %}Simpan ke lemari{% endif %}</button></span></div>
+      </div>
+    </form>
+  </main>
+</div>
+<script>
+const photoInput = document.getElementById('photo-input');
+photoInput?.addEventListener('change', () => { const file = photoInput.files[0]; if (!file) return; const preview = document.getElementById('photo-preview'); preview.src = URL.createObjectURL(file); preview.hidden = false; document.getElementById('photo-empty').hidden = true; });
+</script>
+{% endblock %}

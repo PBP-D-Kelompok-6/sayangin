@@ -1,0 +1,329 @@
+from django.http import FileResponse, Http404
+from django.db.models import Case, IntegerField, When
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import ListingPhoto, SaleListing, WardrobeItem
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from datetime import datetime
+
+
+@login_required(login_url="/login/")
+def _listing_values(request):
+    def integer(name):
+        value = request.POST.get(name, "").replace(".", "").replace(",", "").strip()
+        return int(value) if value.isdigit() else None
+
+    return {
+        "title": request.POST.get("judul", "").strip(),
+        "category": request.POST.get("kategori", "").strip(),
+        "size": request.POST.get("ukuran", "").strip(),
+        "condition": request.POST.get("kondisi", "").strip(),
+        "condition_notes": request.POST.get("catatan", "").strip(),
+        "price": integer("harga"),
+        "weight": integer("berat"),
+        "shipped_from": request.POST.get("dikirim_dari", "Depok").strip(),
+    }
+
+
+def _length_error(value, limit, label):
+    return f"{label} maksimal {limit} karakter." if len(value) > limit else ""
+
+
+@login_required(login_url="/login/")
+def index(request):
+    wardrobe_items = WardrobeItem.objects.filter(owner=request.user)
+    if not wardrobe_items.exists():
+        return render(request, "lemari/kosong.html")
+    reminder_items = WardrobeItem.objects.filter(owner=request.user, reminder_enabled=True)
+    sort = request.GET.get("sort", "listed")
+    usage_order = Case(
+        When(last_used="Lebih dari 6 bulan", then=0),
+        When(last_used="3–6 bulan lalu", then=1),
+        When(last_used="1–3 bulan lalu", then=2),
+        When(last_used="Kurang dari 1 bulan", then=3),
+        When(last_used="Belum pernah dipakai", then=4),
+        default=5,
+        output_field=IntegerField(),
+    )
+    if sort == "usage":
+        wardrobe_items = wardrobe_items.annotate(usage_rank=usage_order).order_by(
+            "usage_rank", "name"
+        )
+    elif sort == "category":
+        wardrobe_items = wardrobe_items.order_by("category", "name")
+    else:
+        sort = "listed"
+        wardrobe_items = wardrobe_items.order_by("-created_at")
+    return render(
+        request,
+        "lemari/index.html",
+        {
+            "wardrobe_items": wardrobe_items,
+            "wardrobe_count": wardrobe_items.count(),
+            "current_sort": sort,
+            "reminder_items": reminder_items,
+        },
+    )
+
+
+def kosong(request):
+    return render(request, "lemari/kosong.html")
+
+
+@login_required(login_url="/login/")
+def awal(request):
+    if request.method == "POST":
+        entries = []
+        errors = {}
+        for number in range(1, 4):
+            name = request.POST.get(f"nama_{number}", "").strip()
+            category = request.POST.get(f"kategori_{number}", "").strip()
+            last_used = request.POST.get(f"terakhir_dipakai_{number}", "").strip()
+            has_content = (
+                name or category or last_used or request.FILES.get(f"foto_{number}")
+            )
+            if not has_content:
+                continue
+            if not name:
+                errors[number] = "Isi nama barang."
+            elif not category or not last_used:
+                errors[number] = "Lengkapi kategori dan terakhir dipakai."
+            elif len(name) > 160:
+                errors[number] = "Nama barang maksimal 160 karakter."
+            entries.append((number, name, category, last_used))
+        if not entries:
+            errors[1] = "Tambahkan setidaknya satu barang ke lemarimu."
+        if errors:
+            return render(request, "lemari/awal.html", {"errors": errors})
+        for number, name, category, last_used in entries:
+            item = WardrobeItem(
+                owner=request.user,
+                name=name,
+                category=category,
+                last_used=last_used,
+            )
+            photo = request.FILES.get(f"foto_{number}")
+            if photo:
+                item.photo = photo
+            item.save()
+        return redirect("lemari:index")
+    return render(request, "lemari/awal.html")
+
+
+@login_required(login_url="/login/")
+def tambah_barang(request):
+    edit_id = request.POST.get("edit_item") or request.GET.get("edit")
+    item = get_object_or_404(WardrobeItem, pk=edit_id, owner=request.user) if edit_id else None
+    if request.method == "POST":
+        name = request.POST.get("nama", "").strip()
+        category = request.POST.get("kategori", "").strip()
+        size = request.POST.get("ukuran", "").strip()
+        last_used = request.POST.get("terakhir_dipakai", "").strip()
+        color = request.POST.get("warna", "").strip()
+        purchased_at = request.POST.get("kapan_dibeli", "").strip()
+        notes = request.POST.get("catatan", "").strip()
+        photo = request.FILES.get("foto")
+        text_limits = ((name, 160, "Nama barang"), (category, 80, "Kategori"), (size, 40, "Ukuran"), (last_used, 40, "Terakhir dipakai"), (color, 80, "Warna"), (purchased_at, 40, "Kapan dibeli"), (notes, 2000, "Catatan"))
+        too_long = next((f"{label} maksimal {limit} karakter." for value, limit, label in text_limits if len(value) > limit), "")
+        if too_long or not name or not category or not last_used or (not item and not photo):
+            return render(
+                request,
+                "lemari/tambah_barang.html",
+                {
+                    "errors": too_long or "Lengkapi foto, nama barang, kategori, dan terakhir dipakai.",
+                    "values": {"name": name, "category": category, "size": size, "last_used": last_used, "color": color, "purchased_at": purchased_at, "notes": notes},
+                    "item": item,
+                },
+            )
+        if item:
+            item.name, item.category, item.size = name, category, size
+            item.last_used, item.color = last_used, color
+            item.purchased_at, item.notes = purchased_at, notes
+            if photo:
+                item.photo = photo
+            item.save()
+        else:
+            item = WardrobeItem.objects.create(owner=request.user, name=name, category=category, size=size, last_used=last_used, color=color, purchased_at=purchased_at, notes=notes, photo=photo)
+        if edit_id:
+            return redirect("lemari:detail_barang", item_id=item.pk)
+        if request.POST.get("action") == "save_add":
+            messages.success(request, f"{name} berhasil ditambahkan ke lemarimu.")
+            return redirect("lemari:tambah_barang")
+        return redirect("lemari:index")
+    values = {
+        "name": item.name if item else "",
+        "category": item.category if item else "",
+        "size": item.size if item else "",
+        "last_used": item.last_used if item else "",
+        "color": item.color if item else "",
+        "purchased_at": item.purchased_at if item else "",
+        "notes": item.notes if item else "",
+    }
+    return render(request, "lemari/tambah_barang.html", {"item": item, "values": values})
+
+
+@login_required(login_url="/login/")
+def detail_barang(request, item_id):
+    item = get_object_or_404(WardrobeItem, pk=item_id, owner=request.user)
+    month_name = ""
+    if item.purchased_at:
+        try:
+            purchased_date = datetime.strptime(item.purchased_at, "%Y-%m")
+            months = ("Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember")
+            month_name = f"{months[purchased_date.month - 1]} {purchased_date.year}"
+        except ValueError:
+            month_name = item.purchased_at
+    return render(request, "lemari/detail_barang.html", {"item": item, "purchased_label": month_name})
+
+
+@login_required(login_url="/login/")
+def wardrobe_photo(request, item_id):
+    item = get_object_or_404(WardrobeItem, pk=item_id, owner=request.user)
+    if not item.photo:
+        raise Http404
+    return FileResponse(item.photo.open("rb"), content_type="image/*")
+
+
+@login_required(login_url="/login/")
+def hapus_item(request, item_id):
+    if request.method == "POST":
+        get_object_or_404(WardrobeItem, pk=item_id, owner=request.user).delete()
+    return redirect("lemari:index")
+
+
+@login_required(login_url="/login/")
+def toggle_reminder(request, item_id):
+    if request.method == "POST":
+        item = get_object_or_404(WardrobeItem, pk=item_id, owner=request.user)
+        item.reminder_enabled = not item.reminder_enabled
+        item.save(update_fields=["reminder_enabled"])
+    return redirect("lemari:index")
+
+
+@login_required(login_url="/login/")
+def jual(request):
+    listing_id = request.POST.get("listing_id") or request.GET.get("listing")
+    listing = (
+        get_object_or_404(SaleListing, pk=listing_id, owner=request.user)
+        if listing_id
+        else None
+    )
+    source_id = (
+        request.POST.get("source_item")
+        or request.GET.get("item")
+        or (listing.source_item_id if listing else None)
+    )
+    source_item = (
+        get_object_or_404(WardrobeItem, pk=source_id, owner=request.user)
+        if source_id
+        else None
+    )
+    if request.method == "POST":
+        values = _listing_values(request)
+        errors = {}
+        text_limits = {
+            "title": (160, "Judul"),
+            "category": (80, "Kategori"),
+            "size": (40, "Ukuran"),
+            "condition": (30, "Kondisi"),
+            "condition_notes": (2000, "Catatan kondisi"),
+            "shipped_from": (120, "Alamat pengiriman"),
+        }
+        for field, (limit, label) in text_limits.items():
+            if values[field]:
+                message = _length_error(values[field], limit, label)
+                if message:
+                    errors[field] = message
+        if not values["title"]:
+            errors["judul"] = "Isi judul barang."
+        if not values["category"]:
+            errors["kategori"] = "Pilih kategori."
+        if not values["size"]:
+            errors["ukuran"] = "Pilih ukuran."
+        if not values["condition"]:
+            errors["kondisi"] = (
+                "Pilih kondisi supaya pembeli tahu apa yang mereka dapat."
+            )
+        if not values["price"] or values["price"] < 1000:
+            errors["harga"] = "Isi harga minimal Rp1.000."
+        if not values["weight"] or values["weight"] <= 0:
+            errors["berat"] = "Isi berat barang."
+        if errors:
+            return render(
+                request,
+                "lemari/jual.html",
+                {
+                    "values": values,
+                    "errors": errors,
+                    "listing": listing,
+                    "source_item": source_item,
+                },
+            )
+        if listing is None:
+            listing = SaleListing()
+        for field, value in values.items():
+            setattr(listing, field, value)
+        listing.status = SaleListing.PUBLISHED
+        listing.source_item = source_item
+        if request.user.is_authenticated:
+            listing.owner = request.user
+        listing.save()
+        for image in request.FILES.getlist("photos"):
+            ListingPhoto.objects.create(listing=listing, image=image)
+        if (
+            source_item
+            and source_item.photo
+            and not request.FILES.getlist("photos")
+            and not listing.photos.exists()
+        ):
+            ListingPhoto.objects.create(listing=listing, image=source_item.photo.name)
+        return redirect("lemari:jual_sukses", listing_id=listing.pk)
+    values = {
+        "title": (
+            listing.title
+            if listing
+            else (source_item.name if source_item else "Blazer wol abu, ukuran M")
+        ),
+        "category": (
+            listing.category
+            if listing
+            else (source_item.category if source_item else "Pakaian · Luaran")
+        ),
+        "size": listing.size if listing else "M",
+        "condition": listing.condition if listing else "terawat",
+        "condition_notes": (
+            listing.condition_notes
+            if listing
+            else (source_item.notes if source_item and source_item.notes else "")
+        ),
+        "price": listing.price if listing else "",
+        "weight": listing.weight if listing else 800,
+        "shipped_from": (
+            listing.shipped_from if listing else "Alamat utama · Jakarta Selatan"
+        ),
+    }
+    return render(
+        request,
+        "lemari/jual.html",
+        {
+            "values": values,
+            "errors": {},
+            "listing": listing,
+            "source_item": source_item,
+        },
+    )
+
+
+@login_required(login_url="/login/")
+def jual_sukses(request, listing_id=None):
+    listing = (
+        get_object_or_404(SaleListing, pk=listing_id, owner=request.user)
+        if listing_id
+        else None
+    )
+    return render(
+        request,
+        "lemari/jual_sukses.html",
+        {"listing": listing, "source_item": listing.source_item if listing else None},
+    )

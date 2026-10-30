@@ -1,0 +1,82 @@
+{% extends 'lemari/base.html' %}
+{% load static %}
+{% block title %}Isi lemari pertama{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/onboarding.css' %}">{% endblock %}
+{% block body %}
+<div class="onboard">
+  <header class="onboard__header only-desktop"><a class="logo" href="/"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a><ol class="steps" aria-label="Langkah pendaftaran"><li class="is-done"><span class="steps__dot">✓</span>Akun</li><li class="steps__line is-done" aria-hidden="true"></li><li class="is-done"><span class="steps__dot">✓</span>Profil &amp; alamat</li><li class="steps__line is-done" aria-hidden="true"></li><li aria-current="step"><span class="steps__dot">3</span>Isi lemari</li></ol><a href="{% url 'lemari:index' %}">Lewati</a></header>
+  <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="javascript:history.back()" aria-label="Kembali">←</a><span class="app-bar__label">Isi lemari</span><a href="{% url 'lemari:index' %}">Lewati</a></header>
+  <div class="onboard__body">
+    <aside class="onboard__aside dark-panel only-desktop"><div class="onboard__art"><img class="cutout onboard__img" src="{% static 'img/henley-sage-cut.png' %}" alt="" style="left: 50px; top: 50px; width: 230px; height: 200px;"><img class="cutout onboard__img" src="{% static 'img/tas-tote-metalik-cut.png' %}" alt="" style="left: 230px; top: 140px; width: 150px; height: 180px;"></div><div class="onboard__caption"><span class="eyebrow">Tips</span><p class="onboard__title">Mulai dari yang <em>jarang dipakai</em>.</p><p class="onboard__text">Barang yang lama diam di lemari akan kami ingatkan: jual, donasikan, atau simpan.</p></div></aside>
+    <main class="onboard__main" id="konten">
+      <div class="stack first-items" style="--stack-gap: 20px">
+        <div class="row first-items__head"><div class="stack spacer" style="--stack-gap: 6px"><h1 class="page-title"><span class="eyebrow"><span class="only-desktop">Langkah 3 dari 3 · </span>Lemari Digital</span>Mulai dengan <em>3 barang</em></h1><span class="text-soft">Tambahkan sampai tiga barang sekaligus. Data tetap tersimpan saat berpindah tab.</span></div></div>
+        {% if errors %}<div class="alert" role="alert"><span class="alert-icon" aria-hidden="true">!</span><span>{% for number, message in errors.items %}Barang ke-{{ number }}: {{ message }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span></div>{% endif %}
+        <form class="onboard-items-form" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% for number in '123' %}
+          <section class="add-item item-panel{% if not forloop.first %} is-hidden{% endif %}" data-panel="{{ number }}" role="tabpanel">
+            <label class="dropzone add-item__photo photo-picker"><input class="visually-hidden item-photo-input" type="file" name="foto_{{ number }}" accept="image/*" capture="environment" data-preview="preview-{{ number }}"><span class="photo-picker__empty">+ <span class="only-desktop">Foto barang</span><span class="only-mobile">Ambil foto atau pilih dari galeri</span><span class="text-sm only-desktop">atau seret ke sini</span></span><img class="photo-picker__preview is-hidden" id="preview-{{ number }}" alt="Pratinjau foto barang {{ number }}"></label>
+            <div class="stack" style="--stack-gap: 12px; flex: 1"><label class="field"><span class="field__label">Nama barang</span><input class="input" type="text" name="nama_{{ number }}" maxlength="160" placeholder="Contoh: Jaket denim biru"></label><div class="form-row"><label class="field"><span class="field__label">Kategori</span><select class="select" name="kategori_{{ number }}"><option value="">Pilih</option><option>Pakaian</option><option>Sepatu</option><option>Aksesori</option><option>Buku</option><option>Elektronik</option><option>Lainnya</option></select></label><label class="field"><span class="field__label">Terakhir dipakai</span><select class="select" name="terakhir_dipakai_{{ number }}"><option value="">Kira-kira kapan?</option><option>Kurang dari 1 bulan</option><option>1–3 bulan lalu</option><option>3–6 bulan lalu</option><option>Lebih dari 6 bulan</option><option>Belum pernah dipakai</option></select></label></div><span class="item-panel__error" aria-live="polite"></span></div>
+          </section>
+          {% endfor %}
+          <div class="slots" aria-label="Pilih barang"><button class="slot slot-tab is-active" type="button" data-item="1"><span class="slot__number">1</span><b>Barang ke-1</b></button><button class="slot slot-tab" type="button" data-item="2" disabled aria-disabled="true"><span class="slot__number">2</span><b>Barang ke-2 <small class="slot__optional">(Opsional)</small></b></button><button class="slot slot-tab" type="button" data-item="3" disabled aria-disabled="true"><span class="slot__number">3</span><b>Barang ke-3 <small class="slot__optional">(Opsional)</small></b></button></div>
+          <div class="form-actions"><a class="btn btn--outline btn--lg only-desktop" href="{% url 'lemari:index' %}">Lewati dulu</a><button class="btn btn--primary btn--lg" type="submit">+ Masukkan ke lemari</button></div>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>
+<script>
+(() => {
+  const buttons = [...document.querySelectorAll('[data-item]')], panels = [...document.querySelectorAll('.item-panel')];
+  const select = (item) => { panels.forEach(panel => panel.classList.toggle('is-hidden', panel.dataset.panel !== item)); buttons.forEach(button => button.classList.toggle('is-active', button.dataset.item === item)); };
+  buttons.forEach(button => button.addEventListener('click', () => select(button.dataset.item)));
+  const hasContent = (panel) => {
+    const number = panel.dataset.panel;
+    return Boolean(panel.querySelector('.item-photo-input').files.length || panel.querySelector(`[name="nama_${number}"]`).value.trim() || panel.querySelector(`[name="kategori_${number}"]`).value || panel.querySelector(`[name="terakhir_dipakai_${number}"]`).value);
+  };
+  const isComplete = (panel) => {
+    const number = panel.dataset.panel, slot = document.querySelector(`.slot-tab[data-item="${number}"]`);
+    return Boolean(panel.querySelector('.item-photo-input').files.length && panel.querySelector(`[name="nama_${number}"]`).value.trim() && panel.querySelector(`[name="kategori_${number}"]`).value && panel.querySelector(`[name="terakhir_dipakai_${number}"]`).value);
+  };
+  const updateLocks = () => {
+    const firstComplete = isComplete(panels[0]), secondComplete = isComplete(panels[1]);
+    const secondButton = document.querySelector('.slot-tab[data-item="2"]'), thirdButton = document.querySelector('.slot-tab[data-item="3"]');
+    secondButton.disabled = !firstComplete; secondButton.setAttribute('aria-disabled', String(!firstComplete));
+    thirdButton.disabled = !secondComplete; thirdButton.setAttribute('aria-disabled', String(!secondComplete));
+    const active = document.querySelector('.slot-tab.is-active');
+    if (active?.dataset.item === '3' && !secondComplete) select(firstComplete ? '2' : '1');
+    else if (active?.dataset.item === '2' && !firstComplete) select('1');
+  };
+  const updateCompletion = (panel) => {
+    const number = panel.dataset.panel, slot = document.querySelector(`.slot-tab[data-item="${number}"]`), complete = isComplete(panel);
+    slot.classList.toggle('is-complete', complete);
+  };
+  document.querySelectorAll('.item-photo-input').forEach(input => input.addEventListener('change', () => {
+    const preview = document.getElementById(input.dataset.preview), empty = input.closest('.photo-picker').querySelector('.photo-picker__empty');
+    const file = input.files[0];
+    if (!file) return;
+    preview.src = URL.createObjectURL(file); preview.classList.remove('is-hidden'); empty.classList.add('is-hidden');
+    updateCompletion(input.closest('.item-panel')); updateLocks();
+  }));
+  panels.forEach(panel => { panel.querySelectorAll('input, select').forEach(field => field.addEventListener('input', () => { updateCompletion(panel); updateLocks(); })); updateCompletion(panel); });
+  updateLocks();
+  document.querySelector('.onboard-items-form').addEventListener('submit', (event) => {
+    const incomplete = panels.find(panel => hasContent(panel) && !isComplete(panel));
+    panels.forEach(panel => panel.querySelector('.item-panel__error').textContent = '');
+    if (incomplete) {
+      event.preventDefault();
+      incomplete.querySelector('.item-panel__error').textContent = 'Lengkapi foto, nama, kategori, dan terakhir dipakai sebelum menyimpan.';
+      select(incomplete.dataset.panel);
+      return;
+    }
+    if (!panels.some(isComplete)) {
+      event.preventDefault();
+      panels[0].querySelector('.item-panel__error').textContent = 'Tambahkan setidaknya satu barang yang lengkap.';
+      select('1');
+    }
+  });
+})();
+</script>
+{% endblock %}

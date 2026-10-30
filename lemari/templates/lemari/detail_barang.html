@@ -1,0 +1,24 @@
+{% extends 'lemari/base.html' %}
+{% load static %}
+{% block title %}{{ item.name }} · Lemari{% endblock %}
+{% block body %}
+<div class="page">
+  {% include 'lemari/_site_header.html' %}
+  <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="{% url 'lemari:index' %}" aria-label="Kembali ke lemari">←</a><span class="app-bar__label">Detail barang</span><a class="text-sm" href="{% url 'lemari:tambah_barang' %}?edit={{ item.pk }}">Ubah</a><form method="post" action="{% url 'lemari:hapus_item' item.pk %}" onsubmit="return confirm('Hapus barang ini dari lemarimu?');">{% csrf_token %}<button class="icon-btn btn--danger item-detail__del" type="submit" aria-label="Hapus dari lemari">×</button></form></header>
+  <main class="page__main container item-detail" id="konten">
+    <nav class="breadcrumb text-sm only-desktop" aria-label="Breadcrumb"><a href="{% url 'lemari:index' %}">Lemari Digital</a> / {{ item.name }}</nav>
+    <div class="item-detail__grid">
+      <div class="item-detail__media"><div class="item-detail__photo" role="img" aria-label="{{ item.name }}"{% if item.photo %} style="--img: url('{% url 'lemari:wardrobe_photo' item.pk %}')"{% else %} style="--img: url({% static 'img/blazer-abu.jpg' %})"{% endif %}></div></div>
+      <div class="item-detail__info">
+        <span class="eyebrow">{{ item.category }}</span>
+        <div class="item-detail__title"><h1 class="page-title">{{ item.name }}</h1><span class="row only-desktop" style="--row-gap: 8px"><a class="btn btn--outline btn--sm" href="{% url 'lemari:tambah_barang' %}?edit={{ item.pk }}">Ubah</a><form method="post" action="{% url 'lemari:hapus_item' item.pk %}" onsubmit="return confirm('Hapus barang ini dari lemarimu?');">{% csrf_token %}<button class="btn btn--danger btn--sm" type="submit">Hapus</button></form></span></div>
+        <div class="item-specs"><div class="item-specs__row"><span class="text-sm text-muted">Ukuran</span><b>{{ item.size|default:'—' }}</b></div><div class="item-specs__row"><span class="text-sm text-muted">Warna</span><b>{{ item.color|default:'—' }}</b></div><div class="item-specs__row"><span class="text-sm text-muted">Dibeli</span><b>{{ purchased_label|default:'—' }}</b></div><div class="item-specs__row"><span class="text-sm text-muted">Terakhir dipakai</span><b>{{ item.last_used }}</b></div><div class="item-specs__row"><span class="text-sm text-muted">Masuk lemari</span><b>{{ item.created_at|date:'F Y' }}</b></div></div>
+        {% if item.notes %}<div class="notice"><b>Catatan:</b> {{ item.notes }}</div>{% endif %}
+        <form class="reminder-toggle" method="post" action="{% url 'lemari:toggle_reminder' item.pk %}">{% csrf_token %}<button class="btn btn--outline btn--sm" type="submit">{% if item.reminder_enabled %}Simpan dari pengingat{% else %}Aktifkan pengingat{% endif %}</button></form>
+        <h2 class="section-title">Mau diapakan <em>barang ini?</em></h2>
+        <div class="decide"><a class="decide__opt" href="{% url 'lemari:jual' %}?item={{ item.pk }}"><span class="decide__icon">↗</span><span class="decide__body"><b class="serif decide__title">Jual</b><span class="text-soft">Pasang di Marketplace. Foto dan data barang ini langsung terisi.</span><span class="decide__cta">Atur jualan →</span></span></a><a class="decide__opt decide__opt--rec" href="#"><span class="decide__icon">♥</span><span class="decide__body"><b class="serif decide__title">Donasikan</b><span class="text-soft">Kirim ke lembaga yang sedang membutuhkannya.</span><span class="decide__cta">Pilih lembaga →</span></span></a><a class="decide__opt" href="{% url 'lemari:index' %}"><span class="decide__icon">⌂</span><span class="decide__body"><b class="serif decide__title">Simpan</b><span class="text-soft">Barang tetap berada di lemarimu.</span><span class="decide__cta">Simpan di lemari →</span></span></a></div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
