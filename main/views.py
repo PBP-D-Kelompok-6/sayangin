@@ -23,7 +23,12 @@ from donasi.models import Kebutuhan
 
 
 def show_main(request):
-    daftar_kebutuhan = Kebutuhan.objects.aktif().select_related("lembaga")[:5]
+    if request.user.is_authenticated:
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        if profile.role == 'LEMBAGA' and not _is_institution_profile_complete(request.user):
+            return redirect('main:edit_institution_profile')
+
+    daftar_kebutuhan = Kebutuhan.objects.aktif().select_related("lembaga")[:5] # type: ignore
     
     return render(request, 'index.html', {
         'daftar_kebutuhan': daftar_kebutuhan,
@@ -37,6 +42,26 @@ def show_menu(request):
 def _is_institution_profile_complete(user) -> bool:
     institution = InstitutionProfile.objects.filter(user=user).first()
     return bool(institution and institution.name.strip() and institution.address.strip())
+
+
+def _is_safe_next_url(request, next_url: str) -> bool:
+    return bool(
+        next_url
+        and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()})
+    )
+
+
+def _redirect_authenticated_user(request, user, next_url: str = ''):
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    if profile.role == 'LEMBAGA':
+        if not _is_institution_profile_complete(user):
+            return redirect('main:edit_institution_profile')
+        if _is_safe_next_url(request, next_url):
+            return redirect(next_url)
+        return redirect('donasi:dashboard_lembaga')
+    if _is_safe_next_url(request, next_url):
+        return redirect(next_url)
+    return redirect('main:show_main')
 
 
 def _ensure_user_addresses_synced(user, profile: UserProfile):
@@ -69,13 +94,9 @@ def _parse_request_payload(request) -> dict:
 
 
 def show_login(request):
+    next_url = (request.POST.get('next') or request.GET.get('next') or '').strip()
     if request.user.is_authenticated:
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        if profile.role == 'LEMBAGA':
-            if not _is_institution_profile_complete(request.user):
-                return redirect('main:edit_institution_profile')
-            return redirect('donasi:dashboard_lembaga')  # Diarahkan ke Dashboard Donasi
-        return redirect("main:show_main")
+        return _redirect_authenticated_user(request, request.user, next_url)
 
     if request.method == 'POST':
         identity = (request.POST.get('identity') or request.POST.get('email') or '').strip()
@@ -88,20 +109,19 @@ def show_login(request):
         if user is not None:
             login(request, user)
             profile, _ = UserProfile.objects.get_or_create(user=user)
-            if profile.role == 'LEMBAGA':
-                if not _is_institution_profile_complete(user):
-                    messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
-                    return redirect('main:edit_institution_profile')
-                return redirect('donasi:dashboard_lembaga')  # Diarahkan ke Dashboard Donasi
-            return redirect('main:show_main')
+            if profile.role == 'LEMBAGA' and not _is_institution_profile_complete(user):
+                messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
+                return redirect('main:edit_institution_profile')
+            return _redirect_authenticated_user(request, user, next_url)
         else:
             messages.error(request, 'Email/username atau kata sandi salah.')
             return render(request, 'login.html', {
                 'identity_value': identity,
                 'login_error': True,
+                'next_url': next_url,
             })
 
-    return render(request, 'login.html')
+    return render(request, 'login.html', {'next_url': next_url})
 
 
 def _generate_unique_username(email: str) -> str:
@@ -119,8 +139,9 @@ def _generate_unique_username(email: str) -> str:
 
 
 def show_register(request):
+    next_url = (request.POST.get('next') or request.GET.get('next') or '').strip()
     if request.user.is_authenticated:
-        return redirect("main:show_main")
+        return _redirect_authenticated_user(request, request.user, next_url)
 
     if request.method == "POST":
         jenis = request.POST.get('jenis', '').strip().lower()
@@ -133,7 +154,6 @@ def show_register(request):
         tipe_param = (request.GET.get('tipe') or request.GET.get('jenis') or '').strip().lower()
         account_type = 'LEMBAGA' if tipe_param == 'lembaga' else 'PERSONAL'
 
-    next_url = (request.POST.get('next') or request.GET.get('next') or '').strip()
     show_cart_notice = bool(next_url and 'checkout' in next_url.lower()) or request.GET.get('from') == 'checkout'
 
     context = {
@@ -194,9 +214,10 @@ def show_register(request):
 
 
 @login_required(login_url='main:show_login')
-@personal_required
 def show_profile(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if profile.role == 'LEMBAGA':
+        return redirect('main:show_lembaga_profile')
     all_addresses = _ensure_user_addresses_synced(request.user, profile)
     display_name = (profile.full_name or request.user.username).strip()
     parts = display_name.split()
@@ -249,9 +270,10 @@ def show_profile(request):
 
 
 @login_required(login_url='main:show_login')
-@personal_required
 def edit_profile(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if profile.role == 'LEMBAGA':
+        return redirect('main:edit_institution_profile')
     _ensure_user_addresses_synced(request.user, profile)
 
     mode = (request.POST.get('mode') or request.GET.get('mode') or '').strip().lower()
@@ -790,17 +812,19 @@ def google_callback(request):
 
     login(request, user)
 
-    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        return redirect(next_url)
-
     if profile.role == 'LEMBAGA':
         if not _is_institution_profile_complete(user):
             return redirect('main:edit_institution_profile')
+        if _is_safe_next_url(request, next_url):
+            return redirect(next_url)
         return redirect('donasi:dashboard_lembaga')
 
     has_address = bool(profile.address.strip() or UserAddress.objects.filter(user=user).exists())
     if is_new_user or not has_address:
         return redirect('main:edit_profile')
+
+    if _is_safe_next_url(request, next_url):
+        return redirect(next_url)
 
     return redirect('main:show_main')
 
@@ -954,13 +978,14 @@ def delete_account(request):
 
 
 @login_required(login_url='main:show_login')
-@lembaga_required
 def show_lembaga_profile(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if profile.role != 'LEMBAGA':
+        return redirect('main:show_profile')
     institution = InstitutionProfile.objects.filter(user=request.user).first()
     if not institution or not institution.name.strip() or not institution.address.strip():
         messages.info(request, "Silakan lengkapi profil lembaga Anda terlebih dahulu.")
         return redirect("main:edit_institution_profile")
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
     context = {
         "lembaga": institution,
         "profile": profile,
@@ -972,9 +997,15 @@ def show_lembaga_profile(request):
 
 
 @login_required(login_url='main:show_login')
-@lembaga_required
 def edit_institution_profile(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if profile.role != 'LEMBAGA':
+        return redirect('main:edit_profile')
     institution = InstitutionProfile.objects.filter(user=request.user).first()
+    is_onboarding = not (institution and institution.name.strip() and institution.address.strip())
+    email_value = request.user.email
+    email_error = None
+
     if request.method == "POST":
         post_data = request.POST.copy()
         if not post_data.get("name") and post_data.get("nama_lembaga"):
@@ -991,9 +1022,21 @@ def edit_institution_profile(request):
         if not post_data.get("contact_phone") and post_data.get("hp"):
             post_data["contact_phone"] = post_data["hp"]
 
+        if "email" in request.POST:
+            email_value = (request.POST.get("email") or "").strip()
+            if email_value and email_value.lower() != request.user.email.lower():
+                if not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email_value):
+                    email_error = "Masukkan alamat email yang valid."
+                elif User.objects.filter(email__iexact=email_value).exclude(pk=request.user.pk).exists():
+                    email_error = "Email sudah terpakai oleh akun lain."
+
         form = InstitutionProfileForm(post_data, instance=institution)
 
-        if form.is_valid():
+        if form.is_valid() and not email_error:
+            if "email" in request.POST and email_value and email_value.lower() != request.user.email.lower():
+                request.user.email = email_value
+                request.user.save(update_fields=["email"])
+
             institution = form.save(commit=False)
             institution.user = request.user
             uploaded_doc = request.FILES.get("legal_document")
@@ -1010,6 +1053,9 @@ def edit_institution_profile(request):
     context = {
         "form": form,
         "institution": institution,
+        "is_onboarding": is_onboarding,
+        "email_value": email_value,
+        "email_error": email_error,
     }
 
     return render(request, 'lembaga_profil.html', context)

@@ -4,7 +4,11 @@
   <section class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="keluar-judul" aria-describedby="keluar-deskripsi">
     <span class="eyebrow">Keluar</span>
     <h2 class="dialog__title" id="keluar-judul">Keluar dari <em>Sayangin</em>?</h2>
-    <p class="text-soft" id="keluar-deskripsi">Isi lemari, keranjang, dan daftar Tunda Beli tetap tersimpan. Kamu bisa masuk lagi kapan saja.</p>
+    {% if user.profile.role == 'LEMBAGA' %}
+      <p class="text-soft" id="keluar-deskripsi">Data lembaga, daftar kebutuhan aktif, dan riwayat tawaran donasi tetap tersimpan. Kamu bisa masuk kembali kapan saja.</p>
+    {% else %}
+      <p class="text-soft" id="keluar-deskripsi">Isi lemari, keranjang, dan daftar Tunda Beli tetap tersimpan. Kamu bisa masuk lagi kapan saja.</p>
+    {% endif %}
     <form class="dialog__form" method="POST" action="{% url 'main:logout_user' %}">
       {% csrf_token %}
       <label class="row text-sm text-soft"><input type="checkbox" name="logout_all"> Keluar dari semua perangkat</label>

@@ -13,7 +13,7 @@
 
 {% block app_bar %}
   <header class="app-bar only-mobile flex md:hidden items-center">
-    <a class="logo" href="{% url 'main:show_lembaga_profile' %}">
+    <a class="logo" href="{% url 'donasi:dashboard_lembaga' %}">
       <img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span>
     </a>
     <span class="spacer"></span>
@@ -22,7 +22,10 @@
 {% endblock %}
 
 {% block content %}
-  <main class="page__main container org-dash flex-1 flex flex-col" id="konten">
+  <main class="page__main container org-dash flex-1 flex flex-col" id="konten"
+        data-api-password-url="{% url 'main:api_change_password' %}"
+        data-api-google-disconnect-url="{% url 'main:api_disconnect_google' %}"
+        data-api-delete-account-url="{% url 'main:api_delete_account' %}">
     {% if messages %}
       {% for message in messages %}
         {% if 'error' in message.tags %}

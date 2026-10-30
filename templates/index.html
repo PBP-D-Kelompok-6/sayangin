@@ -18,17 +18,26 @@
 
   <div class="landing">
     <header class="landing-header flex items-center justify-between">
-      <a class="logo" href="{% url 'main:show_main' %}">
+      <a class="logo" href="{% if user.is_authenticated and user.profile.role == 'LEMBAGA' %}{% url 'donasi:dashboard_lembaga' %}{% else %}{% url 'main:show_main' %}{% endif %}">
         <img class="only-desktop hidden md:block" src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">
         <img class="only-mobile md:hidden" src="{% static 'img/logo-light.svg' %}" alt="" width="35" height="35">
-        sayangin
+        sayangin{% if user.is_authenticated and user.profile.role == 'LEMBAGA' %} <span class="logo__tag">MITRA</span>{% endif %}
       </a>
-      <nav class="landing-nav only-desktop hidden md:flex items-center" aria-label="Utama">
-        <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
-        <a href="{% url 'lemari:index' %}">Lemari Digital</a>
-        <a href="{% url 'donasi:pilih_lembaga' %}">Donasi</a>
-        <a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a>
-      </nav>
+      {% if user.is_authenticated and user.profile.role == 'LEMBAGA' %}
+        <nav class="landing-nav only-desktop hidden md:flex items-center" aria-label="Utama">
+          <a href="{% url 'donasi:dashboard_lembaga' %}">Dashboard</a>
+          <a href="{% url 'donasi:kebutuhan_list' %}">Kebutuhan</a>
+          <a href="{% url 'donasi:dashboard_lembaga' %}#tawaran">Tawaran masuk</a>
+          <a href="{% url 'main:show_lembaga_profile' %}">Data lembaga</a>
+        </nav>
+      {% else %}
+        <nav class="landing-nav only-desktop hidden md:flex items-center" aria-label="Utama">
+          <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
+          <a href="{% url 'lemari:index' %}">Lemari Digital</a>
+          <a href="{% url 'donasi:pilih_lembaga' %}">Donasi</a>
+          <a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a>
+        </nav>
+      {% endif %}
       <div class="row landing-header__actions flex items-center">
         <a class="icon-btn only-desktop hidden md:inline-flex" href="#baru-masuk" aria-label="Cari">
           <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
@@ -77,15 +86,16 @@
             <span class="only-mobile md:hidden">Barang lama, <em>disayang</em> lagi.</span>
           </p>
           <div class="hero__ctas flex flex-col md:flex-row">
-            <a class="btn btn--primary btn--lg" href="{% url 'marketplace:catalog' %}">Jelajahi marketplace</a>
-            {% if user.is_authenticated %}
-              {% if user.profile.role == 'LEMBAGA' %}
-                <a class="btn btn--lg hero__ghost" href="{% url 'main:show_lembaga_profile' %}">Kelola lembaga</a>
-              {% else %}
-                <a class="btn btn--lg hero__ghost" href="{% url 'main:show_profile' %}">Mulai dari lemari</a>
-              {% endif %}
+            {% if user.is_authenticated and user.profile.role == 'LEMBAGA' %}
+              <a class="btn btn--primary btn--lg" href="{% url 'donasi:dashboard_lembaga' %}">Dashboard donasi</a>
+              <a class="btn btn--lg hero__ghost" href="{% url 'donasi:kebutuhan_buat' %}">+ Buat kebutuhan</a>
             {% else %}
-              <a class="btn btn--lg hero__ghost" href="{% url 'main:show_register' %}">Mulai dari lemari</a>
+              <a class="btn btn--primary btn--lg" href="{% url 'marketplace:catalog' %}">Jelajahi marketplace</a>
+              {% if user.is_authenticated %}
+                <a class="btn btn--lg hero__ghost" href="{% url 'lemari:index' %}">Mulai dari lemari</a>
+              {% else %}
+                <a class="btn btn--lg hero__ghost" href="{% url 'main:show_register' %}">Mulai dari lemari</a>
+              {% endif %}
             {% endif %}
           </div>
         </div>
