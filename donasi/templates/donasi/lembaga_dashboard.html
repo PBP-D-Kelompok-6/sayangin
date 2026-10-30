@@ -1,0 +1,32 @@
+{% extends "donasi/base_donasi.html" %}
+{% load static %}
+{% block title %}Dashboard lembaga — Sayangin{% endblock %}
+{% block page_class %} has-bottom-nav{% endblock %}
+{% block header %}
+{% include "donasi/_header_lembaga.html" with aktif="dashboard" %}
+<header class="app-bar only-mobile"><a class="logo" href="{% url 'donasi:dashboard_lembaga' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span></a><span class="spacer"></span><span class="avatar avatar--sm" aria-hidden="true"></span></header>
+{% endblock %}
+{% block content %}
+<main class="page__main container org-dash" id="konten">
+  <div class="org-dash__head">
+    <h1 class="page-title">Halo, <em>{{ request.user.institution_profile.name|default:request.user.get_full_name|default:request.user.username }}</em></h1>
+    <a class="btn btn--primary" href="{% url 'donasi:kebutuhan_buat' %}">+ Buat kebutuhan</a>
+  </div>
+  <div class="stats">
+    <div class="stat stat--dark dark-panel"><span class="eyebrow only-desktop">Tawaran menunggu keputusan</span><span class="stat__value serif" id="stat-menunggu">{{ jumlah_menunggu }}</span><span class="text-sm only-mobile">Tawaran menunggu</span></div>
+    <div class="stat"><span class="eyebrow only-desktop">Kebutuhan aktif</span><span class="stat__value serif">{{ kebutuhan_aktif|length }}</span><span class="text-sm only-mobile">Kebutuhan aktif</span></div>
+    <div class="stat"><span class="eyebrow only-desktop">Barang diterima bulan ini</span><span class="stat__value serif">{{ diterima_bulan_ini }}</span><span class="text-sm only-mobile">Diterima bln ini</span></div>
+  </div>
+  <div class="org-dash__grid">
+    <section id="tawaran">
+      <div class="section-head"><h2 class="section-title">Tawaran <em>masuk</em></h2><a class="text-sm" href="{% url 'donasi:riwayat_lembaga' %}">Lihat riwayat</a></div>
+      {% for p in tawaran %}{% include "donasi/_offer_row.html" %}{% empty %}<p class="text-soft">Belum ada tawaran masuk.</p>{% endfor %}
+    </section>
+    <section>
+      <div class="section-head"><h2 class="section-title">Kebutuhan <em>aktif</em></h2><a class="text-sm" href="{% url 'donasi:kebutuhan_list' %}">Kelola</a></div>
+      {% for k in kebutuhan_aktif %}{% include "donasi/_need_row.html" with tanpa_aksi=True %}{% empty %}<p class="text-soft">Belum ada kebutuhan aktif. <a href="{% url 'donasi:kebutuhan_buat' %}">Buat yang pertama</a>.</p>{% endfor %}
+    </section>
+  </div>
+</main>
+{% endblock %}
+{% block bottom_nav %}{% include "donasi/_bottom_nav_lembaga.html" with aktif="dashboard" %}{% endblock %}

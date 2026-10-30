@@ -19,10 +19,15 @@ from django.views.decorators.http import require_POST, require_GET
 from main.models import UserProfile, UserAddress, InstitutionProfile
 from main.forms import InstitutionProfileForm, ProfileForm, UserAddressForm, CITY_CHOICES
 from main.decorators import personal_required, lembaga_required
+from donasi.models import Kebutuhan
 
 
 def show_main(request):
-    return render(request, 'index.html')
+    daftar_kebutuhan = Kebutuhan.objects.aktif().select_related("lembaga")[:5]
+    
+    return render(request, 'index.html', {
+        'daftar_kebutuhan': daftar_kebutuhan,
+    })
 
 
 def show_menu(request):
@@ -69,7 +74,7 @@ def show_login(request):
         if profile.role == 'LEMBAGA':
             if not _is_institution_profile_complete(request.user):
                 return redirect('main:edit_institution_profile')
-            return redirect('main:show_lembaga_profile')
+            return redirect('donasi:dashboard_lembaga')  # Diarahkan ke Dashboard Donasi
         return redirect("main:show_main")
 
     if request.method == 'POST':
@@ -87,7 +92,7 @@ def show_login(request):
                 if not _is_institution_profile_complete(user):
                     messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
                     return redirect('main:edit_institution_profile')
-                return redirect('main:show_lembaga_profile')
+                return redirect('donasi:dashboard_lembaga')  # Diarahkan ke Dashboard Donasi
             return redirect('main:show_main')
         else:
             messages.error(request, 'Email/username atau kata sandi salah.')
@@ -791,7 +796,7 @@ def google_callback(request):
     if profile.role == 'LEMBAGA':
         if not _is_institution_profile_complete(user):
             return redirect('main:edit_institution_profile')
-        return redirect('main:show_lembaga_profile')
+        return redirect('donasi:dashboard_lembaga')
 
     has_address = bool(profile.address.strip() or UserAddress.objects.filter(user=user).exists())
     if is_new_user or not has_address:

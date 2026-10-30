@@ -43,87 +43,8 @@
       </h1>
       <div class="org-dash__actions">
         <a class="btn btn--outline" href="{% url 'main:edit_institution_profile' %}">Ubah data lembaga</a>
-        <a class="btn btn--primary" href="#kebutuhan-aktif">+ Buat kebutuhan</a>
+        <a class="btn btn--primary" href="{% url 'donasi:dashboard_lembaga' %}">Dashboard donasi</a>
       </div>
-    </div>
-
-    <div class="stats grid grid-cols-3">
-      <div class="stat stat--dark dark-panel">
-        <span class="eyebrow only-desktop hidden md:block">Tawaran menunggu keputusan</span>
-        <span class="stat__value serif">4</span>
-        <span class="text-sm only-mobile md:hidden">Tawaran menunggu</span>
-      </div>
-      <div class="stat">
-        <span class="eyebrow only-desktop hidden md:block">Kebutuhan aktif</span>
-        <span class="stat__value serif">3</span>
-        <span class="text-sm only-mobile md:hidden">Kebutuhan aktif</span>
-      </div>
-      <div class="stat">
-        <span class="eyebrow only-desktop hidden md:block">Barang diterima bulan ini</span>
-        <span class="stat__value serif">12</span>
-        <span class="text-sm only-mobile md:hidden">Diterima bln ini</span>
-      </div>
-    </div>
-
-    <div class="org-dash__grid grid grid-cols-1 md:grid-cols-2">
-      <section id="tawaran">
-        <div class="section-head flex justify-between items-baseline">
-          <h2 class="section-title">Tawaran <em>masuk</em></h2>
-          <a class="text-sm" href="#tawaran">Lihat semua</a>
-        </div>
-        <div class="offer">
-          <span class="offer__img offer__img--jaket-zaitun"></span>
-          <span class="spacer">
-            <b>3 jaket anak, ukuran 8</b><br>
-            <span class="text-sm text-soft">
-              <span class="only-desktop hidden md:inline">dari @sekar_ay · untuk kebutuhan "12 jaket anak" · kondisi baik</span>
-              <span class="only-mobile md:hidden">@sekar_ay · untuk "12 jaket anak"</span>
-            </span>
-          </span>
-          <span class="offer__actions"><a class="btn btn--outline btn--sm" href="#tawaran">Tolak</a><a class="btn btn--primary btn--sm" href="#tawaran">Terima</a></span>
-        </div>
-        <div class="offer">
-          <span class="offer__img offer__img--jaket-kulit"></span>
-          <span class="spacer">
-            <b>2 jaket anak, ukuran 6</b><br>
-            <span class="text-sm text-soft">
-              <span class="only-desktop hidden md:inline">dari @bimapras · untuk kebutuhan "12 jaket anak" · ada noda kecil</span>
-              <span class="only-mobile md:hidden">@bimapras · ada noda kecil</span>
-            </span>
-          </span>
-          <span class="offer__actions"><a class="btn btn--outline btn--sm" href="#tawaran">Tolak</a><a class="btn btn--primary btn--sm" href="#tawaran">Terima</a></span>
-        </div>
-        <div class="offer only-desktop hidden md:flex">
-          <span class="offer__img offer__img--sweter-krem"></span>
-          <span class="spacer">
-            <b>Sweter rajut krem</b><br>
-            <span class="text-sm text-soft">dari @nadia.r · tidak ada kebutuhan yang cocok</span>
-          </span>
-          <span class="offer__actions"><a class="btn btn--outline btn--sm" href="#tawaran">Tolak</a><a class="btn btn--primary btn--sm" href="#tawaran">Terima</a></span>
-        </div>
-      </section>
-
-      <section id="kebutuhan-aktif">
-        <div class="section-head flex justify-between items-baseline">
-          <h2 class="section-title">Kebutuhan <em>aktif</em></h2>
-          <a class="text-sm" href="#kebutuhan-aktif">Kelola</a>
-        </div>
-        <div class="need-row">
-          <div class="row"><b class="spacer">Jaket anak 6–10 tahun</b><span class="mono">8 / 12</span></div>
-          <div class="progress progress--thin progress--67"><span></span></div>
-          <span class="text-sm text-soft only-desktop hidden md:inline">Tenggat 30 Nov</span>
-        </div>
-        <div class="need-row">
-          <div class="row"><b class="spacer">Buku pelajaran SD</b><span class="mono">15 / 40</span></div>
-          <div class="progress progress--thin progress--38"><span></span></div>
-          <span class="text-sm text-soft only-desktop hidden md:inline">Tenggat 15 Des</span>
-        </div>
-        <div class="need-row">
-          <div class="row"><b class="spacer">Sepatu sekolah</b><span class="mono">0 / 20</span></div>
-          <div class="progress progress--thin progress--0"><span></span></div>
-          <span class="text-sm text-soft only-desktop hidden md:inline">Tenggat 10 Jan</span>
-        </div>
-      </section>
     </div>
 
     <section class="profile org-profile-section" id="profil-lembaga" aria-labelledby="profil-lembaga-judul">
@@ -303,16 +224,16 @@
 
 {% block bottom_nav %}
   <nav class="bottom-nav bottom-nav--4" aria-label="Utama">
-    <a href="{% url 'main:show_lembaga_profile' %}" aria-current="page">
+    <a href="{% url 'donasi:dashboard_lembaga' %}">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>Dashboard
     </a>
-    <a href="#kebutuhan-aktif">
+    <a href="{% url 'donasi:kebutuhan_list' %}">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="4.5" width="13" height="16" rx="2"/><path d="M9 4.5h6v2.5H9z"/><path d="M8.5 11h7M8.5 15h5"/></svg>Kebutuhan
     </a>
-    <a href="#tawaran">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13.5 6.5 6h11L20 13.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 13.5h4.5l1.2 2h4.6l1.2-2H20"/></svg>Tawaran (4)
+    <a href="{% url 'donasi:dashboard_lembaga' %}#tawaran">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13.5 6.5 6h11L20 13.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 13.5h4.5l1.2 2h4.6l1.2-2H20"/></svg>Tawaran
     </a>
-    <a href="#profil-lembaga">
+    <a href="{% url 'main:show_lembaga_profile' %}" aria-current="page">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1.6-3.2 4-4.5 7-4.5s5.4 1.3 7 4.5"/></svg>Profil
     </a>
   </nav>

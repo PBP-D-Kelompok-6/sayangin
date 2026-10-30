@@ -1,0 +1,29 @@
+{% extends "donasi/base_donasi.html" %}
+{% load static %}
+{% block content %}
+{% static 'img/logo.svg' as placeholder %}
+<main class="page__main container donate" id="konten">
+  {% if barang.nama %}
+    {% include "donasi/_item_strip.html" %}
+  {% endif %}
+  <div class="donate__head">
+    <h1 class="page-title"><span class="eyebrow">Donasi tepat sasaran</span>{{ daftar|length }} {% if barang.nama %}lembaga <em>butuh</em> barang ini{% else %}kebutuhan <em>aktif</em>{% endif %}</h1>
+    <form id="urut-form" hx-get="{% url 'donasi:pilih_lembaga' %}" hx-trigger="change" hx-target="#org-list" hx-swap="innerHTML">
+      {% for kunci, nilai in barang.items %}{% if nilai %}<input type="hidden" name="{{ kunci }}" value="{{ nilai }}">{% endif %}{% endfor %}
+      <div class="chips" role="group" aria-label="Urutkan">
+        {% for kunci, label in urutan.items %}
+        <label><input class="visually-hidden" type="radio" name="urut" value="{{ kunci }}"{% if urut == kunci %} checked{% endif %}><span class="chip">{{ label }}</span></label>
+        {% endfor %}
+      </div>
+    </form>
+  </div>
+  <div class="donate__grid">
+    <div class="org-list" id="org-list">{% include "donasi/_org_list.html" %}</div>
+    <aside class="notice donate__aside">
+      <b>Belum ada yang cocok?</b>
+      <span>Simpan ke daftar donasi umum. Kami kabari saat ada lembaga yang membutuhkannya.</span>
+      <a class="btn btn--outline btn--block only-desktop" href="{% url 'donasi:tawaran_saya' %}">Lihat donasiku</a>
+    </aside>
+  </div>
+</main>
+{% endblock %}

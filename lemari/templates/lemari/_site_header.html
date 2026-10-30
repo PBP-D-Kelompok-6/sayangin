@@ -5,7 +5,7 @@
     <nav class="primary-nav" aria-label="Utama">
       <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
       <a href="{% url 'lemari:index' %}" aria-current="page">Lemari Digital</a>
-      <a href="{% url 'main:show_main' %}#kebutuhan">Donasi</a>
+      <a href="{% url 'donasi:pilih_lembaga' %}" {% if request.resolver_match.namespace == 'donasi' %}aria-current="page"{% endif %}>Donasi</a>
       <a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a>
     </nav>
     <div class="site-header__actions">

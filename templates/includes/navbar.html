@@ -3,18 +3,26 @@
 {% if user.is_authenticated and user.profile.role == 'LEMBAGA' %}
   <header class="site-header only-desktop hidden md:block">
     <div class="site-header__bar flex items-center justify-between">
-      <a class="logo" href="{% url 'main:show_lembaga_profile' %}">
+      <!-- Logo langsung mengarah ke Dashboard Donasi Lembaga -->
+      <a class="logo" href="{% url 'donasi:dashboard_lembaga' %}">
         <img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span>
       </a>
       <nav class="primary-nav flex items-center" aria-label="Utama">
-        <a href="{% url 'main:show_lembaga_profile' %}" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}>Dashboard</a>
-        <a href="{% url 'main:show_lembaga_profile' %}#kebutuhan-aktif">Kebutuhan</a>
-        <a href="{% url 'main:show_lembaga_profile' %}#tawaran">Tawaran masuk (4)</a>
-        <a href="{% url 'main:edit_institution_profile' %}" {% if request.resolver_match.url_name == 'edit_institution_profile' %}aria-current="page"{% endif %}>Data lembaga</a>
+        <!-- 1. Menu Dashboard Donasi -->
+        <a href="{% url 'donasi:dashboard_lembaga' %}" {% if request.resolver_match.url_name == 'dashboard_lembaga' %}aria-current="page"{% endif %}>Dashboard</a>
+
+        <!-- 2. Menu Kelola Kebutuhan Barang Donasi -->
+        <a href="{% url 'donasi:kebutuhan_list' %}" {% if request.resolver_match.url_name == 'kebutuhan_list' %}aria-current="page"{% endif %}>Kebutuhan</a>
+
+        <!-- 3. Menu Tawaran Masuk (Loncat ke section tawaran di dashboard) -->
+        <a href="{% url 'donasi:dashboard_lembaga' %}#tawaran">Tawaran masuk</a>
+
+        <!-- 4. Menu Data Lembaga (Halaman profil/pengaturan akun lembaga) -->
+        <a href="{% url 'main:show_lembaga_profile' %}" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}>Data lembaga</a>
       </nav>
       <div class="site-header__actions flex items-center">
         <span class="text-soft">{{ user.institution_profile.name|default:user.username }}</span>
-        <a class="avatar" href="{% url 'main:show_lembaga_profile' %}#profil-lembaga" aria-label="Profil lembaga" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}></a>
+        <a class="avatar" href="{% url 'main:show_lembaga_profile' %}" aria-label="Profil lembaga" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}></a>
       </div>
     </div>
   </header>
@@ -27,7 +35,7 @@
       <nav class="primary-nav flex items-center" aria-label="Utama">
         <a href="{% url 'marketplace:catalog' %}" {% if request.resolver_match.namespace == 'marketplace' %}aria-current="page"{% endif %}>Marketplace</a>
         <a href="{% url 'lemari:index' %}" {% if request.resolver_match.namespace == 'lemari' %}aria-current="page"{% endif %}>Lemari Digital</a>
-        <a href="{% url 'main:show_main' %}#kebutuhan">Donasi</a>
+        <a href="{% url 'donasi:pilih_lembaga' %}" {% if request.resolver_match.namespace == 'donasi' %}aria-current="page"{% endif %}>Donasi</a>
         <a href="{% url 'impact:show_impact_dashboard' %}" {% if request.resolver_match.namespace == 'impact' %}aria-current="page"{% endif %}>Dampak</a>
       </nav>
       <div class="site-header__actions flex items-center">

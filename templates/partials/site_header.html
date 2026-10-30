@@ -10,7 +10,7 @@ Gaya: static/css/site-header.css. Ikon & logo inline, jadi tidak butuh sprite la
     <nav class="sg-nav" aria-label="Utama">
         <a href="{% url 'marketplace:catalog' %}"{% if active == 'marketplace' %} aria-current="page"{% endif %}>Marketplace</a>
         <a href="{% url 'lemari:index' %}"{% if active == 'lemari' %} aria-current="page"{% endif %}>Lemari Digital</a>
-        <a href="{% url 'main:show_main' %}#kebutuhan"{% if active == 'donasi' %} aria-current="page"{% endif %}>Donasi</a>
+        <a href="{% url 'donasi:pilih_lembaga' %}"{% if active == 'donasi' or request.resolver_match.namespace == 'donasi' %} aria-current="page"{% endif %}>Donasi</a>
         <a href="{% url 'impact:show_impact_dashboard' %}"{% if active == 'dampak' %} aria-current="page"{% endif %}>Dampak</a>
     </nav>
     <div class="sg-actions">

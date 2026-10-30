@@ -25,8 +25,8 @@
       </a>
       <nav class="landing-nav only-desktop hidden md:flex items-center" aria-label="Utama">
         <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
-        <a href="#lemari">Lemari Digital</a>
-        <a href="#kebutuhan">Donasi</a>
+        <a href="{% url 'lemari:index' %}">Lemari Digital</a>
+        <a href="{% url 'donasi:pilih_lembaga' %}">Donasi</a>
         <a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a>
       </nav>
       <div class="row landing-header__actions flex items-center">
@@ -35,7 +35,7 @@
         </a>
         {% if user.is_authenticated %}
           {% if user.profile.role == 'LEMBAGA' %}
-            <a class="header-link" href="{% url 'main:show_lembaga_profile' %}">Dashboard</a>
+            <a class="header-link" href="{% url 'donasi:dashboard_lembaga' %}">Dashboard</a>
             <a class="btn btn--primary only-desktop hidden md:inline-flex" href="{% url 'main:show_lembaga_profile' %}">Profil lembaga</a>
           {% else %}
             <a class="header-link" href="{% url 'main:show_profile' %}">Akun saya</a>
@@ -200,14 +200,24 @@
         <img class="cutout needs__left only-desktop hidden md:block" src="{% static 'img/henley-sage-cut.png' %}" alt="">
         <img class="cutout needs__right only-desktop hidden md:block" src="{% static 'img/baret-navy-cut.png' %}" alt="">
         <p class="needs__intro only-desktop hidden md:block">Lembaga mitra memasang barang yang benar-benar mereka butuhkan.</p>
+        
         <div class="needs__list flex flex-col">
-          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">Selimut &amp; kursi roda</span><span class="need__place">Panti Werdha Kasih Bunda</span><span class="need__count">1 / 5</span><span aria-hidden="true">↗</span></a>
-          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">15 sweter anak</span><span class="need__place">Panti Asuhan Harapan</span><span class="need__count">8 / 15</span><span aria-hidden="true">↗</span></a>
-          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">40 buku cerita anak</span><span class="need__place">SD Negeri 04 Depok</span><span class="need__count">15 / 40</span><span aria-hidden="true">↗</span></a>
-          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">Sepatu sekolah</span><span class="need__place">Sekolah Bisa Mandiri</span><span class="need__count">0 / 20</span><span aria-hidden="true">↗</span></a>
-          <a class="need grid items-center" href="#kebutuhan"><span class="need__item">Peralatan dapur</span><span class="need__place">Komunitas Dapur Bersama</span><span class="need__count">3 / 10</span><span aria-hidden="true">↗</span></a>
+          {% for k in daftar_kebutuhan %}
+            <a class="need grid items-center" href="{% url 'donasi:pilih_lembaga' %}">
+              <span class="need__item">{{ k.nama_barang }}</span>
+              <span class="need__place">{{ k.nama_lembaga }}</span>
+              <span class="need__count">{{ k.terpenuhi }} / {{ k.jumlah }}</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          {% empty %}
+            <!-- Fallback bila belum ada data kebutuhan aktif di database -->
+            <div class="text-center py-6 text-soft">
+              <p>Belum ada kebutuhan aktif saat ini.</p>
+            </div>
+          {% endfor %}
         </div>
-        <a class="btn btn--outline needs__all only-desktop hidden md:inline-flex" href="#kebutuhan">Lihat semua</a>
+        
+        <a class="btn btn--outline needs__all only-desktop hidden md:inline-flex" href="{% url 'donasi:pilih_lembaga' %}">Lihat semua</a>
       </section>
 
       <section class="choices container only-desktop hidden md:flex flex-col items-center" id="pilihan">

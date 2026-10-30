@@ -1,0 +1,43 @@
+{% extends "donasi/base_donasi.html" %}
+{% load static %}
+{% block title %}Kirim donasi — Sayangin{% endblock %}
+{% block appbar_title %}Kirim donasi{% endblock %}
+{% block content %}
+<main class="page__main container send" id="konten">
+  <div class="notice only-mobile"><b>{{ barang.nama }} → {{ kebutuhan.nama_lembaga }}</b><br><span class="text-sm">Butuh {{ kebutuhan.nama_barang|lower }} · {{ kebutuhan.terpenuhi }}/{{ kebutuhan.jumlah }}</span></div>
+  <form class="send__form stack" style="--stack-gap: 18px" method="post" novalidate>
+    {% csrf_token %}
+    <h1 class="page-title only-desktop"><span class="eyebrow">Kirim donasi</span>Bagaimana barangnya <em>sampai</em>?</h1>
+    {% if form.errors %}<div class="alert" role="alert"><b>!</b> Ada isian yang perlu diperbaiki.</div>{% endif %}
+
+    <fieldset class="stack" style="--stack-gap: 8px"><legend class="field__label">Cara pengiriman</legend>
+      {% for opt in form.metode %}
+      <label class="choice{% if not opt.data.selected %} choice--plain{% endif %}">
+        <input type="radio" name="{{ opt.data.name }}" value="{{ opt.data.value }}"{% if opt.data.selected %} checked{% endif %}>
+        <span><b>{{ opt.choice_label }}</b><br><span class="text-sm text-soft">{% if opt.data.value == "antar" %}Antar langsung ke {{ kebutuhan.nama_lembaga }}{% else %}Ongkir dibayar donatur{% endif %}</span></span>
+      </label>
+      {% endfor %}
+    </fieldset>
+
+    <div class="form-row">
+      <label class="field"><span class="field__label">Rencana tanggal</span>{{ form.tanggal_rencana }}{% for e in form.tanggal_rencana.errors %}<span class="field__error">{{ e }}</span>{% endfor %}</label>
+      <label class="field"><span class="field__label">Perkiraan jam</span>{{ form.jam }}</label>
+    </div>
+    <label class="field"><span class="field__label">Pesan untuk lembaga <span class="text-muted">(opsional)</span></span>{{ form.pesan }}</label>
+    <label class="choice choice--inline"><input type="checkbox" name="bersih" required{% if form.bersih.value %} checked{% endif %}><span>Barang sudah bersih dan layak pakai. <span class="text-muted">(wajib)</span></span></label>
+    {% for e in form.bersih.errors %}<span class="field__error">{{ e }}</span>{% endfor %}
+    <p class="text-sm text-soft only-mobile">Lembaga akan menerima atau menolak dalam 2 hari.</p>
+    <div class="send__submit"><button class="btn btn--primary btn--lg" type="submit">Kirim tawaran donasi</button></div>
+  </form>
+  <aside class="send__summary only-desktop" aria-label="Ringkasan donasi">
+    <b>Ringkasan</b>
+    <div class="cart-item">
+      <span class="cart-item__img{% if not foto %} cart-item__img--org{% endif %}"{% if foto %}style="background: url('{{ foto }}') center / cover no-repeat"{% endif %}></span>
+      <span>{{ barang.nama }}<br><span class="text-sm text-soft">{% if barang.ukuran %}Ukuran {{ barang.ukuran }} · {% endif %}{{ kondisi_label }} · 1 barang</span></span>
+    </div>
+    <div class="cart-item"><span class="cart-item__img cart-item__img--org"></span><span>{{ kebutuhan.nama_lembaga }}<br><span class="text-sm text-soft">Butuh {{ kebutuhan.nama_barang|lower }} · {{ kebutuhan.terpenuhi }}/{{ kebutuhan.jumlah }}</span></span></div>
+    <p class="text-sm text-soft">Lembaga akan menerima atau menolak tawaranmu dalam 2 hari. Kamu bisa memantau statusnya di halaman Donasiku.</p>
+    <div class="notice text-sm">Poin dampak ditambahkan setelah barang diterima.</div>
+  </aside>
+</main>
+{% endblock %}

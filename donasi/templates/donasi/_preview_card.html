@@ -1,0 +1,7 @@
+{% load static %}{% static 'img/logo.svg' as placeholder %}
+<span class="preview__img" style="--img: url('{{ preview.foto_url|default:placeholder }}')"></span>
+<b class="serif preview__title">{% if preview.jumlah %}{{ preview.jumlah }} {% endif %}{{ preview.nama_barang|default:"nama barang"|lower }}</b>
+<span class="text-sm text-soft">{{ preview.nama_lembaga }}{% if preview.ukuran_list %} · ukuran {{ preview.ukuran_label }}{% endif %} · {{ preview.get_kondisi_min_display|lower }}</span>
+<div class="progress progress--thin" style="--value: {{ preview.persen }}%"><span></span></div>
+<span class="text-sm text-soft">{{ preview.terpenuhi }} / {{ preview.jumlah }} terpenuhi{% if preview.tenggat %} · tenggat {{ preview.tenggat|date:"j M Y" }}{% endif %}</span>
+{% if preview.cerita %}<span class="text-sm">“{{ preview.cerita }}”</span>{% endif %}
