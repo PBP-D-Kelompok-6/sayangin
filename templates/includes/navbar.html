@@ -1,48 +1,53 @@
 {% load static %}
 
 {% if user.is_authenticated and user.profile.role == 'LEMBAGA' %}
-  <header class="site-header only-desktop">
-    <div class="site-header__bar">
+  <header class="site-header only-desktop hidden md:block">
+    <div class="site-header__bar flex items-center justify-between">
       <a class="logo" href="{% url 'main:show_lembaga_profile' %}">
         <img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span>
       </a>
-      <nav class="primary-nav" aria-label="Utama">
-        <a href="{% url 'main:show_lembaga_profile' %}">Dashboard</a>
-        <a href="{% url 'main:edit_institution_profile' %}">Data lembaga</a>
-        <a href="{% url 'main:show_main' %}#kebutuhan">Donasi</a>
+      <nav class="primary-nav flex items-center" aria-label="Utama">
+        <a href="{% url 'main:show_lembaga_profile' %}" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}>Dashboard</a>
+        <a href="{% url 'main:show_lembaga_profile' %}#kebutuhan-aktif">Kebutuhan</a>
+        <a href="{% url 'main:show_lembaga_profile' %}#tawaran">Tawaran masuk (4)</a>
+        <a href="{% url 'main:edit_institution_profile' %}" {% if request.resolver_match.url_name == 'edit_institution_profile' %}aria-current="page"{% endif %}>Data lembaga</a>
       </nav>
-      <span class="spacer"></span>
-      <span class="text-soft">{{ user.institution_profile.name|default:user.username }}</span>
-      <a class="avatar" href="{% url 'main:show_lembaga_profile' %}" aria-label="Profil lembaga"></a>
+      <div class="site-header__actions flex items-center">
+        <span class="text-soft">{{ user.institution_profile.name|default:user.username }}</span>
+        <a class="avatar" href="{% url 'main:show_lembaga_profile' %}#profil-lembaga" aria-label="Profil lembaga" {% if request.resolver_match.url_name == 'show_lembaga_profile' %}aria-current="page"{% endif %}></a>
+      </div>
     </div>
   </header>
 {% else %}
-  <header class="site-header only-desktop">
-    <div class="site-header__bar">
+  <header class="site-header only-desktop hidden md:block">
+    <div class="site-header__bar flex items-center justify-between">
       <a class="logo" href="{% url 'main:show_main' %}">
         <img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin
       </a>
-      <nav class="primary-nav" aria-label="Utama">
-        <a href="{% url 'main:show_main' %}">Beranda</a>
-        <a href="{% url 'main:show_main' %}#lemari">Lemari</a>
+      <nav class="primary-nav flex items-center" aria-label="Utama">
         <a href="{% url 'main:show_main' %}#baru-masuk">Marketplace</a>
+        <a href="{% url 'main:show_main' %}#lemari">Lemari Digital</a>
         <a href="{% url 'main:show_main' %}#kebutuhan">Donasi</a>
-        <a href="{% url 'impact:show_impact_dashboard' %}#dampak">Dampak</a>
+        <a href="{% url 'impact:show_impact_dashboard' %}" {% if request.resolver_match.namespace == 'impact' %}aria-current="page"{% endif %}>Dampak</a>
       </nav>
-      <label class="search">
-        <span class="visually-hidden">Cari</span>
-        <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-        <input type="search" placeholder="Cari barang preloved" aria-keyshortcuts="/">
-        <kbd class="kbd" title="Tekan / untuk mencari">/</kbd>
-      </label>
-      <a class="header-link" href="{% url 'main:show_main' %}#pilihan">Tunda Beli</a>
-      <a class="header-link" href="{% url 'main:show_main' %}#baru-masuk">Keranjang (2)</a>
-      {% if user.is_authenticated %}
-        <a class="avatar" href="{% url 'main:show_profile' %}" aria-label="Profil"></a>
-      {% else %}
-        <a class="header-link" href="{% url 'main:show_login' %}">Masuk</a>
-        <a class="btn btn--primary" href="{% url 'main:show_register' %}">Mulai sekarang</a>
-      {% endif %}
+      <div class="site-header__actions flex items-center">
+        <a class="icon-btn" href="{% url 'main:show_main' %}#baru-masuk" aria-label="Cari">
+          <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+        </a>
+        {# Jualanku (sesuai Figma) -> halaman "barang saya" di modul Marketplace (path 'barang-saya/', name 'my_products') #}
+        {# ditulis manual dulu karena app marketplace belum masuk main; setelah merge bisa diganti {% url 'marketplace:my_products' %} #}
+        <a class="header-link" href="/marketplace/barang-saya/">Jualanku</a>
+        <a class="icon-btn" href="{% url 'main:show_main' %}#baru-masuk" aria-label="Keranjang, 2 barang">
+          <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5h14l-1.1 11.5H6.1z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/></svg>
+          <span class="icon-btn__count" aria-hidden="true">2</span>
+        </a>
+        {% if user.is_authenticated %}
+          <a class="avatar" href="{% url 'main:show_profile' %}" aria-label="Profil" {% if request.resolver_match.url_name == 'show_profile' %}aria-current="page"{% endif %}></a>
+        {% else %}
+          <a class="header-link" href="{% url 'main:show_login' %}">Masuk</a>
+          <a class="btn btn--primary" href="{% url 'main:show_register' %}">Mulai sekarang</a>
+        {% endif %}
+      </div>
     </div>
   </header>
 {% endif %}

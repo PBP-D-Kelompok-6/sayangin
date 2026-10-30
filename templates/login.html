@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Masuk — Sayangin</title>
   {% include 'includes/fonts.html' %}
+  {% include 'includes/tailwind.html' %}
   <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
@@ -94,8 +95,8 @@
 
         <button class="btn btn--primary btn--lg btn--block" type="submit">Masuk</button>
         <div class="divider-text">atau</div>
-        <a class="btn btn--outline btn--lg btn--block" href="#">Lanjut dengan Google</a>
-        <p class="text-soft" style="text-align: center">Belum punya akun? <a href="{% url 'main:show_register' %}">Daftar</a></p>
+        <a class="btn btn--outline btn--lg btn--block" href="{% url 'main:google_login' %}">Lanjut dengan Google</a>
+        <p class="text-soft auth-footer-text">Belum punya akun? <a href="{% url 'main:show_register' %}">Daftar</a></p>
       </form>
     </main>
   </div>

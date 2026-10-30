@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Profil &amp; alamat — Sayangin</title>
   {% include 'includes/fonts.html' %}
+  {% include 'includes/tailwind.html' %}
   <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
@@ -16,10 +17,10 @@
   <a class="skip-link" href="#konten">Lewati ke konten</a>
   {% include 'includes/svg_filters.html' %}
 
-  <div class="onboard">
-    <header class="onboard__header only-desktop">
+  <div class="onboard min-h-screen flex flex-col">
+    <header class="onboard__header only-desktop hidden md:flex items-center justify-between">
       <a class="logo" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
-      <ol class="steps" aria-label="Langkah pendaftaran">
+      <ol class="steps flex items-center" aria-label="Langkah pendaftaran">
         <li class="is-done"><span class="steps__dot">✓</span>Akun</li>
         <li class="steps__line is-done" aria-hidden="true"></li>
         <li aria-current="step"><span class="steps__dot">2</span>Profil &amp; alamat</li>
@@ -29,20 +30,20 @@
       <a href="{% url 'main:show_profile' %}">Nanti saja</a>
     </header>
 
-    <header class="app-bar app-bar--back only-mobile">
+    <header class="app-bar app-bar--back only-mobile flex md:hidden items-center">
       <a class="icon-btn" href="{% url 'main:show_profile' %}" aria-label="Kembali">←</a>
       <span class="app-bar__label">Profil &amp; alamat</span>
       <span class="text-sm text-soft">Langkah 2 / 3</span>
     </header>
-    <div class="progress only-mobile" style="--value: 66%; border-radius: 0"><span></span></div>
+    <div class="progress progress--step2 only-mobile md:hidden"><span></span></div>
 
-    <div class="onboard__body">
-      <aside class="onboard__aside dark-panel only-desktop">
+    <div class="onboard__body flex-1 flex">
+      <aside class="onboard__aside dark-panel only-desktop hidden md:flex flex-col justify-end">
         <svg class="caustics" viewBox="0 0 420 320" preserveAspectRatio="none" aria-hidden="true"><rect width="420" height="320" filter="url(#sgcaus)"/></svg>
         <div class="onboard__art" aria-hidden="true">
           <svg class="onboard__chrome" viewBox="0 0 420 320" aria-hidden="true"><path filter="url(#sgliq2)" fill="url(#sgbands)" d="M50 210C80 120 170 84 236 126S344 196 384 118C404 84 418 156 386 198S272 266 208 226S96 270 50 210Z"/></svg>
-          <img class="cutout onboard__img" src="{% static 'img/kamera-film-cut.png' %}" alt="" style="left: 70px; top: 70px; width: 210px; height: 170px;">
-          <img class="cutout onboard__img" src="{% static 'img/gelang-resin-cut.png' %}" alt="" style="left: 230px; top: 150px; width: 150px; height: 150px;">
+          <img class="cutout onboard__img onboard__img--camera" src="{% static 'img/kamera-film-cut.png' %}" alt="">
+          <img class="cutout onboard__img onboard__img--bracelet" src="{% static 'img/gelang-resin-cut.png' %}" alt="">
         </div>
         <div class="onboard__caption">
           <span class="eyebrow">Kenapa kami tanya</span>
@@ -51,21 +52,29 @@
         </div>
       </aside>
 
-      <main class="onboard__main" id="konten">
-        <form class="stack auth-form auth-form--wide" style="--stack-gap: 18px" method="POST" action="{% url 'main:edit_profile' %}" novalidate>
+      <main class="onboard__main flex-1" id="konten">
+        <form class="stack auth-stack auth-form auth-form--wide" method="POST" action="{% url 'main:edit_profile' %}" novalidate>
           {% csrf_token %}
+          <input type="hidden" name="mode" value="{{ mode|default:'' }}">
+          {% if target_address %}
+            <input type="hidden" name="address_id" value="{{ target_address.pk }}">
+          {% endif %}
 
-          <div class="stack" style="--stack-gap: 6px">
-            <h1 class="page-title"><span class="eyebrow"><span class="only-desktop">Langkah 2 dari 3 · </span>Profil</span>Kenalan <em>dulu</em>, yuk</h1>
+          <div class="stack auth-heading-stack">
+            <h1 class="page-title"><span class="eyebrow"><span class="only-desktop hidden md:inline">Langkah 2 dari 3 · </span>Profil</span>Kenalan <em>dulu</em>, yuk</h1>
             <span class="text-soft">Alamat dipakai untuk menghitung ongkir dan mencari lembaga terdekat.</span>
           </div>
 
           {% if messages %}
             {% for message in messages %}
-              <div class="alert" role="alert">
-                <span class="alert-icon" aria-hidden="true">!</span>
-                <span>{{ message }}</span>
-              </div>
+              {% if 'error' in message.tags %}
+                <div class="alert" role="alert">
+                  <span class="alert-icon" aria-hidden="true">!</span>
+                  <span>{{ message }}</span>
+                </div>
+              {% else %}
+                <div class="notice text-sm" role="status">{{ message }}</div>
+              {% endif %}
             {% endfor %}
           {% endif %}
 
@@ -76,7 +85,7 @@
             </div>
           {% endif %}
 
-          <div class="form-row">
+          <div class="form-row grid grid-cols-1 md:grid-cols-2">
             <label class="field">
               <span class="field__label">Nama lengkap</span>
               <input
@@ -117,7 +126,7 @@
 
           <fieldset class="field">
             <legend class="field__label">Label alamat</legend>
-            <div class="row" style="--row-gap: 8px">
+            <div class="chips flex flex-wrap gap-2">
               <label>
                 <input class="visually-hidden" type="radio" name="address_label" value="RUMAH" {% if form.address_label.value == 'RUMAH' or not form.address_label.value %}checked{% endif %}>
                 <span class="chip chip--lg">Rumah</span>
@@ -125,6 +134,10 @@
               <label>
                 <input class="visually-hidden" type="radio" name="address_label" value="KOS" {% if form.address_label.value == 'KOS' %}checked{% endif %}>
                 <span class="chip chip--lg">Kos</span>
+              </label>
+              <label>
+                <input class="visually-hidden" type="radio" name="address_label" value="APARTEMEN" {% if form.address_label.value == 'APARTEMEN' %}checked{% endif %}>
+                <span class="chip chip--lg">Apartemen</span>
               </label>
               <label>
                 <input class="visually-hidden" type="radio" name="address_label" value="KANTOR" {% if form.address_label.value == 'KANTOR' %}checked{% endif %}>
@@ -149,8 +162,8 @@
             {% endfor %}
           </label>
 
-          <div class="form-row form-row--2-1">
-            <label class="field">
+          <div class="form-row form-row--2-1 grid grid-cols-1 md:grid-cols-3">
+            <label class="field md:col-span-2">
               <span class="field__label">Kota / kabupaten</span>
               {{ form.city }}
             </label>
@@ -171,8 +184,8 @@
             <input type="checkbox" name="is_primary_address" {% if form.is_primary_address.value %}checked{% endif %}> Jadikan alamat utama
           </label>
 
-          <div class="form-actions">
-            <a class="btn btn--outline btn--lg only-desktop" href="{% url 'main:show_profile' %}">Kembali</a>
+          <div class="form-actions flex items-center justify-between">
+            <a class="btn btn--outline btn--lg only-desktop hidden md:inline-flex" href="{% url 'main:show_profile' %}">Kembali</a>
             <button class="btn btn--primary btn--lg" type="submit">Lanjut</button>
           </div>
         </form>

@@ -3,18 +3,18 @@
 {# show_impact_challenges(request), hanya jika HX-Request #}
 
 {% if rows %}
-<ul class="dampak-list tw-grid md:tw-grid-cols-2 tw-gap-3">
+<ul class="dampak-list grid md:grid-cols-2 gap-3">
 
   {% for row in rows %}
   <li class="dampak-card">
-    <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       <span class="pill {% if not row.challenge.is_running %}pill--soft{% endif %}">{% if row.challenge.is_running %}Berjalan{% else %}Berakhir{% endif %}</span>
       <span class="mono">{{ row.challenge.get_kind_display }}</span>
     </div>
     <h3 class="serif">{{ row.challenge.title }}</h3>
     <div class="progress"><span style="--value: {{ row.percent }}%"></span></div>
     <p class="text-soft">{{ row.done }} / {{ row.challenge.target }} · {{ row.challenge.start_date|date:"j M" }} – {{ row.challenge.end_date|date:"j M Y" }}</p>
-    <div class="tw-flex tw-gap-2">
+    <div class="flex gap-2">
       <a class="btn btn--sm btn--outline" href="{% url 'impact:edit_impact_challenge' row.challenge.pk %}">Ubah</a>
       <form method="post" action="{% url 'impact:delete_impact_challenge' row.challenge.pk %}">
         {% csrf_token %}

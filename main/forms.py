@@ -1,5 +1,5 @@
 from django import forms
-from main.models import UserProfile, InstitutionProfile
+from main.models import UserProfile, UserAddress, InstitutionProfile
 
 CITY_CHOICES = [
     ("", "Pilih kota"),
@@ -143,3 +143,45 @@ class InstitutionProfileForm(forms.ModelForm):
                 "min": 1800,
             }),
         }
+
+
+class UserAddressForm(forms.ModelForm):
+    class Meta:
+        model = UserAddress
+        fields = [
+            "label",
+            "recipient_name",
+            "phone_number",
+            "address",
+            "city",
+            "postal_code",
+            "is_primary",
+        ]
+        widgets = {
+            "label": forms.RadioSelect(attrs={
+                "class": "visually-hidden",
+            }),
+            "recipient_name": forms.TextInput(attrs={
+                "class": "input",
+                "autocomplete": "name",
+            }),
+            "phone_number": forms.TextInput(attrs={
+                "class": "input",
+                "type": "tel",
+            }),
+            "address": forms.Textarea(attrs={
+                "class": "textarea",
+                "rows": 2,
+                "required": True,
+            }),
+            "city": forms.Select(choices=CITY_CHOICES, attrs={
+                "class": "select",
+                "required": True,
+            }),
+            "postal_code": forms.TextInput(attrs={
+                "class": "input",
+                "inputmode": "numeric",
+            }),
+            "is_primary": forms.CheckboxInput(),
+        }
+

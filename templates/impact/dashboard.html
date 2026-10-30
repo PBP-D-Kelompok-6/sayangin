@@ -51,10 +51,10 @@
 
     {% if challenges %}
     {# Tailwind: 1 kolom di HP, 2 kolom mulai layar md #}
-    <ul class="dampak-list tw-grid md:tw-grid-cols-2 tw-gap-3">
+    <ul class="dampak-list grid md:grid-cols-2 gap-3">
       {% for row in challenges %}
       <li class="dampak-mini">
-        <div class="tw-flex tw-flex-wrap tw-items-center tw-gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <span class="pill">Berjalan</span>
           <span class="mono">{{ row.challenge.get_kind_display }}</span>
         </div>
@@ -77,7 +77,7 @@
       <span class="mono">{{ earned_count }} / {{ badges|length }} diraih</span>
     </div>
     {# Tailwind: 2 kolom di HP, 3 kolom mulai layar md #}
-    <ul class="dampak-list tw-grid tw-grid-cols-2 md:tw-grid-cols-3 tw-gap-3">
+    <ul class="dampak-list grid grid-cols-2 md:grid-cols-3 gap-3">
 
       {% for badge in badges %}
       {# is-earned: kartu jadi solid dan gambarnya berwarna (lihat impact.css) #}

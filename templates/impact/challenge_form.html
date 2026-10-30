@@ -18,9 +18,9 @@
 
   <form class="dampak-card dampak-form" method="post" novalidate>
     {% csrf_token %}
-    <div class="tw-grid tw-grid-cols-2 tw-gap-4">
+    <div class="grid grid-cols-2 gap-4">
       {% for field in form %}
-      <label class="field {% if field.name == 'title' %}tw-col-span-2{% elif field.name == 'kind' or field.name == 'target' %}tw-col-span-2 sm:tw-col-span-1{% endif %}">
+      <label class="field {% if field.name == 'title' %}col-span-2{% elif field.name == 'kind' or field.name == 'target' %}col-span-2 sm:col-span-1{% endif %}">
         <span class="field__label">{{ field.label }}</span>
         {{ field }}
         {% for error in field.errors %}
@@ -32,7 +32,7 @@
       </label>
       {% endfor %}
     </div>
-    <div class="tw-flex tw-gap-3">
+    <div class="flex gap-3">
       <button class="btn btn--primary" type="submit">Simpan</button>
       <a class="btn btn--outline" href="{% url 'impact:show_impact_challenges' %}">Batal</a>
     </div>
