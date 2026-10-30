@@ -11,7 +11,7 @@
   {% if barang_query %}
   <a class="btn btn--primary btn--sm" href="{% url 'donasi:kirim_donasi' k.pk %}?{{ barang_query }}">Pilih</a>
   {% else %}
-  <span class="btn btn--outline btn--sm" aria-disabled="true">Pilih barang dulu</span>
+  <a class="btn btn--outline btn--sm" href="{% url 'lemari:index' %}" title="Buka lemari digital untuk memilih barang">Pilih dari Lemari</a>
   {% endif %}
 </div>
 {% empty %}

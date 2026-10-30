@@ -1,0 +1,500 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profil &amp; akun — Sayangin{% endblock %}
+{% block meta_description %}Profil, alamat, preferensi, dan pengaturan akunmu di Sayangin.{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/onboarding.css' %}">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block app_bar %}
+  <header class="app-bar app-bar--back only-mobile flex md:hidden items-center">
+    <a class="icon-btn" href="{% url 'main:show_main' %}" aria-label="Kembali">←</a>
+    <span class="app-bar__label">Akun</span>
+  </header>
+{% endblock %}
+
+{% block content %}
+  <main class="page__main container profile flex-1 flex flex-col" id="konten"
+        data-api-profile-url="{% url 'main:api_profile_data' %}"
+        data-api-profile-update-url="{% url 'main:api_update_profile' %}"
+        data-api-preferences-url="{% url 'main:api_update_preferences' %}"
+        data-api-address-add-url="{% url 'main:api_add_address' %}"
+        data-api-password-url="{% url 'main:api_change_password' %}"
+        data-api-google-disconnect-url="{% url 'main:api_disconnect_google' %}"
+        data-api-delete-account-url="{% url 'main:api_delete_account' %}"
+        data-edit-profile-url="{% url 'main:edit_profile' %}">
+    {% if messages %}
+      {% for message in messages %}
+        {% if 'error' in message.tags %}
+          <div class="alert" role="alert">
+            <span class="alert-icon" aria-hidden="true">!</span>
+            <div>{{ message }}</div>
+          </div>
+        {% else %}
+          <div class="notice text-sm" role="status">{{ message }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <h1 class="page-title only-desktop hidden md:block"><span class="eyebrow">Akun saya</span>Halo, <em data-user-firstname>{{ first_name }}</em></h1>
+
+    <div class="profile__grid flex flex-col md:flex-row items-start">
+      <aside class="profile__summary w-full md:w-[300px] flex flex-col">
+        <span class="avatar avatar--lg" aria-hidden="true"></span>
+        <div class="profile__who flex flex-col">
+          <span class="serif profile__name" data-user-fullname>{{ profile.full_name|default:user.username }}</span>
+          <span class="text-soft">@{{ user.username }} · {% if profile.role == 'LEMBAGA' %}Akun lembaga{% else %}Akun pribadi{% endif %}</span>
+          <span class="text-sm text-soft only-desktop hidden md:inline">Bergabung sejak {{ user.date_joined|date:"F Y" }}</span>
+        </div>
+        <a class="text-sm only-mobile md:hidden" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
+        <div class="profile__stats">
+          <span><b class="serif">410</b><span>poin dampak</span></span>
+          <span><b class="serif">2</b><span>lencana</span></span>
+          <span><b class="serif">24</b><span>barang di lemari</span></span>
+        </div>
+        <nav class="only-desktop hidden md:block" aria-label="Pintasan akun">
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#baru-masuk">
+            <span class="spacer">Pesanan saya</span>
+            <span class="text-sm text-muted">2 dalam pengiriman</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#lemari">
+            <span class="spacer">Barang dijual</span>
+            <span class="text-sm text-muted">3 tayang</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#kebutuhan">
+            <span class="spacer">Donasi saya</span>
+            <span class="text-sm text-muted">5 tersalurkan</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#pilihan">
+            <span class="spacer">Tunda Beli</span>
+            <span class="text-sm text-muted">2 menunggu</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </nav>
+        <nav class="only-desktop profile__help hidden md:block" aria-label="Bantuan dan kebijakan">
+          <h2 class="eyebrow">Bantuan &amp; kebijakan</h2>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#faq">
+            <span class="spacer">Pusat bantuan &amp; FAQ</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Hubungi kami</span>
+            <span class="text-sm text-muted">Balas &lt; 1 hari kerja</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Kebijakan privasi</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Syarat &amp; ketentuan</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </nav>
+        <a class="btn btn--danger btn--sm only-desktop hidden md:inline-flex" href="#keluar" data-dialog-open="keluar">
+          <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Keluar
+        </a>
+      </aside>
+
+      <div class="profile__settings only-desktop hidden md:flex flex-1 flex-col">
+        <section>
+          <h2 class="eyebrow">Data diri</h2>
+          <div class="list-row">
+            <span class="profile__key">Nama lengkap</span>
+            <span class="spacer" data-user-fullname>{{ profile.full_name|default:user.username }}</span>
+            <a class="text-sm" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
+          </div>
+          <div class="list-row">
+            <span class="profile__key">Email</span>
+            <span class="spacer" data-user-email>{{ user.email|default:"Belum diisi" }}</span>
+            <a class="text-sm" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
+          </div>
+          <div class="list-row">
+            <span class="profile__key">Nomor HP</span>
+            <span class="spacer" data-user-phone>{{ profile.phone_number|default:"Belum diisi" }}</span>
+            <a class="text-sm" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
+          </div>
+        </section>
+
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="eyebrow m-0">Alamat</h2>
+            <span class="text-sm text-muted" data-address-count>{{ total_addresses_count|default:addresses|length }} alamat</span>
+          </div>
+
+          <!-- Filter Kategori & Pencarian Alamat Database -->
+          <div class="address-filter-bar flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
+            <div class="filters flex flex-wrap gap-1.5" role="group" aria-label="Filter kategori alamat" data-address-filters>
+              <button class="filter-chip" type="button" data-address-filter="ALL" aria-pressed="{% if not selected_label or selected_label == 'ALL' %}true{% else %}false{% endif %}">Semua</button>
+              <button class="filter-chip" type="button" data-address-filter="RUMAH" aria-pressed="{% if selected_label == 'RUMAH' %}true{% else %}false{% endif %}">Rumah</button>
+              <button class="filter-chip" type="button" data-address-filter="KOS" aria-pressed="{% if selected_label == 'KOS' %}true{% else %}false{% endif %}">Kos</button>
+              <button class="filter-chip" type="button" data-address-filter="APARTEMEN" aria-pressed="{% if selected_label == 'APARTEMEN' %}true{% else %}false{% endif %}">Apartemen</button>
+              <button class="filter-chip" type="button" data-address-filter="KANTOR" aria-pressed="{% if selected_label == 'KANTOR' %}true{% else %}false{% endif %}">Kantor</button>
+            </div>
+            <div class="search search--sm w-full sm:w-48">
+              <input type="search" placeholder="Cari jalan / kota…" aria-label="Cari alamat" data-address-search value="{{ search_query|default:'' }}" class="input input--sm w-full text-xs py-1 px-3 rounded-full border border-stone-300">
+            </div>
+          </div>
+
+          <div id="profile-address-list" data-address-list>
+            {% for addr in addresses %}
+              <div class="list-row" data-address-row="{{ addr.pk }}">
+                <span class="profile__key">{{ addr.get_label_display }}{% if addr.is_primary %} · utama{% endif %}</span>
+                <span class="spacer">
+                  <span data-address-text>{{ addr.formatted_address }}</span>
+                  {% if addr.rajaongkir_city_id %}
+                    <span class="mono" title="ID Kota RajaOngkir"> · #{{ addr.rajaongkir_city_id }}</span>
+                  {% endif %}
+                </span>
+                <span class="row">
+                  {% if not addr.is_primary %}
+                    <button class="link-btn text-sm text-soft" type="button" data-address-set-primary="{{ addr.pk }}">Utama</button>
+                  {% endif %}
+                  <a class="text-sm"
+                     href="{% url 'main:edit_profile' %}?address_id={{ addr.pk }}"
+                     data-address-edit="{{ addr.pk }}"
+                     data-label="{{ addr.label }}"
+                     data-recipient-name="{{ addr.recipient_name }}"
+                     data-phone-number="{{ addr.phone_number }}"
+                     data-address="{{ addr.address }}"
+                     data-city="{{ addr.city }}"
+                     data-postal-code="{{ addr.postal_code }}"
+                     data-is-primary="{{ addr.is_primary|yesno:'true,false' }}">Ubah</a>
+                  <button class="link-btn text-sm text-muted" type="button" data-address-delete="{{ addr.pk }}">Hapus</button>
+                </span>
+              </div>
+            {% empty %}
+              <div class="list-row" data-address-empty>
+                <span class="profile__key text-muted">-</span>
+                <span class="spacer">{% if selected_label != 'ALL' or search_query %}Tidak ada alamat yang cocok dengan filter saat ini.{% else %}Alamat belum diisi{% endif %}</span>
+                <a class="text-sm" href="{% url 'main:edit_profile' %}?mode=add" data-address-add>Tambah alamat</a>
+              </div>
+            {% endfor %}
+          </div>
+          <a class="profile__add text-sm" href="{% url 'main:edit_profile' %}?mode=add" data-address-add>+ Tambah alamat</a>
+        </section>
+
+        <section>
+          <h2 class="eyebrow">Preferensi</h2>
+          <div class="list-row">
+            <span class="profile__key">Ukuran pakaian</span>
+            <span class="chips flex flex-wrap">
+              <label><input class="visually-hidden" type="checkbox" value="XS" data-pref-size {% if 'XS' in preferences.sizes %}checked{% endif %}><span class="chip">XS</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="S" data-pref-size {% if 'S' in preferences.sizes %}checked{% endif %}><span class="chip">S</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="M" data-pref-size {% if 'M' in preferences.sizes %}checked{% endif %}><span class="chip">M</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="L" data-pref-size {% if 'L' in preferences.sizes %}checked{% endif %}><span class="chip">L</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="XL" data-pref-size {% if 'XL' in preferences.sizes %}checked{% endif %}><span class="chip">XL</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="XXL" data-pref-size {% if 'XXL' in preferences.sizes %}checked{% endif %}><span class="chip">XXL</span></label>
+            </span>
+          </div>
+          <div class="list-row">
+            <span class="profile__key">Kategori favorit</span>
+            <span class="chips flex flex-wrap">
+              <label><input class="visually-hidden" type="checkbox" value="Atasan" data-pref-category {% if 'Atasan' in preferences.categories %}checked{% endif %}><span class="chip">Atasan</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="Tas" data-pref-category {% if 'Tas' in preferences.categories %}checked{% endif %}><span class="chip">Tas</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="Buku" data-pref-category {% if 'Buku' in preferences.categories %}checked{% endif %}><span class="chip">Buku</span></label>
+              <label><input class="visually-hidden" type="checkbox" value="Aksesori" data-pref-category {% if 'Aksesori' in preferences.categories %}checked{% endif %}><span class="chip">Aksesori</span></label>
+            </span>
+          </div>
+          <label class="list-row">
+            <span class="spacer"><b>Ingatkan barang yang jarang dipakai</b><br><span class="text-sm text-muted">Setelah 6 bulan tidak dipakai</span></span>
+            <span class="toggle"><input type="checkbox" name="pengingat" data-pref-reminder {% if preferences.reminder %}checked{% endif %}><span></span></span>
+          </label>
+          <label class="list-row">
+            <span class="spacer"><b>Kabar barang baru lewat email</b><br><span class="text-sm text-muted">Maksimal satu email per minggu</span></span>
+            <span class="toggle"><input type="checkbox" name="email_kabar" data-pref-email {% if preferences.email_newsletter %}checked{% endif %}><span></span></span>
+          </label>
+        </section>
+
+        <section>
+          <h2 class="eyebrow">Keamanan</h2>
+          <div class="list-row">
+            <span class="profile__key">Kata sandi</span>
+            <span class="spacer" data-password-status>{% if profile.password_updated_at %}Diubah {{ profile.password_updated_at|timesince }} lalu{% elif has_usable_password %}Terakhir diubah baru-baru ini{% else %}Belum diatur (masuk lewat Google){% endif %}</span>
+            <a class="text-sm" href="#modal-password" data-password-edit>Ubah</a>
+          </div>
+          <div class="list-row">
+            <span class="profile__key">Akun Google</span>
+            <span class="spacer" data-google-status>{% if profile.google_connected %}Terhubung{% if profile.google_email %} · {{ profile.google_email }}{% endif %}{% else %}Belum terhubung{% endif %}</span>
+            <span data-google-action-wrap>
+              {% if profile.google_connected %}
+                <button class="link-btn text-sm" type="button" data-google-disconnect>Putuskan</button>
+              {% else %}
+                <a class="text-sm" href="{% url 'main:google_login' %}?action=connect">Hubungkan</a>
+              {% endif %}
+            </span>
+          </div>
+          <a class="profile__add text-sm text-muted" href="#hapus-akun" data-delete-account-open>Hapus akun</a>
+        </section>
+      </div>
+
+      <div class="profile__mobile only-mobile flex md:hidden flex-col w-full">
+        <section>
+          <h2 class="eyebrow">Aktivitas</h2>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#baru-masuk">
+            <span class="spacer">Pesanan saya</span>
+            <span class="text-sm text-muted">2 dalam pengiriman</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#lemari">
+            <span class="spacer">Barang dijual</span>
+            <span class="text-sm text-muted">3 tayang</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#kebutuhan">
+            <span class="spacer">Donasi saya</span>
+            <span class="text-sm text-muted">5 tersalurkan</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#pilihan">
+            <span class="spacer">Tunda Beli</span>
+            <span class="text-sm text-muted">2 menunggu</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </section>
+
+        <section>
+          <h2 class="eyebrow">Akun</h2>
+          <a class="list-row list-row--link" href="{% url 'main:edit_profile' %}" data-profile-edit>
+            <span class="spacer">Data diri</span>
+            <span class="text-sm text-muted" data-user-fullname>{{ profile.full_name|default:user.username }}</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="{% url 'main:edit_profile' %}?mode=add" data-address-add>
+            <span class="spacer">Alamat</span>
+            <span class="text-sm text-muted" data-address-count>{% if addresses %}{{ addresses|length }} alamat{% elif formatted_address %}1 alamat{% else %}Belum diisi{% endif %}</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#modal-password" data-password-edit>
+            <span class="spacer">Kata sandi &amp; Google</span>
+            <span class="text-sm text-muted" data-google-status-mobile>{% if profile.google_connected %}Google terhubung{% else %}Kata sandi{% endif %}</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </section>
+
+        <section>
+          <h2 class="eyebrow">Preferensi</h2>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Ukuran &amp; kategori favorit</span>
+            <span class="text-sm text-muted" data-pref-summary>{{ preferences.sizes|join:", "|default:"M" }} · {{ preferences.categories|join:", "|default:"Atasan, Tas" }}</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <label class="list-row">
+            <span class="spacer"><b>Ingatkan barang jarang dipakai</b><br><span class="text-sm text-muted">Setelah 6 bulan</span></span>
+            <span class="toggle"><input type="checkbox" name="pengingat_m" data-pref-reminder-mobile {% if preferences.reminder %}checked{% endif %}><span></span></span>
+          </label>
+          <label class="list-row">
+            <span class="spacer"><b>Kabar barang baru lewat email</b></span>
+            <span class="toggle"><input type="checkbox" name="email_m" data-pref-email-mobile {% if preferences.email_newsletter %}checked{% endif %}><span></span></span>
+          </label>
+        </section>
+
+        <section>
+          <h2 class="eyebrow">Bantuan &amp; kebijakan</h2>
+          <a class="list-row list-row--link" href="{% url 'main:show_main' %}#faq">
+            <span class="spacer">Pusat bantuan &amp; FAQ</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Hubungi kami</span>
+            <span class="text-sm text-muted">Balas &lt; 1 hari kerja</span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Kebijakan privasi</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+          <a class="list-row list-row--link" href="#">
+            <span class="spacer">Syarat &amp; ketentuan</span>
+            <span class="text-sm text-muted"></span>
+            <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+        </section>
+
+        <a class="btn btn--danger btn--block w-full" href="#keluar" data-dialog-open="keluar">
+          <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>Keluar
+        </a>
+        <a class="profile__delete text-sm text-muted" href="#hapus-akun" data-delete-account-open>Hapus akun</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal AJAX: Ubah Data Diri -->
+  <div class="overlay" id="modal-profil" role="dialog" aria-modal="true" aria-labelledby="modal-profil-title">
+    <div class="dialog dialog--wide">
+      <h2 class="dialog__title" id="modal-profil-title">Ubah <em>data diri</em></h2>
+      <p class="text-soft text-sm">Perubahan langsung disimpan ke akunmu.</p>
+      <div class="alert" data-profile-modal-error hidden role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span data-profile-modal-error-text></span>
+      </div>
+      <form class="dialog__form" id="form-ajax-profil" novalidate>
+        {% csrf_token %}
+        <label class="field">
+          <span class="field__label">Nama lengkap</span>
+          <input class="input" type="text" name="full_name" value="{{ profile.full_name|default:user.username }}" required>
+        </label>
+        <div class="form-row grid grid-cols-1 md:grid-cols-2">
+          <label class="field">
+            <span class="field__label">Email</span>
+            <input class="input" type="email" name="email" value="{{ user.email|default:'' }}" required>
+          </label>
+          <label class="field">
+            <span class="field__label">Nomor HP</span>
+            <input class="input" type="tel" name="phone_number" value="{{ profile.phone_number|default:'' }}" placeholder="08…">
+          </label>
+        </div>
+        <div class="dialog__actions">
+          <button class="btn btn--outline" type="button" data-modal-close="modal-profil">Batal</button>
+          <button class="btn btn--primary" type="submit" data-profile-submit>Simpan perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal AJAX: Tambah / Ubah Alamat (RajaOngkir-ready) -->
+  <div class="overlay" id="modal-alamat" role="dialog" aria-modal="true" aria-labelledby="modal-alamat-title">
+    <div class="dialog dialog--wide">
+      <h2 class="dialog__title" id="modal-alamat-title" data-address-modal-title>Tambah <em>alamat</em></h2>
+      <p class="text-soft text-sm">Kota otomatis dipetakan ke ID kota RajaOngkir untuk perhitungan ongkir instan.</p>
+      <div class="alert" data-address-modal-error hidden role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span data-address-modal-error-text></span>
+      </div>
+      <form class="dialog__form" id="form-ajax-alamat" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="address_id" value="">
+
+        <fieldset class="field">
+          <legend class="field__label">Label alamat</legend>
+          <div class="chips flex flex-wrap gap-2">
+            {% for val, lbl in address_label_choices %}
+              <label>
+                <input class="visually-hidden" type="radio" name="label" value="{{ val }}" {% if val == 'RUMAH' %}checked{% endif %}>
+                <span class="chip chip--lg">{{ lbl }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <div class="form-row grid grid-cols-1 md:grid-cols-2">
+          <label class="field">
+            <span class="field__label">Nama penerima</span>
+            <input class="input" type="text" name="recipient_name" value="{{ profile.full_name|default:user.username }}" placeholder="Nama penerima paket">
+          </label>
+          <label class="field">
+            <span class="field__label">Nomor HP penerima</span>
+            <input class="input" type="tel" name="phone_number" value="{{ profile.phone_number|default:'' }}" placeholder="08…">
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Alamat lengkap</span>
+          <textarea class="textarea" name="address" rows="2" placeholder="Nama jalan, nomor rumah/unit, RT/RW, kelurahan, kecamatan" required></textarea>
+        </label>
+
+        <div class="form-row form-row--2-1 grid grid-cols-1 md:grid-cols-3">
+          <label class="field md:col-span-2">
+            <span class="field__label">Kota / kabupaten (RajaOngkir)</span>
+            <select class="select" name="city" required>
+              <option value="">Pilih kota / kabupaten</option>
+              {% for city_val, city_label in city_choices %}
+                <option value="{{ city_val }}">{{ city_label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">Kode pos</span>
+            <input class="input" type="text" name="postal_code" inputmode="numeric" placeholder="12345">
+          </label>
+        </div>
+
+        <label class="row">
+          <input type="checkbox" name="is_primary" checked> Jadikan alamat utama
+        </label>
+
+        <div class="dialog__actions">
+          <button class="btn btn--outline" type="button" data-modal-close="modal-alamat">Batal</button>
+          <button class="btn btn--primary" type="submit" data-address-submit>Simpan alamat</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal AJAX: Ubah Kata Sandi -->
+  <div class="overlay" id="modal-password" role="dialog" aria-modal="true" aria-labelledby="modal-password-title">
+    <div class="dialog dialog--wide">
+      <h2 class="dialog__title" id="modal-password-title">Ubah <em>kata sandi</em></h2>
+      <p class="text-soft text-sm">Gunakan minimal 8 karakter agar akunmu tetap aman.</p>
+      <div class="alert" data-password-modal-error hidden role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span data-password-modal-error-text></span>
+      </div>
+      <form class="dialog__form" id="form-ajax-password" method="POST" action="{% url 'main:change_password' %}" novalidate>
+        {% csrf_token %}
+        <label class="field" data-old-password-field {% if not has_usable_password %}hidden{% endif %}>
+          <span class="field__label">Kata sandi saat ini</span>
+          <input class="input" type="password" name="old_password" autocomplete="current-password">
+        </label>
+        <div class="form-row grid grid-cols-1 md:grid-cols-2">
+          <label class="field">
+            <span class="field__label">Kata sandi baru</span>
+            <input class="input" type="password" name="new_password1" minlength="8" autocomplete="new-password" required>
+            <span class="field__hint">Minimal 8 karakter</span>
+          </label>
+          <label class="field">
+            <span class="field__label">Ulangi kata sandi baru</span>
+            <input class="input" type="password" name="new_password2" minlength="8" autocomplete="new-password" required>
+          </label>
+        </div>
+        <div class="dialog__actions">
+          <button class="btn btn--outline" type="button" data-modal-close="modal-password">Batal</button>
+          <button class="btn btn--primary" type="submit">Simpan kata sandi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal AJAX / Konfirmasi: Hapus Akun -->
+  <div class="overlay" id="hapus-akun" role="dialog" aria-modal="true" aria-labelledby="hapus-akun-title">
+    <div class="dialog">
+      <h2 class="dialog__title" id="hapus-akun-title">Hapus akun <em>Sayangin</em>?</h2>
+      <p class="text-soft">Tindakan ini bersifat permanen. Seluruh data profil, alamat tersimpan, dan riwayat lemari digitalmu akan dihapus.</p>
+      <div class="alert" data-delete-modal-error hidden role="alert">
+        <span class="alert-icon" aria-hidden="true">!</span>
+        <span data-delete-modal-error-text></span>
+      </div>
+      <form class="dialog__form" id="form-ajax-delete-account" method="POST" action="{% url 'main:delete_account' %}" novalidate>
+        {% csrf_token %}
+        {% if has_usable_password %}
+          <label class="field" data-delete-password-field>
+            <span class="field__label">Masukkan kata sandi untuk konfirmasi</span>
+            <input class="input" type="password" name="password" autocomplete="current-password" placeholder="Kata sandi akunmu" required>
+          </label>
+        {% else %}
+          <label class="field">
+            <span class="field__label">Ketik HAPUS untuk konfirmasi</span>
+            <input class="input" type="text" name="confirm_text" placeholder="HAPUS" required>
+          </label>
+        {% endif %}
+        <div class="dialog__actions">
+          <button class="btn btn--outline" type="button" data-modal-close="hapus-akun">Batal</button>
+          <button class="btn btn--danger" type="submit">Ya, hapus akun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block footer %}{% endblock %}

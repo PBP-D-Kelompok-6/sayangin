@@ -20,17 +20,44 @@
     {# TODO integrasi: ganti path di bawah dengan tag url dari modul lain saat sudah tersedia #}
     <header class="site-header only-desktop">
       <div class="site-header__bar">
-        <a class="logo" href="/"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
+        <a class="logo" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
         <nav class="primary-nav" aria-label="Utama">
-          <a href="/marketplace/">Marketplace</a>
-          <a href="/lemari/">Lemari Digital</a>
+          <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
+          <a href="{% url 'lemari:index' %}">Lemari Digital</a>
           <a href="{% url 'donasi:pilih_lembaga' %}" aria-current="page">Donasi</a>
-          <a href="/dampak/">Dampak</a>
+          <a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a>
         </nav>
-        <div class="site-header__actions">
-          <a class="header-link" href="{% url 'donasi:tawaran_saya' %}">Donasiku</a>
-          <a class="header-link" href="/tunda-beli/">Tunda Beli</a>
-          <a class="avatar" href="/profil/" aria-label="Profil"></a>
+        <div class="site-header__actions" style="display: flex; align-items: center; gap: 8px;">
+          <!-- 1. Ikon Kaca Pembesar (Cari) -->
+          <a class="icon-btn" href="{% url 'marketplace:catalog' %}" aria-label="Cari" style="display: inline-flex; align-items: center; justify-content: center;">
+            <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5"/>
+              <path d="M20 20l-4.2-4.2"/>
+            </svg>
+          </a>
+
+          {% if user.is_authenticated %}
+            <!-- 2. Tulisan "Jualanku" (Dikunci di tengah vertikal) -->
+            <a class="header-link" href="{% url 'marketplace:my_products' %}" style="display: inline-flex; align-items: center; line-height: 1; padding: 0 8px;">
+              Jualanku
+            </a>
+
+            <!-- 3. Ikon Keranjang Belanja -->
+            <a class="icon-btn" href="{% url 'marketplace:cart' %}" aria-label="Keranjang, {{ cart_count|default:0 }} barang" style="display: inline-flex; align-items: center; justify-content: center;">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 8.5h14l-1.1 11.5H6.1z"/>
+                <path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>
+              </svg>
+              {% if cart_count %}<span class="icon-btn__count" aria-hidden="true">{{ cart_count }}</span>{% endif %}
+            </a>
+
+            <!-- 4. Avatar Bulat -->
+            <a class="avatar" href="{% if user.profile.role == 'LEMBAGA' %}{% url 'main:show_lembaga_profile' %}{% else %}{% url 'main:show_profile' %}{% endif %}" aria-label="Profil" style="display: inline-block; vertical-align: middle;"></a>
+          {% else %}
+            <!-- State Belum Login -->
+            <a class="header-link" href="{% url 'main:show_login' %}" style="display: inline-flex; align-items: center; line-height: 1;">Masuk</a>
+            <a class="btn btn--primary" href="{% url 'main:show_register' %}">Mulai sekarang</a>
+          {% endif %}
         </div>
       </div>
     </header>

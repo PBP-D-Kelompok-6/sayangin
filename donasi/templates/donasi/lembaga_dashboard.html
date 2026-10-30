@@ -9,7 +9,7 @@
 {% block content %}
 <main class="page__main container org-dash" id="konten">
   <div class="org-dash__head">
-    <h1 class="page-title">Halo, <em>{{ request.user.get_full_name|default:request.user.username }}</em></h1>
+    <h1 class="page-title">Halo, <em>{{ request.user.institution_profile.name|default:request.user.get_full_name|default:request.user.username }}</em></h1>
     <a class="btn btn--primary" href="{% url 'donasi:kebutuhan_buat' %}">+ Buat kebutuhan</a>
   </div>
   <div class="stats">

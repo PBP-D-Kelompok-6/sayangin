@@ -5,5 +5,5 @@
     <span class="eyebrow only-desktop">Barang yang akan didonasikan</span>
     <b>{{ barang.nama }}{% if barang.ukuran %} · {{ barang.ukuran }}{% endif %}{% if kondisi_label %} · {{ kondisi_label }}{% endif %}</b>
   </span>
-  <a class="text-sm" href="/lemari/">Ganti<span class="only-desktop"> barang</span></a>
+  <a class="text-sm" href="{% url 'lemari:index' %}">Ganti<span class="only-desktop"> barang</span></a>
 </div>

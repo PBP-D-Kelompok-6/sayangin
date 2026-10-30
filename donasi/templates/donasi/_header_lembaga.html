@@ -8,6 +8,9 @@
       <a href="{% url 'donasi:dashboard_lembaga' %}#tawaran">Tawaran masuk{% if jumlah_menunggu %} ({{ jumlah_menunggu }}){% endif %}</a>
       <a href="{% url 'donasi:riwayat_lembaga' %}"{% if aktif == "riwayat" %} aria-current="page"{% endif %}>Riwayat</a>
     </nav>
-    <div class="site-header__actions"><span class="text-soft">{{ request.user.get_full_name|default:request.user.username }}</span><a class="avatar" href="/profil/" aria-label="Profil lembaga"></a></div>
+    <div class="site-header__actions" style="display: flex; align-items: center; gap: 10px;">
+      <span class="text-soft" style="display: inline-flex; align-items: center; line-height: 1;">{{ request.user.institution_profile.name|default:request.user.get_full_name|default:request.user.username }}</span>
+      <a class="avatar" href="{% url 'main:show_lembaga_profile' %}" aria-label="Profil lembaga" style="display: inline-block; vertical-align: middle;"></a>
+    </div>
   </div>
 </header>

@@ -1,0 +1,48 @@
+/* Navbar bersama Sayangin (templates/partials/site_header.html).
+   Ukuran diambil dari navbar landing page final supaya semua halaman identik.
+   Nilai warna ditulis langsung agar tidak bergantung pada token halaman yang memakainya. */
+.sg-header {
+  position: sticky; top: 0; z-index: 30;
+  height: 80px; padding: 0 40px;
+  display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  background: rgba(250,250,248,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(26,18,16,.08);
+  font-family: 'Inter Tight', system-ui, sans-serif; font-size: 14px; color: #1A1210;
+}
+.sg-header a { color: #1A1210; text-decoration: none; }
+.sg-header a:hover { color: #6B1420; }
+.sg-logo { display: flex; align-items: center; gap: 10px; font-family: 'Instrument Serif', Georgia, serif; font-size: 30px; letter-spacing: -.01em; }
+.sg-logo svg { width: 45px; height: 45px; flex: none; overflow: visible; }
+.sg-nav { display: flex; gap: 28px; font-weight: 500; }
+.sg-nav a { padding: 12px 0; border-bottom: 2px solid transparent; }
+.sg-nav a[aria-current="page"] { color: #6B1420; border-bottom-color: #6B1420; }
+.sg-actions { display: flex; align-items: center; gap: 8px; }
+.sg-icon { position: relative; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: #1A1210; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.sg-icon svg, .sg-search-field svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.sg-icon[aria-expanded="true"] { color: #6B1420; }
+.sg-badge { position: absolute; top: 4px; right: 2px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: #6B1420; color: #FFF; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.sg-badge[hidden] { display: none; }
+.sg-link { padding: 12px 14px; font-weight: 500; }
+.sg-btn { height: 40px; padding: 0 20px; border-radius: 999px; display: inline-flex; align-items: center; font-weight: 500; white-space: nowrap; border: 1px solid rgba(0,0,0,.14); background: linear-gradient(180deg,#FFF 0%,#F3F4F5 30%,#E4E6E8 62%,#D9DBDE 85%,#EEEFF1 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 1px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.08); }
+.sg-avatar { width: 36px; height: 36px; flex: none; margin-left: 4px; border-radius: 50%; background: radial-gradient(circle at 34% 28%, #FFF 0 6%, rgba(255,255,255,0) 26%), conic-gradient(from 160deg, #3A221C, #D8C6BF, #7A1E2A, #F4ECE8, #4E2E26, #B7A39B, #3A221C); }
+.sg-header :focus-visible { outline: 2px solid rgba(107,20,32,.55); outline-offset: 2px; }
+
+/* Kolom cari di dalam navbar: tertutup = ikon, terbuka = kolom 300px (ikon kaca pembesar atau tombol "/"). */
+.sg-search { display: flex; align-items: center; }
+.sg-search-field { display: none; width: 300px; height: 40px; padding: 0 16px; border: 1px solid rgba(26,18,16,.18); border-radius: 999px; background: #FFF; align-items: center; gap: 10px; color: #1A1210; font: 14px 'Inter Tight', system-ui, sans-serif; }
+.sg-search[data-open="true"] .sg-search-field { display: flex; }
+.sg-search[data-open="true"] [data-search-toggle] { display: none; }
+.sg-search-field:focus-within { border-color: #1A1210; }
+.sg-search-field svg { width: 16px; height: 16px; }
+.sg-search-field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; color: #1A1210; }
+.sg-link[aria-current="page"] { color: #6B1420; }
+
+@media (max-width: 1100px) {
+  .sg-header { padding: 0 24px; gap: 16px; }
+  .sg-nav { gap: 18px; }
+  .sg-search-field { width: 220px; }
+}
+/* Di HP tiap halaman memakai pola mobile dari desain (landing: menu ☰, marketplace: tab bar bawah). */
+@media (max-width: 760px) {
+  .sg-header { display: none; }
+}

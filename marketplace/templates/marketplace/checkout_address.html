@@ -1,0 +1,30 @@
+{% extends 'marketplace/checkout_base.html' %}
+
+{% block steps %}
+<section class="co-block">
+    <span class="eyebrow">Dikirim ke</span>
+    <div class="form-grid grid grid-cols-1 md:grid-cols-2 gap-3">
+        <label>Nama penerima
+            <input class="input" name="recipient" value="{{ form.recipient }}" autocomplete="name" required {% if errors.recipient %}aria-invalid="true" aria-describedby="err-recipient"{% endif %}>
+            {% if errors.recipient %}<span class="err" id="err-recipient">{{ errors.recipient }}</span>{% endif %}
+        </label>
+        <label>No. HP
+            <input class="input" name="phone" type="tel" value="{{ form.phone }}" autocomplete="tel" required {% if errors.phone %}aria-invalid="true" aria-describedby="err-phone"{% endif %}>
+            {% if errors.phone %}<span class="err" id="err-phone">{{ errors.phone }}</span>{% endif %}
+        </label>
+        <label class="md:col-span-2">Alamat lengkap
+            <textarea class="input" name="address" rows="2" autocomplete="street-address" required {% if errors.address %}aria-invalid="true" aria-describedby="err-address"{% endif %}>{{ form.address }}</textarea>
+            {% if errors.address %}<span class="err" id="err-address">{{ errors.address }}</span>{% endif %}
+        </label>
+        <label>Kota
+            <input class="input" name="city" value="{{ form.city }}" autocomplete="address-level2" required {% if errors.city %}aria-invalid="true" aria-describedby="err-city"{% endif %}>
+            {% if errors.city %}<span class="err" id="err-city">{{ errors.city }}</span>{% endif %}
+        </label>
+    </div>
+</section>
+{% endblock %}
+
+{% block submit %}
+<button type="submit" class="btn btn-lg btn-chrome" id="pay">Lanjut ke pengiriman</button>
+<small id="pay-hint">Tombol aktif setelah alamat lengkap.</small>
+{% endblock %}

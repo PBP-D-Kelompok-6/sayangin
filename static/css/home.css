@@ -2,8 +2,6 @@
    Sayangin — Homepage
    ========================================================== */
 
-.mobile-only { display: none !important; }
-
 /* ---------- Hero (slider) ---------- */
 .hero { padding-block: var(--space-16) var(--space-12); }
 .hero__inner { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-5); }
@@ -94,10 +92,6 @@
 }
 
 @media (max-width: 900px) {
-  .desktop-only { display: none !important; }
-  .mobile-only { display: inline-flex !important; }
-  .icon-btn.mobile-only { display: inline-grid !important; }
-
   .hero { padding-block: var(--space-8) var(--space-6); }
   .hero__inner { grid-template-columns: 1fr; gap: var(--space-4); }
   .hero__slide { grid-template-columns: 1fr; gap: var(--space-6); }

@@ -98,6 +98,8 @@ class Kebutuhan(models.Model):
 
     @property
     def nama_lembaga(self):
+        if hasattr(self.lembaga, "institution_profile") and self.lembaga.institution_profile.name:
+            return self.lembaga.institution_profile.name
         return self.lembaga.get_full_name() or self.lembaga.username
 
     @property
@@ -208,4 +210,12 @@ class Penawaran(models.Model):
             self.save(update_fields=["status", "diterima_pada"])
             if self.kebutuhan_id:
                 self.kebutuhan.tambah_terpenuhi(self.jumlah)
+            
+            # Opsional: Jika barang berasal dari lemari_id, hapus atau nonaktifkan dari WardrobeItem
+            if self.lemari_id:
+                try:
+                    from lemari.models import WardrobeItem
+                    WardrobeItem.objects.filter(pk=self.lemari_id, owner=self.donatur).delete()
+                except Exception:
+                    pass
         return True

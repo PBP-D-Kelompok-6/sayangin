@@ -1,0 +1,22 @@
+{% extends 'lemari/base.html' %}
+{% load static %}
+{% block title %}Barang tayang{% endblock %}
+
+{% block body %}
+<div class="page">
+  {% include 'lemari/_site_header.html' %}
+  <header class="app-bar only-mobile"><span class="app-bar__label">Barang tayang</span><a class="icon-btn" href="{% url 'lemari:index' %}" aria-label="Tutup">✕</a></header>
+  <main class="page__main container done" id="konten">
+    <div class="done__photo" style="--img: url({% if source_item and source_item.photo %}{% url 'lemari:wardrobe_photo' source_item.pk %}{% elif listing and listing.photos.first %}{{ listing.photos.first.image.url }}{% else %}{% static 'img/blazer-abu.jpg' %}{% endif %})" role="img" aria-label="{{ listing.title|default:'Barang' }}"></div>
+    <div class="done__copy">
+      <span class="check-badge" aria-hidden="true">✓</span>
+      <h1 class="page-title done__title"><span class="eyebrow"><span class="only-desktop">Barang tayang</span></span>{{ listing.title|default:'Barang' }} sudah <em>tayang</em></h1>
+      <p class="text-soft">+[N] poin dampak. Kami kabari kalau ada yang menyimpan atau membeli barangmu.</p>
+      <dl class="done__summary only-desktop"><dt>Harga</dt><dd>Rp{{ listing.price|default:'-' }}</dd><dt>Kondisi</dt><dd>{{ listing.get_condition_display|default:'-' }}</dd><dt>Tampil di</dt><dd>Marketplace · {{ listing.category|default:'-' }}</dd></dl>
+      <div class="row only-desktop" style="--row-gap: 10px"><a class="btn btn--primary" href="#">Lihat di marketplace</a><a class="btn btn--outline" href="#">Bagikan</a><a class="text-sm" href="{% url 'lemari:jual' %}?listing={{ listing.pk }}">Ubah iklan</a></div>
+    </div>
+    <div class="toast done__toast" role="status"><span class="toast__text">Tawaran donasi terkirim<span class="only-desktop"> ke Panti Asuhan [NAMA]</span></span><a href="#">Batalkan</a></div>
+    <div class="stack only-mobile" style="--stack-gap: 10px"><a class="btn btn--primary btn--lg btn--block" href="#">Lihat di marketplace</a><a class="btn btn--outline btn--lg btn--block" href="#">Bagikan</a></div>
+  </main>
+</div>
+{% endblock %}

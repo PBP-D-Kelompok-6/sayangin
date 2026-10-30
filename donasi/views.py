@@ -22,6 +22,24 @@ URUTAN = {
 }
 FIELD_BARANG = ("nama", "kategori", "ukuran", "kondisi", "foto", "lemari_id")
 
+KATEGORI_LEMARI_MAP = {
+    "pakaian · luaran": "pakaian-luaran",
+    "pakaian-luaran": "pakaian-luaran",
+    "pakaian": "pakaian-atasan",
+    "pakaian · atasan": "pakaian-atasan",
+    "pakaian-atasan": "pakaian-atasan",
+    "pakaian · bawahan": "pakaian-bawahan",
+    "pakaian-bawahan": "pakaian-bawahan",
+    "sepatu": "alas-kaki",
+    "alas-kaki": "alas-kaki",
+    "buku": "buku",
+    "perlengkapan sekolah": "perlengkapan-sekolah",
+    "perlengkapan-sekolah": "perlengkapan-sekolah",
+    "mainan": "mainan",
+    "perabot": "perabot",
+    "lainnya": "lainnya",
+}
+
 
 def _is_htmx(request):
     return request.headers.get("HX-Request") == "true"
@@ -29,7 +47,12 @@ def _is_htmx(request):
 
 def _barang_dari_request(request):
     """Data barang dari Lemari Digital yang dibawa lewat query string."""
-    return {f: request.GET.get(f, "").strip() for f in FIELD_BARANG}
+    data = {f: request.GET.get(f, "").strip() for f in FIELD_BARANG}
+    # Ubah format kategori teks menjadi slug kategori donasi
+    kat_raw = data.get("kategori", "").lower()
+    if kat_raw in KATEGORI_LEMARI_MAP:
+        data["kategori"] = KATEGORI_LEMARI_MAP[kat_raw]
+    return data
 
 
 def _label_kondisi(kode):
@@ -335,10 +358,15 @@ def _kebutuhan_dict(k, login=False):
 
 
 def _penawaran_dict(p):
+    nama_lembaga = (
+        p.lembaga.institution_profile.name
+        if hasattr(p.lembaga, "institution_profile") and p.lembaga.institution_profile.name
+        else (p.lembaga.get_full_name() or p.lembaga.username)
+    )
     return {
         "id": p.pk,
         "kebutuhan_id": p.kebutuhan_id,
-        "lembaga": p.lembaga.get_full_name() or p.lembaga.username,
+        "lembaga": nama_lembaga,
         "donatur": p.donatur.username,
         "nama_barang": p.nama_barang,
         "jumlah": p.jumlah,
