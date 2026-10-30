@@ -4,7 +4,7 @@
 {% block body %}
 <div class="page">
   {% include 'lemari/_site_header.html' %}
-  <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="javascript:history.back()" aria-label="Kembali">←</a><h1 class="app-bar__title">Jual barang <em>ini</em></h1><a class="avatar-link" href="#" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
+  <header class="app-bar app-bar--back only-mobile"><a class="icon-btn" href="javascript:history.back()" aria-label="Kembali">←</a><h1 class="app-bar__title">Jual barang <em>ini</em></h1><a class="avatar-link" href="{% url 'main:show_profile' %}" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
   <main class="page__main container sell" id="konten">
     <nav class="breadcrumb text-sm only-desktop" aria-label="Breadcrumb"><a href="{% url 'lemari:index' %}">Lemari</a> / Jual</nav>
     <div class="sell__head only-desktop"><h1 class="page-title">Jual barang <em>ini</em></h1><span class="text-soft">Periksa detailnya, lalu tayangkan.</span></div>

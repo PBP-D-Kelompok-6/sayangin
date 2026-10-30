@@ -11,13 +11,17 @@
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/components.css' %}">
   <link rel="stylesheet" href="{% static 'css/umum.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site-header.css' %}">
 </head>
 <body class="">
   <a class="skip-link" href="#konten">Lewati ke konten</a>
   {% include 'includes/svg_filters.html' %}
 
   <div class="landing">
-    <header class="landing-header flex items-center justify-between">
+    {# Desktop: navbar bersama (partials/site_header.html), jadi logo & menu beranda sama persis dengan halaman lain #}
+    {% include 'partials/site_header.html' with active='' %}
+    {# HP: header landing di atas foto hero (desktop disembunyikan lewat only-mobile) #}
+    <header class="landing-header only-mobile flex items-center justify-between">
       <a class="logo" href="{% url 'main:show_main' %}">
         <img class="only-desktop hidden md:block" src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">
         <img class="only-mobile md:hidden" src="{% static 'img/logo-light.svg' %}" alt="" width="35" height="35">

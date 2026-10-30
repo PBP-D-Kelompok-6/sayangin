@@ -5,7 +5,7 @@
 {% block body %}
 <div class="page has-bottom-nav">
   {% include 'lemari/_site_header.html' %}
-  <header class="app-bar only-mobile"><h1 class="app-bar__title">Lemari <em>kamu</em></h1><button class="icon-btn" type="button" aria-label="Cari di lemari"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button><a class="avatar-link" href="#" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
+  <header class="app-bar only-mobile"><h1 class="app-bar__title">Lemari <em>kamu</em></h1><button class="icon-btn" type="button" aria-label="Cari di lemari"><svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg></button><a class="avatar-link" href="{% url 'main:show_profile' %}" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
   <main class="page__main container wardrobe" id="konten">
     <div class="wardrobe__head">
       <div class="stack" style="--stack-gap: 6px"><span class="eyebrow">Lemari digital<span class="only-mobile"> · {{ wardrobe_count|default:0 }} barang</span></span><h1 class="page-title only-desktop">Lemari <em>kamu</em></h1><span class="text-soft only-desktop">{{ wardrobe_count|default:0 }} barang</span></div>

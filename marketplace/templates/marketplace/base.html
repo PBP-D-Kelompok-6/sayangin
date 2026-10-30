@@ -62,10 +62,10 @@
     {% block tabbar %}
     <nav class="tabbar" aria-label="Menu utama">
         <a href="{% url 'main:show_main' %}"><svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>Beranda</a>
-        <a href="#"><svg class="icon" aria-hidden="true"><use href="#i-hanger"/></svg>Lemari</a>
+        <a href="{% url 'lemari:index' %}"><svg class="icon" aria-hidden="true"><use href="#i-hanger"/></svg>Lemari</a>
         <a href="{% url 'marketplace:catalog' %}" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-bag"/></svg>Marketplace</a>
-        <a href="#"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg>Donasi</a>
-        <a href="#"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg>Dampak</a>
+        <a href="{% url 'main:show_main' %}#kebutuhan"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg>Donasi</a>
+        <a href="{% url 'impact:show_impact_dashboard' %}"><svg class="icon" aria-hidden="true"><use href="#i-spark"/></svg>Dampak</a>
     </nav>
     {% endblock %}
 
