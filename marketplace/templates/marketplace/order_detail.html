@@ -1,0 +1,65 @@
+{% extends 'marketplace/base.html' %}
+{% load static rupiah %}
+{% block title %}Lacak #{{ order.code }}{% endblock %}
+{% block m_title %}Lacak <em class="em">pesanan</em>{% endblock %}
+
+{% block content %}
+<nav aria-label="Breadcrumb" class="soft"><a href="{% url 'marketplace:orders' %}">Pesanan saya</a> / #{{ order.code }}</nav>
+
+<div class="track-head">
+    <div>
+        <span class="eyebrow">Lacak pesanan</span>
+        <h1>{{ title }}<br><em>{{ emphasis }}</em></h1>
+        <span class="soft">{% if order.status != 'selesai' %}Perkiraan tiba {{ order.eta }} · {% endif %}{% if is_buyer %}dari @{{ order.seller.username }}{% else %}untuk @{{ order.buyer.username }}{% endif %}</span>
+    </div>
+    <span class="status-pill">{{ short_status }}</span>
+</div>
+
+<div class="two-col">
+    <section class="timeline" aria-label="Status pengiriman">
+        <ol>
+            {% for s in steps %}
+            <li class="{% if s.done %}done{% elif s.now %}now{% else %}todo{% endif %}" {% if s.now %}aria-current="step"{% endif %}>
+                <span class="dot" aria-hidden="true">{% if s.done %}<svg class="icon"><use href="#i-check"/></svg>{% endif %}</span>
+                <span><b>{{ s.label }}</b><span class="soft">{{ s.meta }}</span></span>
+            </li>
+            {% endfor %}
+        </ol>
+        {% if order.tracking_number %}
+        <div class="resi">
+            <span>Resi JNE: <b id="resi">{{ order.tracking_number }}</b></span>
+            <button type="button" class="btn" onclick="navigator.clipboard.writeText(document.getElementById('resi').textContent); this.textContent = 'Tersalin'">Salin</button>
+        </div>
+        {% endif %}
+    </section>
+
+    <aside class="side">
+        <div class="note">
+            {% for item in order.items.all %}
+            <div class="line-item">
+                <div class="photo" style="background-image: url('{{ item.photo }}'); width:56px; height:56px"></div>
+                <span>{{ item.name }}<br><span class="soft">{{ item.price|rupiah }}</span></span>
+            </div>
+            {% endfor %}
+            <div class="divided"><span>Ongkir · {{ order.get_courier_display }}</span><span>{{ order.shipping_cost|rupiah }}</span></div>
+            <div class="divided" style="border:0; padding:0"><span>Total dibayar</span><b>{{ order.total|rupiah }}</b></div>
+            <span class="soft">Dikirim ke: {{ order.recipient }} · {{ order.address }}, {{ order.city }}</span>
+        </div>
+
+        <form method="post" style="display:flex; flex-direction:column; gap:8px">
+            {% csrf_token %}
+            {% if is_buyer %}
+                <input type="hidden" name="action" value="confirm">
+                <button type="submit" class="btn btn-lg btn-chrome" {% if order.status != 'tiba' %}disabled{% endif %}>
+                    {% if order.status == 'selesai' %}Pesanan selesai{% else %}Pesanan diterima{% endif %}
+                </button>
+                {% if order.status != 'tiba' and order.status != 'selesai' %}<small class="soft">Aktif setelah kurir menandai barang tiba.</small>{% endif %}
+            {% elif next_label %}
+                <input type="hidden" name="action" value="advance">
+                <button type="submit" class="btn btn-lg btn-chrome">{{ next_label }}</button>
+                <small class="soft">Kamu penjual pesanan ini. Perbarui status supaya pembeli tahu.</small>
+            {% endif %}
+        </form>
+    </aside>
+</div>
+{% endblock %}

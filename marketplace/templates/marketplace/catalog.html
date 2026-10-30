@@ -1,0 +1,154 @@
+{% extends 'marketplace/base.html' %}
+{% load static %}
+{% block title %}{% if q %}“{{ q }}”{% else %}Marketplace{% endif %}{% endblock %}
+
+{% block content %}
+<div class="catalog">
+<form id="filter-form" action="{% url 'marketplace:catalog' %}" class="catalog">
+    {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+    {% if selected.penjual %}<input type="hidden" name="penjual" value="{{ selected.penjual }}">{% endif %}
+    <div class="catalog-head">
+        <div>
+            {% if searching %}
+                <span class="eyebrow">{{ products|length }} hasil</span>
+                <h1><span class="desk-only">{% if q %}“{{ q }}”{% else %}Hasil <em>filter</em>{% endif %}</span><span class="m-only">{{ products|length }} <em>hasil</em></span></h1>
+            {% else %}
+                <span class="eyebrow">{{ total_available }} barang preloved</span>
+                <h1><span class="desk-only">Market<em>place</em></span><span class="m-only">Baru <em>masuk</em></span></h1>
+            {% endif %}
+        </div>
+        <div class="catalog-tools"{% if nothing_found %} hidden{% endif %}>
+            <button type="button" class="btn{% if active_filters %} is-active{% endif %}" id="filter-btn" aria-expanded="false" aria-controls="panel-filter">
+                <svg class="icon" aria-hidden="true"><use href="#i-filter"/></svg>
+                Filter{% if active_filters %} · {{ active_filters|length }}{% endif %}
+            </button>
+            <label><span>Urutkan</span>
+                <select class="select" name="urut" onchange="this.form.submit()" aria-label="Urutkan">
+                    <option value="terbaru" {% if sort == 'terbaru' %}selected{% endif %}>Terbaru</option>
+                    <option value="termurah" {% if sort == 'termurah' %}selected{% endif %}>Termurah</option>
+                    <option value="termahal" {% if sort == 'termahal' %}selected{% endif %}>Termahal</option>
+                </select>
+            </label>
+        </div>
+    </div>
+
+    <div class="backdrop" id="filter-backdrop" hidden></div>
+    <section class="filter-panel" id="panel-filter" aria-label="Filter" hidden>
+        <div class="sheet-head">
+            <h2>Filter</h2>
+            <button type="button" class="icon-link link-btn" data-close-filter aria-label="Tutup filter" style="text-decoration:none"><svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+        <fieldset>
+            <legend class="eyebrow">Kategori</legend>
+            <div class="options">
+                {% for value, label in categories %}
+                    <label class="chip"><input type="checkbox" name="kategori" value="{{ value }}" {% if value in selected.kategori %}checked{% endif %}><span>{{ label }}</span></label>
+                {% endfor %}
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend class="eyebrow">Kondisi</legend>
+            <div class="options">
+                {% for value, label in conditions %}
+                    <label class="chip"><input type="checkbox" name="kondisi" value="{{ value }}" {% if value in selected.kondisi %}checked{% endif %}><span>{{ label }}</span></label>
+                {% endfor %}
+            </div>
+        </fieldset>
+        <fieldset>
+            <legend class="eyebrow">Ukuran</legend>
+            <div class="options">
+                {% for s in sizes %}
+                    <label class="chip"><input type="checkbox" name="ukuran" value="{{ s }}" {% if s in selected.ukuran %}checked{% endif %}><span>{{ s }}</span></label>
+                {% endfor %}
+            </div>
+        </fieldset>
+        <div>
+            <fieldset>
+                <legend class="eyebrow">Harga &amp; lokasi</legend>
+                <div class="options">
+                    <input class="field" style="flex:1" type="number" inputmode="numeric" min="0" step="1000" name="min" value="{{ selected.min }}" aria-label="Harga minimum" placeholder="Min">
+                    <input class="field" style="flex:1" type="number" inputmode="numeric" min="0" step="1000" name="maks" value="{{ selected.maks }}" aria-label="Harga maksimum" placeholder="Maks">
+                </div>
+                <select class="field" name="lokasi" aria-label="Lokasi">
+                    <option value="">Semua lokasi</option>
+                    {% for c in cities %}<option {% if c == selected.lokasi %}selected{% endif %}>{{ c }}</option>{% endfor %}
+                </select>
+            </fieldset>
+            <div class="filter-actions">
+                <a href="{% url 'marketplace:catalog' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="soft">Reset</a>
+                <button type="submit" class="btn btn-chrome">Tampilkan hasil</button>
+            </div>
+        </div>
+    </section>
+</form>
+
+{% if active_filters %}
+<div class="active-filters">
+    {% for f in active_filters %}
+        <a class="bubble" href="{{ f.url }}" aria-label="Hapus filter {{ f.label }}">{{ f.label }} <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg></a>
+    {% endfor %}
+    <a class="soft" href="{% url 'marketplace:catalog' %}{% if q %}?q={{ q|urlencode }}{% endif %}">Hapus semua</a>
+</div>
+{% endif %}
+
+{% if not searching %}
+<a class="banner" href="?kategori=atasan">
+    <span class="banner-text">
+        <span class="eyebrow">Pilihan pekan ini</span>
+        <span class="banner-title">Avant-garde, <em>tapi preloved</em></span>
+        <span class="banner-cta">Lihat koleksi →</span>
+    </span>
+    <img src="{% static 'marketplace/img/jaket-track-zaitun-cut.png' %}" alt="" style="right: 360px">
+    <img src="{% static 'marketplace/img/henley-sage-cut.png' %}" alt="" style="right: 210px">
+    <img src="{% static 'marketplace/img/tas-tote-metalik-cut.png' %}" alt="" style="right: 60px">
+</a>
+{% endif %}
+
+{% if products %}
+<div class="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2.5 gap-y-3.5 md:gap-5">
+    {% for p in products %}{% include 'marketplace/_card.html' %}{% endfor %}
+</div>
+{% elif nothing_found %}
+{# C2b: pencarian tanpa hasil → bukan jalan buntu. #}
+<div class="empty empty--left" role="status">
+    <h2>Belum ada versi <em>preloved-nya</em></h2>
+    <p>Coba kata lain, atau lihat barang yang mungkin cocok di bawah.</p>
+</div>
+{% if other_keywords %}
+<div class="active-filters">
+    <span class="soft">Coba kata lain:</span>
+    {% for k in other_keywords %}<a class="btn" href="?q={{ k|urlencode }}">{{ k }}</a>{% endfor %}
+</div>
+{% endif %}
+<h2 class="section-title">Mungkin <em>cocok juga</em></h2>
+<div class="product-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-2.5 gap-y-3.5 md:gap-5">
+    {% for p in related %}{% include 'marketplace/_card.html' %}{% endfor %}
+</div>
+{% else %}
+<div class="empty" role="status">
+    <h2>Belum ada yang <em>cocok</em></h2>
+    <p>Coba longgarkan filter atau cari kata lain.</p>
+    <a class="btn" href="{% url 'marketplace:catalog' %}">Lihat semua barang</a>
+</div>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const btn = document.getElementById('filter-btn');
+    const panel = document.getElementById('panel-filter');
+    const backdrop = document.getElementById('filter-backdrop');
+    const set = open => {
+        panel.hidden = backdrop.hidden = !open;
+        btn.setAttribute('aria-expanded', open);
+        if (open) panel.querySelector('input').focus();
+    };
+    btn.addEventListener('click', () => set(panel.hidden));
+    backdrop.addEventListener('click', () => set(false));
+    panel.querySelector('[data-close-filter]').addEventListener('click', () => set(false));
+    panel.addEventListener('keydown', e => { if (e.key === 'Escape') { set(false); btn.focus(); } });
+})();
+</script>
+{% endblock %}

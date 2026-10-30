@@ -1,0 +1,32 @@
+{% extends 'marketplace/checkout_base.html' %}
+{% load static rupiah %}
+{% block back_url %}{% url 'marketplace:checkout_shipping' %}{% endblock %}
+
+{% block steps %}
+{% include 'marketplace/_address_row.html' %}
+
+{% for g in groups %}
+<div class="co-block co-block-row">
+    <span>Dari <b>@{{ g.seller.username }}</b> · {{ g.items|length }} barang<br><span class="soft">{{ g.courier }} · {{ g.cost|rupiah }}</span></span>
+    <a href="{% url 'marketplace:checkout_shipping' %}">Ubah</a>
+</div>
+{% endfor %}
+
+<section class="co-block">
+    <fieldset class="options-list" {% if error %}aria-describedby="err-payment"{% endif %}>
+        <legend>Metode pembayaran</legend>
+        {% for key, label in payments %}
+        <label class="option">
+            <input type="radio" name="payment" value="{{ key }}" required>
+            <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+    </fieldset>
+    {% if error %}<span class="err" role="alert" id="err-payment">{{ error }}</span>{% endif %}
+</section>
+{% endblock %}
+
+{% block submit %}
+<button type="submit" class="btn btn-lg btn-chrome" id="pay">Bayar sekarang</button>
+<small id="pay-hint">Pilih metode pembayaran dulu.</small>
+{% endblock %}
