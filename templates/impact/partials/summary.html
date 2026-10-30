@@ -1,0 +1,57 @@
+{% comment %}Bagian dashboard yang bergantung periode. Dikirim ulang oleh view saat request HTMX.{% endcomment %}
+
+{# Filter Dashboard based on periode, sekalian dari panggilan show_impact_dashboard() #}
+
+{# Judul + tombol periode; tiap tombol meminta ulang #summary lewat HTMX (hx-get) dan mengubah URL (hx-push-url) #}
+<div class="dampak-head">
+  <h1 class="page-title"><span class="eyebrow">Dampak · @{{ user.username }}</span>Dampak kecil, <em>nyata</em>.</h1>
+  <div class="dampak-switch" role="group" aria-label="Pilih periode">
+    <a href="?periode=bulan" class="chip {% if period == 'bulan' %}chip--on{% endif %}"
+       hx-get="?periode=bulan" hx-target="#summary" hx-push-url="true">Bulan ini</a>
+    <a href="?periode=semua" class="chip {% if period == 'semua' %}chip--on{% endif %}"
+       hx-get="?periode=semua" hx-target="#summary" hx-push-url="true">Sepanjang waktu</a>
+  </div>
+</div>
+
+{# Kartu angka: 1 kartu poin + 4 kartu jenis aksi. Tailwind: 2 kolom di HP, 5 kolom mulai layar md #}
+<div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+  <div class="dampak-card dampak-points col-span-2 md:col-span-1">
+    <span class="eyebrow">Poin dampak</span>
+    <strong class="serif">{{ points }}</strong>
+  </div>
+
+  {# stats dari views.build_dashboard(): label, jumlah aksi, dan poin per aksi #}
+  {% for stat in stats %}
+  <div class="dampak-card">
+    <span class="eyebrow">{{ stat.label }}</span>
+    <strong class="serif">{{ stat.value }}</strong>
+    <span class="mono">+{{ stat.points }} poin / aksi</span>
+  </div>
+  {% endfor %}
+
+</div>
+
+{# Papan peringkat: 5 teratas dari views.get_leaderboard(); ada di dalam #summary jadi ikut tombol periode #}
+<section class="dampak-card">
+  <div class="section-head">
+    <h2 class="serif">Papan <em>peringkat</em></h2>
+    {# my_rank kosong kalau user belum punya poin di periode ini #}
+    {% if my_rank %}<span class="mono">Kamu #{{ my_rank.rank }}</span>{% endif %}
+  </div>
+
+  {% if leaderboard %}
+  <ol class="dampak-list dampak-rank">
+    {% for row in leaderboard %}
+    {# is-me: baris milik user yang login disorot #}
+    <li class="{% if row.user_id == user.id %}is-me{% endif %}">
+      <span class="dampak-rank__no">{{ row.rank }}</span>
+      <span>@{{ row.username }}{% if row.user_id == user.id %} (kamu){% endif %}</span>
+      <strong class="mono">{{ row.points }} poin</strong>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  {# belum ada aksi selesai sama sekali di periode ini #}
+  <p class="notice">Belum ada yang mendapat poin pada periode ini.</p>
+  {% endif %}
+</section>

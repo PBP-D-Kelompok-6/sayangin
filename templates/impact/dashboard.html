@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+{# load static: supaya {% static %} bisa dipakai untuk gambar lencana #}
+
+{# Judul tab browser #}
+{% block title %}Dampak Sosial Kamu — Sayangin{% endblock %}
+{% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
+
+{# Bar atas versi HP: tombol kembali ke beranda #}
+{% block app_bar %}
+<header class="app-bar app-bar--back only-mobile">
+  <a class="icon-btn" href="{% url 'main:show_main' %}" aria-label="Kembali">←</a>
+  <span class="app-bar__label">Dampak</span>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="page__main container dampak" id="konten">
+  {# Poin & Angka#}
+  {# isi #summary diganti HTMX saat tombol "Bulan ini / Sepanjang waktu" diklik #}
+  <div id="summary">
+    {% include 'impact/partials/summary.html' %}
+  </div>
+
+  {# Tantangan pribadi selanjutnya #}
+  <section class="dampak-card dampak-next">
+    <span class="eyebrow">Langkah berikutnya</span>
+
+    {# next_step dari views.get_dashboard_challenges(); kosong -> ajak buat tantangan pertama #}
+    {% if next_step %}
+      <h2 class="serif">Tinggal {{ next_step.remaining }} lagi untuk <em>{{ next_step.challenge.title }}</em></h2>
+      <div class="progress"><span style="--value: {{ next_step.percent }}%"></span></div>
+    {% else %}
+      <h2 class="serif">Buat tantangan <em>pribadi</em> pertamamu</h2>
+      <p class="text-soft">Pilih target, progresnya dihitung otomatis dari aksimu.</p>
+    {% endif %}
+
+    <a class="btn btn--primary" href="{% url 'impact:show_impact_challenges' %}">Lihat tantanganku →</a>
+  </section>
+
+  {# Tantangan kamu: maks. 4 tantangan berjalan, dari views.get_dashboard_challenges() #}
+  <section class="dampak-card">
+    <div class="section-head dampak-section-head">
+      <h2 class="serif">Tantangan <em>kamu</em></h2>
+      <div class="dampak-actions">
+        {# challenge_total = semua tantangan, termasuk yang sudah lewat / selesai #}
+        <a class="dampak-link" href="{% url 'impact:show_impact_challenges' %}">Lihat semua ({{ challenge_total }}) →</a>
+        <a class="btn btn--sm btn--outline" href="{% url 'impact:create_impact_challenge' %}">+ Tambah</a>
+      </div>
+    </div>
+
+    {% if challenges %}
+    {# Tailwind: 1 kolom di HP, 2 kolom mulai layar md #}
+    <ul class="dampak-list grid md:grid-cols-2 gap-3">
+      {% for row in challenges %}
+      <li class="dampak-mini">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="pill">Berjalan</span>
+          <span class="mono">{{ row.challenge.get_kind_display }}</span>
+        </div>
+        <strong>{{ row.challenge.title }}</strong>
+        <div class="progress"><span style="--value: {{ row.percent }}%"></span></div>
+        <span class="text-soft">{{ row.done }} / {{ row.challenge.target }} · sampai {{ row.challenge.end_date|date:"j M Y" }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    {# belum ada tantangan yang masih berjalan (bisa jadi semua sudah selesai / lewat) #}
+    <p class="notice">Belum ada tantangan yang sedang berjalan. Klik “+ Tambah” untuk membuat target baru.</p>
+    {% endif %}
+  </section>
+
+  {# Lencana: 6 lencana dari views.BADGES, sudah diraih atau belum #}
+  <section class="dampak-card">
+    <div class="section-head">
+      <h2 class="serif">Lencana <em>kamu</em></h2>
+      <span class="mono">{{ earned_count }} / {{ badges|length }} diraih</span>
+    </div>
+    {# Tailwind: 2 kolom di HP, 3 kolom mulai layar md #}
+    <ul class="dampak-list grid grid-cols-2 md:grid-cols-3 gap-3">
+
+      {% for badge in badges %}
+      {# is-earned: kartu jadi solid dan gambarnya berwarna (lihat impact.css) #}
+      <li class="dampak-badge {% if badge.earned %}is-earned{% endif %}">
+        <img src="{% static badge.image %}" alt="Lencana {{ badge.name }}" width="64" height="64">
+        <strong>{{ badge.name }}</strong>
+        <span class="text-soft">{{ badge.rule }}</span>
+        {# sudah diraih -> label "Diraih", belum -> progress bar persentase #}
+        {% if badge.earned %}
+          <span class="pill">Diraih</span>
+        {% else %}
+          <div class="progress"><span style="--value: {{ badge.percent }}%"></span></div>
+        {% endif %}
+      </li>
+      {% endfor %}
+
+    </ul>
+  </section>
+
+</main>
+{% endblock %}
