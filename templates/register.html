@@ -1,120 +1,131 @@
 {% load static %}
-
 <!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Daftar — Sayangin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Hanken+Grotesk:wght@400;500;600;700&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital@1&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/tokens.css">
-  <link rel="stylesheet" href="/static/css/base.css">
-  <link rel="stylesheet" href="/static/css/components.css">
-  <link rel="stylesheet" href="/static/css/auth.css">
+  {% include 'includes/fonts.html' %}
+  {% include 'includes/tailwind.html' %}
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/onboarding.css' %}">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 </head>
-<body>
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
-    <symbol id="i-chev-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
-    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
-  </svg>
+<body class="">
+  <a class="skip-link" href="#konten">Lewati ke konten</a>
+  {% include 'includes/svg_filters.html' %}
 
-  <div class="auth">
-    <aside class="auth__panel">
-      <a href="{% url 'main:show_main' %}" class="logo logo--light" aria-label="Sayangin — beranda">sayangin</a>
-
-      <div class="auth__mobile-top">
-        <a href="{% url 'main:show_main' %}" class="logo logo--light" aria-label="Sayangin — beranda">sayangin</a>
-        <a href="{% url 'main:show_main' %}" class="icon-btn" aria-label="Tutup, kembali ke beranda"><svg class="icon"><use href="#i-close"/></svg></a>
+  <div class="onboard onboard--split">
+    <aside class="onboard__aside dark-panel only-desktop">
+      <svg class="caustics" viewBox="0 0 420 320" preserveAspectRatio="none" aria-hidden="true"><rect width="420" height="320" filter="url(#sgcaus)"/></svg>
+      <div class="onboard__aside-logo">
+        <a class="logo logo--light" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo-light.svg' %}" alt="" width="35" height="35">sayangin</a>
       </div>
-      <div class="auth__band-heading">
-        <p class="eyebrow">Buat akun</p>
-        <h1>Mulai dari lemarimu.</h1>
-        <p>Satu akun untuk belanja preloved, menjual isi lemari, dan berdonasi tepat sasaran.</p>
+      <div class="onboard__art" aria-hidden="true">
+        <svg class="onboard__chrome" viewBox="0 0 420 320" aria-hidden="true"><path filter="url(#sgliq2)" fill="url(#sgbands)" d="M50 210C80 120 170 84 236 126S344 196 384 118C404 84 418 156 386 198S272 266 208 226S96 270 50 210Z"/></svg>
+        <img class="cutout onboard__img" src="{% static 'img/jaket-track-zaitun-cut.png' %}" alt="" style="left: 70px; top: 10px; width: 230px; height: 290px;">
+        <img class="cutout onboard__img" src="{% static 'img/jeans-lukis-cut.png' %}" alt="" style="left: 245px; top: 30px; width: 190px; height: 330px;">
       </div>
-
-      <div class="auth__panel-content">
-        <figure class="auth__media"><span class="photo-ph">[Foto: kardus berisi barang preloved]</span></figure>
-        <h2>Barang yang disayang, dipakai lebih lama.</h2>
-        <p class="caption-serif">Catat isi lemari, tunda belanja impulsif, dan lihat dampak yang kamu buat.</p>
+      <div class="onboard__caption">
+        <p class="onboard__title">Barang lama, disayang lagi.</p>
+        <p class="onboard__text">Satu akun untuk jual, donasi, dan merawat isi lemari.</p>
       </div>
-      <p class="auth__copyright">© 2026 Sayangin, Inc.</p>
     </aside>
 
-    <main class="auth__main">
-      <a class="auth__back" href="{% url 'main:show_main' %}"><svg class="icon icon--sm"><use href="#i-chev-left"/></svg>Kembali ke beranda</a>
+    <header class="app-bar app-bar--back only-mobile">
+      <a class="icon-btn" href="{% url 'main:show_main' %}" aria-label="Kembali">←</a>
+      <a class="logo" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin</a>
+    </header>
 
-      <div class="auth__center">
-        <div class="auth__card">
-          <header class="auth__heading">
-            <p class="eyebrow">Buat akun</p>
-            <h1>Mulai dari lemarimu.</h1>
-            <p>Satu akun untuk belanja preloved, menjual isi lemari, dan berdonasi tepat sasaran.</p>
-          </header>
+    <main class="onboard__main onboard__main--center" id="konten">
+      <form class="stack auth-form" id="register-form" style="--stack-gap: 18px" method="POST" action="{% url 'main:show_register' %}" novalidate>
+        {% csrf_token %}
+        {% if next_url %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+        {% endif %}
 
-          <form class="auth-form" id="register-form" method="POST" action="{% url 'main:show_register' %}" novalidate>
-            {% csrf_token %}
-            <!-- Client-side JS alert -->
-            <div class="alert" role="alert" hidden data-form-alert></div>
+        {% if show_cart_notice %}
+          <p class="notice">Keranjangmu ({{ cart_count|default:2 }} barang) tersimpan. Setelah daftar, kamu langsung kembali ke checkout.</p>
+        {% endif %}
 
-            <!-- Server-side Django alerts -->
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert {% if message.tags == 'error' %}alert--error{% else %}alert--success{% endif %}" role="alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
+        <h1 class="page-title"><span class="eyebrow">Bergabung<span class="only-desktop"> · gratis</span></span>Buat <em>akun</em></h1>
 
-            <div class="field">
-              <label class="field__label" for="username">Nama pengguna</label>
-              <div class="field__control">
-                <input class="field__input" id="username" name="username" type="text" autocomplete="username" placeholder="contoh: rania.y" minlength="3" maxlength="30" pattern="[A-Za-z0-9._]+" required>
-              </div>
-              <p class="field__error" id="username-error" aria-live="polite"></p>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="email">Email</label>
-              <div class="field__control">
-                <input class="field__input" id="email" name="email" type="email" autocomplete="email" placeholder="nama@email.com" required>
-              </div>
-              <p class="field__error" id="email-error" aria-live="polite"></p>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="password">Kata sandi</label>
-              <div class="field__control field__control--toggle">
-                <input class="field__input" id="password" name="password" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter" minlength="8" required aria-describedby="password-help">
-                <button class="field__toggle" type="button" aria-label="Tampilkan kata sandi" aria-pressed="false" data-toggle-password="password"><svg class="icon"><use href="#i-eye"/></svg></button>
-              </div>
-              <p class="field__help" id="password-help">Minimal 8 karakter, kombinasi huruf dan angka.</p>
-              <p class="field__error" id="password-error" aria-live="polite"></p>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="confirm">Konfirmasi kata sandi</label>
-              <div class="field__control field__control--toggle">
-                <input class="field__input" id="confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Ulangi kata sandi" required>
-                <button class="field__toggle" type="button" aria-label="Tampilkan konfirmasi kata sandi" aria-pressed="false" data-toggle-password="confirm"><svg class="icon"><use href="#i-eye"/></svg></button>
-              </div>
-              <p class="field__error" id="confirm-error" aria-live="polite"></p>
-            </div>
-
-            <button class="btn btn--primary btn--block" type="submit">Daftar</button>
-            <p class="auth-form__terms">Dengan mendaftar, kamu menyetujui <a href="#">Syarat Layanan</a> dan <a href="#">Kebijakan Privasi</a> Sayangin.</p>
-          </form>
-
-          <hr class="auth__divider">
-          <p class="auth__switch">Sudah punya akun?<a href="{% url 'main:show_login' %}">Masuk</a></p>
-          <p class="auth__org">Mewakili panti atau sekolah?<a href="{% url 'main:show_register' %}?tipe=lembaga">Daftarkan lembaga</a></p>
+        <div class="alert" role="alert" hidden data-form-alert>
+          <span class="alert-icon" aria-hidden="true">!</span>
+          <span data-form-alert-text></span>
         </div>
-      </div>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert" role="alert">
+              <span class="alert-icon" aria-hidden="true">!</span>
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <fieldset class="stack" style="--stack-gap: 8px">
+          <legend class="field__label">Saya mendaftar sebagai</legend>
+          <div class="choice-grid">
+            <label class="choice">
+              <input type="radio" name="jenis" value="pribadi" {% if not is_lembaga %}checked{% endif %}>
+              <span><b>Pribadi</b><br><span class="text-soft">Jual, beli, donasi, dan Lemari Digital</span></span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="jenis" value="lembaga" {% if is_lembaga %}checked{% endif %}>
+              <span><b>Lembaga mitra</b><br><span class="text-soft">Panti, sekolah, atau komunitas penerima donasi</span></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <label class="field">
+          <span class="field__label">Email</span>
+          <input
+            class="input"
+            id="email"
+            type="email"
+            name="email"
+            value="{{ email_value|default:'' }}"
+            placeholder="nama@email.com"
+            autocomplete="email"
+            required
+            {% if errors.email %}aria-invalid="true" aria-describedby="email-error"{% endif %}>
+          <span class="field__error" id="email-error" aria-live="polite" {% if not errors.email %}hidden{% endif %}>
+            {% if errors.email %}<span class="alert-icon alert-icon--sm" aria-hidden="true">!</span><span>{{ errors.email }}</span>{% endif %}
+          </span>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Kata sandi</span>
+          <span class="input-group">
+            <input
+              class="input"
+              id="password"
+              type="password"
+              name="password"
+              minlength="8"
+              autocomplete="new-password"
+              required
+              aria-describedby="password-hint{% if errors.password %} password-error{% endif %}"
+              {% if errors.password %}aria-invalid="true"{% endif %}>
+            <button class="btn btn--outline only-desktop" type="button" style="--btn-h: 44px" data-toggle-password="password" aria-pressed="false">Tampilkan</button>
+          </span>
+          <span class="field__hint" id="password-hint">Minimal 8 karakter</span>
+          <span class="field__error" id="password-error" aria-live="polite" {% if not errors.password %}hidden{% endif %}>
+            {% if errors.password %}<span class="alert-icon alert-icon--sm" aria-hidden="true">!</span><span>{{ errors.password }}</span>{% endif %}
+          </span>
+        </label>
+
+        <button class="btn btn--primary btn--lg btn--block" type="submit">Daftar</button>
+        <div class="divider-text">atau</div>
+        <a class="btn btn--outline btn--lg btn--block" href="{% url 'main:google_login' %}?jenis={% if is_lembaga %}lembaga{% else %}pribadi{% endif %}" data-google-register-link data-base-url="{% url 'main:google_login' %}">Lanjut dengan Google</a>
+        <p class="text-soft auth-footer-text">Sudah punya akun? <a href="{% url 'main:show_login' %}">Masuk</a></p>
+      </form>
     </main>
   </div>
 
-  <script src="/static/js/auth.js" defer></script>
+  <script src="{% static 'js/auth.js' %}" defer></script>
 </body>
 </html>
