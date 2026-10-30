@@ -1,34 +1,37 @@
 <footer class="site-footer">
   <div class="site-footer__top">
-    <form class="newsletter" action="#" method="get" onsubmit="return false;">
+    {# Tamu: email dibawa ke halaman daftar akun. Personal: kabar email diatur di profil. Lembaga: tidak ada kabar email. #}
+    {% if not user.is_authenticated %}
+    <form class="newsletter" action="{% url 'main:show_register' %}" method="get">
       <label class="eyebrow" for="footer-newsletter-email">Kabar barang baru &amp; tantangan bulanan</label>
       <span class="row">
-        <input id="footer-newsletter-email" type="email" placeholder="Email kamu">
+        <input id="footer-newsletter-email" type="email" name="email" placeholder="Email kamu">
         <button class="btn btn--primary" type="submit" style="--btn-h: 44px">Daftar</button>
       </span>
     </form>
+    {% elif user.profile.role == 'LEMBAGA' %}
+    <div></div>
+    {% else %}
+    <div class="newsletter">
+      <span class="eyebrow">Kabar barang baru &amp; tantangan bulanan</span>
+      <span class="row"><a class="btn btn--primary" href="{% url 'main:show_profile' %}" style="--btn-h: 44px">Atur di profil</a></span>
+    </div>
+    {% endif %}
     <nav aria-label="Produk">
       <span class="eyebrow">Produk</span>
       <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
-      <a href="{% url 'main:show_main' %}#lemari">Lemari Digital</a>
-      <a href="{% url 'main:show_main' %}#pilihan">Tunda Beli</a>
+      <a href="{% url 'lemari:index' %}">Lemari Digital</a>
+      <a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a>
     </nav>
     <nav aria-label="Komunitas">
       <span class="eyebrow">Komunitas</span>
-      <a href="{% url 'main:show_main' %}#kebutuhan">Donasi</a>
-      <a href="{% url 'impact:show_impact_dashboard' %}">Papan peringkat</a>
-      <a href="{% url 'main:show_register' %}?tipe=lembaga">Jadi mitra</a>
+      <a href="{% url 'donasi:pilih_lembaga' %}">Donasi</a>
+      <a href="{% url 'impact:show_impact_leaderboard' %}">Papan peringkat</a>
     </nav>
     <nav aria-label="Bantuan">
       <span class="eyebrow">Bantuan</span>
       <a href="{% url 'main:show_main' %}#faq">FAQ</a>
-      <a href="#">Kontak</a>
     </nav>
   </div>
   <span class="site-footer__wordmark" aria-hidden="true">Sayangin</span>
-  <div class="site-footer__bottom">
-    <span>© 2026 Sayangin</span>
-    <span class="only-desktop">Barang lama, disayang lagi</span>
-    <span>PBP D · Kelompok 6</span>
-  </div>
 </footer>

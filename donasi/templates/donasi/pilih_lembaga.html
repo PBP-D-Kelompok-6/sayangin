@@ -20,9 +20,9 @@
   <div class="donate__grid">
     <div class="org-list" id="org-list">{% include "donasi/_org_list.html" %}</div>
     <aside class="notice donate__aside">
-      <b>Belum ada yang cocok?</b>
-      <span>Simpan ke daftar donasi umum. Kami kabari saat ada lembaga yang membutuhkannya.</span>
-      <a class="btn btn--outline btn--block only-desktop" href="{% url 'donasi:tawaran_saya' %}">Lihat donasiku</a>
+      <b>Sudah pernah berdonasi?</b>
+      <span>Lihat status tawaranmu: menunggu, diterima, ditolak, atau barang sudah sampai.</span>
+      <a class="btn btn--outline btn--block" href="{% url 'donasi:tawaran_saya' %}">Lihat donasiku</a>
     </aside>
   </div>
 </main>

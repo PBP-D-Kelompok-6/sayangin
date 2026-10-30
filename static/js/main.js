@@ -37,7 +37,7 @@
     .replace(/'/g, '&#39;');
   };
 
-  /* ---------- Landing: Empat pilihan (JUAL / DONASI / SIMPAN / TUNDA BELI) ---------- */
+  /* ---------- Landing: Tiga pilihan (JUAL / DONASI / SIMPAN) ---------- */
   const choiceWords = [...document.querySelectorAll('[data-choice-word]')];
   const choicePreview = document.querySelector('[data-choice-preview]');
   const choiceCaption = document.querySelector('[data-choice-caption]');
@@ -64,7 +64,7 @@
     });
   }
 
-  /* ---------- Landing (mobile): Fase cara kerja ---------- */
+  /* ---------- Landing: Fase cara kerja ---------- */
   const phaseTabs = [...document.querySelectorAll('[data-phase-tab]')];
   const phasePhoto = document.querySelector('[data-phase-photo]');
   const phaseText = document.querySelector('[data-phase-text]');
@@ -74,15 +74,26 @@
     { img: '/static/img/tas-kulit.jpg', text: 'Salurkan ke pembeli baru atau lembaga mitra yang benar-benar membutuhkan.' },
   ];
   if (phaseTabs.length) {
-    phaseTabs.forEach((tab, idx) => {
-      tab.addEventListener('click', (e) => {
-        e.preventDefault();
-        phaseTabs.forEach((t, i) => {
-          const active = i === idx;
-          t.setAttribute('aria-selected', String(active));
-          t.classList.toggle('btn--dark', active);
-          t.classList.toggle('btn--outline', !active);
-        });
+    const PHASE_MS = 2500;
+    const PHASE_FADE_MS = 200; // sama dengan transition di umum.css
+    const phaseSection = phaseTabs[0].closest('.phases');
+    let phaseNow = 0;
+    let phaseTimer = null;
+    let phaseFade = null;
+    // Gambar dimuat lebih dulu supaya tidak berkedip saat pertama kali berganti.
+    phaseData.forEach(({ img }) => { new Image().src = img; });
+    const showPhase = (idx) => {
+      phaseNow = idx;
+      phaseTabs.forEach((t, i) => {
+        const active = i === idx;
+        t.setAttribute('aria-selected', String(active));
+        t.classList.toggle('btn--dark', active);
+        t.classList.toggle('btn--outline', !active);
+      });
+      // Pudar keluar dulu, ganti isinya, lalu pudar masuk.
+      phaseSection.classList.add('is-switching');
+      clearTimeout(phaseFade);
+      phaseFade = setTimeout(() => {
         const item = phaseData[idx];
         if (item && phasePhoto) {
           phasePhoto.style.setProperty('--img', `url(${item.img})`);
@@ -90,8 +101,23 @@
         if (item && phaseText) {
           phaseText.textContent = item.text;
         }
+        phaseSection.classList.remove('is-switching');
+      }, PHASE_FADE_MS);
+    };
+    // Berganti sendiri, kecuali pengguna meminta gerakan dikurangi di pengaturan perangkatnya.
+    const startPhaseTimer = () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      clearInterval(phaseTimer);
+      phaseTimer = setInterval(() => showPhase((phaseNow + 1) % phaseTabs.length), PHASE_MS);
+    };
+    phaseTabs.forEach((tab, idx) => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        showPhase(idx);
+        startPhaseTimer(); // dipencet tetap bisa; hitungannya mulai lagi dari langkah itu
       });
     });
+    startPhaseTimer();
   }
 
   /* ---------- Drawer menu (mobile) ---------- */

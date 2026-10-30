@@ -222,6 +222,37 @@ class MarketplaceFlowTest(TestCase):
         self.assertEqual(self.client.get(reverse('marketplace:products_api'), {'limit': '1'}).json()['count'], 1)
 
 
+class CartCountApiTest(TestCase):
+    def setUp(self):
+        self.seller = User.objects.create_user('nadia', password='x')
+        self.buyer = User.objects.create_user('ira', password='x')
+        self.product = Product.objects.create(seller=self.seller, name='Blazer wol abu', price=185000,
+                                              category='Atasan', condition='terawat', size='M')
+
+    def test_jumlah_keranjang_terbaru_setelah_menambah_barang(self):
+        self.client.force_login(self.buyer)
+        url = reverse('marketplace:cart_count_api')
+        self.assertEqual(self.client.get(url).json(), {'cart_count': 0})
+        self.client.post(reverse('marketplace:add_to_cart', args=[self.product.pk]))
+        self.assertEqual(self.client.get(url).json(), {'cart_count': 1})
+
+    def test_tamu_tidak_bisa_melihat_jumlah_keranjang(self):
+        self.assertEqual(self.client.get(reverse('marketplace:cart_count_api')).status_code, 302)
+
+
+class PilihanBersamaTest(TestCase):
+    def test_lemari_marketplace_donasi_memakai_pilihan_yang_sama(self):
+        from donasi.models import Kategori, Kondisi
+        from lemari.models import WardrobeItem
+        from sayangin.pilihan import KATEGORI, KONDISI
+
+        self.assertEqual(Product.CATEGORY_CHOICES, KATEGORI)
+        self.assertEqual(Product.CONDITION_CHOICES, KONDISI)
+        self.assertEqual(list(Kategori.choices), KATEGORI)
+        self.assertEqual(list(Kondisi.choices), KONDISI)
+        self.assertEqual(list(WardrobeItem._meta.get_field('category').choices), KATEGORI)
+
+
 class OngkirTest(TestCase):
     def setUp(self):
         _destination_id.cache_clear()

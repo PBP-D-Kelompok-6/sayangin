@@ -9,6 +9,7 @@ urlpatterns = [
     # ---------------------------------------------------------------------------
     path("", views.pilih_lembaga, name="pilih_lembaga"),
     path("kirim/<int:kebutuhan_id>/", views.kirim_donasi, name="kirim_donasi"),
+    path("kirim/<int:kebutuhan_id>/pilih-barang/", views.pilih_barang, name="pilih_barang"),
     path("saya/", views.tawaran_saya, name="tawaran_saya"),
     path("saya/<int:pk>/batal/", views.batalkan_tawaran, name="batalkan_tawaran"),
 
@@ -18,6 +19,7 @@ urlpatterns = [
     # Dashboard & Riwayat
     path("lembaga/", views.dashboard_lembaga, name="dashboard_lembaga"),
     path("lembaga/riwayat/", views.riwayat_lembaga, name="riwayat_lembaga"),
+    path("lembaga/tawaran/", views.tawaran_lembaga, name="tawaran_lembaga"),
     
     # Kelola Kebutuhan
     path("lembaga/kebutuhan/", views.kebutuhan_list, name="kebutuhan_list"),

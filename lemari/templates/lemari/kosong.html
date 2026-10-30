@@ -5,7 +5,7 @@
 {% block body %}
 <div class="page has-bottom-nav">
   {% include 'lemari/_site_header.html' %}
-  <header class="app-bar only-mobile"><h1 class="app-bar__title">Lemari <em>kamu</em></h1><a class="avatar-link" href="#" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
+  <header class="app-bar only-mobile"><h1 class="app-bar__title">Lemari <em>kamu</em></h1><a class="avatar-link" href="{% url 'main:show_profile' %}" aria-label="Profil"><span class="avatar avatar--sm"></span></a></header>
   <main class="page__main container empty" id="konten">
     <div class="wardrobe__head only-desktop"><h1 class="page-title"><span class="eyebrow">Lemari digital · 0 barang</span>Lemari <em>kamu</em></h1><a class="btn btn--primary" href="{% url 'lemari:tambah_barang' %}">+ Tambah barang</a></div>
     <div class="empty__body">

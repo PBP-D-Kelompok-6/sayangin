@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from sayangin.pilihan import KATEGORI, KONDISI
+
 
 class SaleListing(models.Model):
     PUBLISHED = "published"
@@ -13,10 +15,18 @@ class SaleListing(models.Model):
         on_delete=models.SET_NULL,
         related_name="sale_listings",
     )
+    # Barang yang benar-benar tayang di Marketplace (dan muncul di Jualanku).
+    product = models.OneToOneField(
+        "marketplace.Product",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lemari_listing",
+    )
     title = models.CharField(max_length=160, blank=True)
-    category = models.CharField(max_length=80, blank=True)
+    category = models.CharField(max_length=80, blank=True, choices=KATEGORI)
     size = models.CharField(max_length=40, blank=True)
-    condition = models.CharField(max_length=30, blank=True)
+    condition = models.CharField(max_length=30, blank=True, choices=KONDISI)
     condition_notes = models.TextField(blank=True, max_length=2000)
     price = models.PositiveIntegerField(null=True, blank=True)
     weight = models.PositiveIntegerField(null=True, blank=True)
@@ -40,7 +50,7 @@ class ListingPhoto(models.Model):
 class WardrobeItem(models.Model):
     owner = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=160)
-    category = models.CharField(max_length=80)
+    category = models.CharField(max_length=80, choices=KATEGORI)
     size = models.CharField(max_length=40, blank=True)
     last_used = models.CharField(max_length=40)
     color = models.CharField(max_length=80, blank=True)

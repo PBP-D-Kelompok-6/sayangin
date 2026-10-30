@@ -6,35 +6,22 @@ from django.db import models, transaction
 from django.db.models import F, Q
 from django.utils import timezone
 
-
-class Kategori(models.TextChoices):
-    PAKAIAN_LUARAN = "pakaian-luaran", "Pakaian · Luaran"
-    PAKAIAN_ATASAN = "pakaian-atasan", "Pakaian · Atasan"
-    PAKAIAN_BAWAHAN = "pakaian-bawahan", "Pakaian · Bawahan"
-    ALAS_KAKI = "alas-kaki", "Alas kaki"
-    BUKU = "buku", "Buku"
-    PERLENGKAPAN_SEKOLAH = "perlengkapan-sekolah", "Perlengkapan sekolah"
-    PERABOT = "perabot", "Perabot"
-    MAINAN = "mainan", "Mainan"
-    LAINNYA = "lainnya", "Lainnya"
+from sayangin.pilihan import KATEGORI, KONDISI, UKURAN
 
 
-class Kondisi(models.TextChoices):
-    SEPERTI_BARU = "seperti-baru", "Seperti baru"
-    TERAWAT = "terawat", "Bekas, terawat"
-    ADA_CACAT = "ada-cacat", "Ada cacat kecil"
-
+Kategori = models.TextChoices("Kategori", [(nilai.upper(), (nilai, label)) for nilai, label in KATEGORI])
+Kondisi = models.TextChoices("Kondisi", [(nilai.upper(), (nilai, label)) for nilai, label in KONDISI])
 
 RANK_KONDISI = {
     Kondisi.SEPERTI_BARU: 3,
     Kondisi.TERAWAT: 2,
-    Kondisi.ADA_CACAT: 1,
+    Kondisi.CACAT: 1,
 }
 
 # Lembaga hanya boleh meminta "seperti baru" atau "bekas, terawat".
 KONDISI_MIN_CHOICES = Kondisi.choices[:2]
 
-UKURAN_CHOICES = [(u, u) for u in ("6 th", "8 th", "10 th", "12 th", "S", "M", "L", "XL")]
+UKURAN_CHOICES = [(u, u) for u in UKURAN]
 
 
 def _kondisi_yang_memenuhi(kondisi_barang):
@@ -60,7 +47,7 @@ class KebutuhanQuerySet(models.QuerySet):
         if kondisi:
             qs = qs.filter(kondisi_min__in=_kondisi_yang_memenuhi(kondisi))
         hasil = list(qs)
-        if ukuran:
+        if ukuran and ukuran != "All size":  # barang "All size" cocok dengan ukuran apa pun
             hasil = [k for k in hasil if not k.ukuran_list or ukuran in k.ukuran_list]
         return hasil
 
@@ -210,12 +197,6 @@ class Penawaran(models.Model):
             self.save(update_fields=["status", "diterima_pada"])
             if self.kebutuhan_id:
                 self.kebutuhan.tambah_terpenuhi(self.jumlah)
-            
-            # Opsional: Jika barang berasal dari lemari_id, hapus atau nonaktifkan dari WardrobeItem
-            if self.lemari_id:
-                try:
-                    from lemari.models import WardrobeItem
-                    WardrobeItem.objects.filter(pk=self.lemari_id, owner=self.donatur).delete()
-                except Exception:
-                    pass
+        # Barangnya tetap di lemari dengan status "Didonasikan" (lihat lemari.views._status_barang),
+        # supaya riwayatnya terlihat dan poin Dampak dari mencatat barang tidak berkurang.
         return True

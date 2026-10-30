@@ -32,7 +32,7 @@ p { margin: 0; }
 .eyebrow { font-family: var(--font-label); font-size: 11px; letter-spacing: .14em; color: var(--ink-faint); text-transform: uppercase; }
 .muted { color: var(--ink-faint); }
 .soft { color: var(--ink-muted); }
-.page { max-width: 1280px; margin: 0 auto; padding: 24px 32px 64px; display: flex; flex-direction: column; gap: 18px; }
+.page { max-width: 1280px; margin: 0 auto; padding: 24px 40px 64px; /* 40px kiri-kanan = sama dengan navbar & halaman lain */ display: flex; flex-direction: column; gap: 18px; }
 .desk-only { display: revert; }
 .m-only { display: none !important; }
 
@@ -280,7 +280,6 @@ textarea.input { height: auto; padding: 12px 14px; resize: vertical; }
 .newsletter input::placeholder { color: #BFB2AC; }
 .site-footer .btn--primary { height: var(--btn-h, 44px); padding: 0 18px; border-radius: 999px; border: 1px solid rgba(0,0,0,.14); background: var(--chrome); box-shadow: var(--chrome-shadow); color: var(--ink); font: inherit; font-weight: 500; cursor: pointer; }
 .site-footer__wordmark { display: block; margin: 56px 0 0 -8px; font-family: var(--font-display); font-size: clamp(104px, 25vw, 330px); line-height: .95; letter-spacing: -.035em; padding-bottom: .12em; background: linear-gradient(180deg, #F4EFEC 0%, #A8998F 50%, #4A2E28 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.site-footer__bottom { display: flex; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.14); font-family: var(--font-label); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #BFB2AC; }
 @media (max-width: 767px) {
   .site-footer { padding: 40px 20px 20px; }
   .site-footer__top { grid-template-columns: 1fr 1fr; gap: 24px; }

@@ -1,16 +1,15 @@
-{% extends 'base.html' %}
+{% extends 'impact/base.html' %}
 {% load static %}
 {# load static: supaya {% static %} bisa dipakai untuk gambar lencana #}
 
 {# Judul tab browser #}
 {% block title %}Dampak Sosial Kamu — Sayangin{% endblock %}
-{% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
 
-{# Bar atas versi HP: tombol kembali ke beranda #}
+{# Bar atas versi HP (sesuai Figma): judul serif + avatar ke profil, sama dengan halaman Dampak lain #}
 {% block app_bar %}
-<header class="app-bar app-bar--back only-mobile">
-  <a class="icon-btn" href="{% url 'main:show_main' %}" aria-label="Kembali">←</a>
-  <span class="app-bar__label">Dampak</span>
+<header class="app-bar only-mobile">
+  <span class="app-bar__title">Dampak</span>
+  <a class="avatar-link" href="{% url 'main:show_profile' %}" aria-label="Profil"><span class="avatar"></span></a>
 </header>
 {% endblock %}
 

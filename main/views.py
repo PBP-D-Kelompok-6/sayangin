@@ -19,7 +19,8 @@ from django.views.decorators.http import require_POST, require_GET
 from main.models import UserProfile, UserAddress, InstitutionProfile
 from main.forms import InstitutionProfileForm, ProfileForm, UserAddressForm, CITY_CHOICES
 from main.decorators import personal_required, lembaga_required
-from donasi.models import Kebutuhan
+from donasi.models import Kebutuhan, Penawaran
+from marketplace.models import Order, Product
 
 
 def show_main(request):
@@ -162,6 +163,7 @@ def show_register(request):
         'next_url': next_url,
         'show_cart_notice': show_cart_notice,
         'errors': {},
+        'email_value': request.GET.get('email', '').strip(),  # dibawa dari form email di footer
     }
 
     if request.method == 'POST':
@@ -264,6 +266,9 @@ def show_profile(request):
         "city_choices": [c for c in CITY_CHOICES if c[0]],
         "address_label_choices": UserProfile.ADDRESS_LABEL_CHOICES,
         "has_usable_password": request.user.has_usable_password(),
+        "pesanan_berjalan": Order.objects.filter(buyer=request.user).exclude(status='selesai').count(),
+        "barang_tayang": Product.objects.filter(seller=request.user).available().count(),
+        "donasi_tersalurkan": Penawaran.objects.filter(donatur=request.user, status=Penawaran.Status.SELESAI).count(),
     }
 
     return render(request, 'profil.html', context)
