@@ -1,0 +1,6 @@
+{# Satu isian form: label (+ "wajib"), input, keterangan, dan pesan error. Pakai: include ... with field=form.nama #}
+<div class="f{% if field.errors %} f--err{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="muted">(wajib)</span>{% endif %}</label>
+    {{ field }}
+    {% for error in field.errors %}<span class="err"><i aria-hidden="true">!</i>{{ error }}</span>{% empty %}{% if field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}{% endfor %}
+</div>

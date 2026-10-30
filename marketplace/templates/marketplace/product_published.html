@@ -1,0 +1,39 @@
+{% extends 'marketplace/base.html' %}
+{% load rupiah %}
+{% block title %}{{ product.name }} sudah masuk Marketplace{% endblock %}
+{% block m_title %}Berhasil <em class="em">dipasang</em>{% endblock %}
+
+{% block content %}
+{# Desain Figma "B4 · Jual barang — sukses". #}
+<section class="published">
+    <div class="photo published-photo" role="img" aria-label="{{ product.name }}" style="background-image: url('{{ product.photo }}')"></div>
+    <div class="published-info">
+        <span class="published-check" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span>
+        <span class="eyebrow">Berhasil dipasang</span>
+        <h1>{{ product.name }} sudah <em>masuk Marketplace</em></h1>
+        <p class="soft">Kami kabari begitu ada yang membeli.</p>
+        <dl class="published-facts">
+            <div><dt>Harga</dt><dd>{{ product.price|rupiah }}</dd></div>
+            <div><dt>Kondisi</dt><dd>{{ product.get_condition_display }}</dd></div>
+            <div><dt>Tampil di</dt><dd>Marketplace · {{ product.get_category_display }}</dd></div>
+        </dl>
+        <div class="published-actions">
+            <a class="btn btn-lg btn-chrome" href="{% url 'marketplace:detail' product.pk %}">Lihat di marketplace</a>
+            <a class="btn btn-lg" href="{% url 'marketplace:my_products' %}">Ke Jualanku</a>
+            <button type="button" class="link-btn" data-share data-share-url="{% url 'marketplace:detail' product.pk %}" data-share-title="{{ product.name }}">Bagikan</button>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelector('[data-share]').addEventListener('click', async e => {
+    const btn = e.currentTarget;
+    const data = { title: btn.dataset.shareTitle, url: new URL(btn.dataset.shareUrl, location.href).href };
+    if (navigator.share) { try { await navigator.share(data); } catch (err) {} return; }
+    await navigator.clipboard.writeText(data.url);
+    btn.textContent = 'Link tersalin';
+});
+</script>
+{% endblock %}

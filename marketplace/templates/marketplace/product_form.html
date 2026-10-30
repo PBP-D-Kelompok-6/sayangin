@@ -1,0 +1,148 @@
+{% extends 'marketplace/base.html' %}
+{% block title %}{% if editing %}Ubah · {{ product.name }}{% else %}Jual barang{% endif %}{% endblock %}
+{% block m_title %}{% if editing %}Ubah <em class="em">barang</em>{% else %}Jual <em class="em">barang</em>{% endif %}{% endblock %}
+{% block body_class %}has-buy-bar{% endblock %}
+
+{% block content %}
+{# Desain Figma "B4 · Jual barang" (+ state error). #}
+<nav class="crumbs" aria-label="Breadcrumb">
+    <a href="{% url 'marketplace:my_products' %}">Jualanku</a> /
+    {% if editing %}<a href="{% url 'marketplace:detail' product.pk %}">{{ product.name }}</a> / Ubah{% else %}Jual barang{% endif %}
+</nav>
+<h1 class="sell-title desk-only">{% if editing %}Ubah <em>barang</em>{% else %}Jual <em>barang</em>{% endif %}</h1>
+
+{% if form.errors %}
+<div class="sell-banner sell-banner--error" role="alert">
+    <i class="sell-banner-icon" aria-hidden="true">!</i>
+    <span><b>{{ bad_fields|length }} kolom perlu diperbaiki</b> sebelum barangmu bisa dijual:
+        {% for field in bad_fields %}{% if not forloop.first %}{% if forloop.last %} dan {% else %}, {% endif %}{% endif %}<a href="#{{ field.id_for_label }}">{{ field.label }}</a>{% endfor %}.</span>
+</div>
+{% elif not editing %}
+<div class="sell-banner">
+    <span><b>Barangnya ada di lemari?</b> Pilih dari lemari, foto dan datanya langsung terisi.</span>
+    <a href="{% url 'main:show_main' %}#lemari">Pilih dari lemari →</a>
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="sell" novalidate>
+    {% csrf_token %}
+    <div class="sell-photos{% if form.photos.errors %} f--err{% endif %}" id="{{ form.photos.id_for_label }}">
+        <input type="file" name="photos" accept="image/*" multiple hidden data-photo-input>
+        <button type="button" class="photo-drop photo" data-photo-main aria-label="Tambah foto"
+                {% if editing %}style="background-image: url('{{ product.photo }}')"{% endif %}>
+            <span class="photo-empty">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                <b>Tambah foto</b>
+                <span class="soft">Seret ke sini atau pilih dari galeri</span>
+            </span>
+        </button>
+        <div class="photo-slots">
+            {% for i in "1234" %}
+            <button type="button" class="photo-slot photo" data-photo-slot aria-label="Tambah foto {{ forloop.counter }}"
+                    {% if editing %}{% for url in product.photos %}{% if forloop.counter == forloop.parentloop.counter %}style="background-image: url('{{ url }}')"{% endif %}{% endfor %}{% endif %}>
+                <span class="photo-empty"><span class="photo-plus">+</span><span class="m-only soft">Foto</span></span>
+            </button>
+            {% endfor %}
+        </div>
+        {% for error in form.photos.errors %}<span class="err"><i aria-hidden="true">!</i>{{ error }}</span>{% empty %}
+        <small class="soft">Maksimal 4 foto. Tambahkan foto bagian yang cacat, kalau ada.{% if editing %} Pilih foto baru untuk mengganti semua foto lama.{% endif %}</small>
+        {% endfor %}
+    </div>
+
+    <div class="sell-fields">
+        {% include 'marketplace/_field.html' with field=form.name %}
+        <div class="sell-row sell-row--size">
+            {% include 'marketplace/_field.html' with field=form.category %}
+            {% include 'marketplace/_field.html' with field=form.size %}
+        </div>
+
+        <fieldset class="f{% if form.condition.errors %} f--err{% endif %}" id="{{ form.condition.id_for_label }}">
+            <legend>Kondisi <span class="muted">(wajib)</span></legend>
+            <div class="condition-pills">
+                {% for radio in form.condition %}<label class="pill">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>{% endfor %}
+            </div>
+            {% for error in form.condition.errors %}<span class="err"><i aria-hidden="true">!</i>{{ error }}</span>{% endfor %}
+        </fieldset>
+        {% include 'marketplace/_field.html' with field=form.condition_note %}
+
+        <div class="sell-row">
+            <div class="f{% if form.price.errors %} f--err{% endif %}">
+                <label for="{{ form.price.id_for_label }}">Harga <span class="muted">(wajib)</span></label>
+                {{ form.price }}
+                {% for error in form.price.errors %}<span class="err"><i aria-hidden="true">!</i><span>{{ error }} <span data-price-hint></span></span></span>{% empty %}
+                <small class="muted" data-price-hint>Saran harga muncul setelah kategori dipilih.</small>
+                {% endfor %}
+            </div>
+            {% include 'marketplace/_field.html' with field=form.weight_grams %}
+        </div>
+
+        <div class="sell-ship{% if form.city.errors or not form.city.value %} is-editing{% endif %}" data-ship>
+            <div class="sell-ship-view">
+                <span><b>Dikirim dari</b><br><span class="soft">{{ form.city.value }}</span></span>
+                <button type="button" class="link-btn" data-ship-edit>Ubah</button>
+            </div>
+            <div class="sell-ship-edit">{% include 'marketplace/_field.html' with field=form.city %}</div>
+        </div>
+
+        <div class="sell-actions">
+            <a class="sell-cancel desk-only" href="{% if editing %}{% url 'marketplace:detail' product.pk %}{% else %}{% url 'marketplace:my_products' %}{% endif %}">Batal</a>
+            {% if not editing or product.is_draft %}
+            <button type="submit" name="action" value="draft" class="btn btn-lg">Simpan draf</button>
+            <button type="submit" name="action" value="publish" class="btn btn-lg btn-chrome">Jual sekarang</button>
+            {% else %}
+            <button type="submit" name="action" value="publish" class="btn btn-lg btn-chrome">Simpan perubahan</button>
+            {% endif %}
+        </div>
+    </div>
+</form>
+{{ price_ranges|json_script:"price-ranges" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    // Foto: satu <input multiple> tersembunyi; kotak besar & 3 kotak kecil menampilkan pratinjaunya.
+    // Kotak besar = foto pertama; 4 kotak kecil = foto 1–4.
+    const input = document.querySelector('[data-photo-input]');
+    const drop = document.querySelector('[data-photo-main]');
+    const slots = [...document.querySelectorAll('[data-photo-slot]')];
+    const boxes = [drop, ...slots];
+    const mark = () => boxes.forEach(b => b.classList.toggle('has-photo', !!b.style.backgroundImage));
+    boxes.forEach(b => b.addEventListener('click', () => input.click()));
+    input.addEventListener('change', () => {
+        if (input.files.length > 4) { alert('Maksimal 4 foto.'); input.value = ''; return; }
+        const urls = [...input.files].map(f => `url("${URL.createObjectURL(f)}")`);
+        slots.forEach((s, i) => { s.style.backgroundImage = urls[i] || ''; });
+        drop.style.backgroundImage = urls[0] || '';
+        mark();
+    });
+    mark();
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('is-over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-over'));
+    drop.addEventListener('drop', e => {
+        e.preventDefault(); drop.classList.remove('is-over');
+        input.files = e.dataTransfer.files;
+        input.dispatchEvent(new Event('change'));
+    });
+
+    // Saran harga dari barang serupa (kategori sama) yang sedang dijual.
+    const ranges = JSON.parse(document.getElementById('price-ranges').textContent);
+    const category = document.getElementById('{{ form.category.id_for_label }}');
+    const hint = document.querySelector('[data-price-hint]');
+    const rp = n => 'Rp' + n.toLocaleString('id-ID');
+    const suggest = () => {
+        const r = ranges[category.value];
+        if (r) hint.textContent = `Saran: ${rp(r[0])} – ${rp(r[1])} untuk barang serupa.`;
+    };
+    category.addEventListener('change', suggest);
+    suggest();
+
+    // "Dikirim dari": tampil sebagai teks, tombol Ubah membuka isian kota.
+    const ship = document.querySelector('[data-ship]');
+    ship.querySelector('[data-ship-edit]').addEventListener('click', () => {
+        ship.classList.add('is-editing');
+        ship.querySelector('input').focus();
+    });
+})();
+</script>
+{% endblock %}

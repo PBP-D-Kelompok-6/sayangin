@@ -1,0 +1,6 @@
+{% load static rupiah %}<a class="card" href="{% url 'marketplace:detail' p.pk %}">
+    <span class="photo" style="background-image: url('{{ p.photo }}')"></span>
+    <span>{{ p.name }}</span>
+    <b>{{ p.price|rupiah }}</b>
+    {% if not hide_meta %}<small>{{ p.get_condition_display }} · {{ p.city }}</small>{% endif %}
+</a>

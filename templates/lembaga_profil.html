@@ -1,0 +1,187 @@
+{% load static %}
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data lembaga — Sayangin</title>
+  {% include 'includes/fonts.html' %}
+  {% include 'includes/tailwind.html' %}
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/onboarding.css' %}">
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body class="">
+  <a class="skip-link" href="#konten">Lewati ke konten</a>
+  {% include 'includes/svg_filters.html' %}
+
+  <div class="onboard min-h-screen flex flex-col">
+    <header class="onboard__header only-desktop hidden md:flex items-center justify-between">
+      <a class="logo" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span></a>
+      <ol aria-label="Langkah pendaftaran lembaga" class="steps flex items-center">
+        <li class="is-done"><span class="steps__dot">✓</span>Akun</li>
+        <li class="steps__line is-done" aria-hidden="true"></li>
+        <li aria-current="step"><span class="steps__dot">2</span>Data lembaga</li>
+        <li class="steps__line" aria-hidden="true"></li>
+        <li><span class="steps__dot">3</span>Verifikasi</li>
+      </ol>
+      <span class="onboard__spacer"></span>
+    </header>
+
+    <header class="app-bar app-bar--back only-mobile flex md:hidden items-center">
+      <a class="icon-btn" href="{% if institution and institution.name %}{% url 'main:show_lembaga_profile' %}{% else %}{% url 'main:show_main' %}{% endif %}" aria-label="Kembali">←</a>
+      <span class="app-bar__label">Data lembaga</span>
+      <span class="text-sm text-soft">Langkah 2 / 3</span>
+    </header>
+    <div class="progress progress--step2 only-mobile md:hidden"><span></span></div>
+
+    <div class="onboard__body flex-1 flex">
+      <aside class="onboard__aside dark-panel only-desktop hidden md:flex flex-col justify-end">
+        <svg class="caustics" viewBox="0 0 420 320" preserveAspectRatio="none" aria-hidden="true"><rect width="420" height="320" filter="url(#sgcaus)"/></svg>
+        <div class="onboard__art" aria-hidden="true">
+          <svg class="onboard__chrome" viewBox="0 0 420 320" aria-hidden="true"><path filter="url(#sgliq2)" fill="url(#sgbands)" d="M50 210C80 120 170 84 236 126S344 196 384 118C404 84 418 156 386 198S272 266 208 226S96 270 50 210Z"/></svg>
+          <img class="cutout onboard__img onboard__img--sweater" src="{% static 'img/sweter-krem-cut.png' %}" alt="">
+          <img class="cutout onboard__img onboard__img--books" src="{% static 'img/buku-vintage-cut.png' %}" alt="">
+        </div>
+        <div class="onboard__caption">
+          <span class="eyebrow">Setelah dikirim</span>
+          <p class="onboard__title">Kami cek dulu, <em>lalu</em> kamu bisa pasang kebutuhan.</p>
+          <p class="onboard__text">Admin memeriksa dokumen 1–3 hari kerja dan mengabari lewat email. Dokumenmu hanya dilihat admin, tidak ditampilkan ke publik.</p>
+        </div>
+      </aside>
+
+      <main class="onboard__main flex-1" id="konten">
+        <form class="stack auth-stack auth-form auth-form--wide" method="POST" action="{% url 'main:edit_institution_profile' %}" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+
+          <div class="stack auth-heading-stack">
+            <h1 class="page-title only-desktop hidden md:block"><span class="eyebrow">Langkah 2 dari 3 · Mitra</span>Data <em>lembaga</em></h1>
+            <span class="text-soft">Kami pakai data ini untuk memastikan donasi sampai ke lembaga yang benar.</span>
+          </div>
+
+          {% if messages %}
+            {% for message in messages %}
+              {% if 'error' in message.tags %}
+                <div class="alert" role="alert">
+                  <span class="alert-icon" aria-hidden="true">!</span>
+                  <span>{{ message }}</span>
+                </div>
+              {% else %}
+                <div class="notice text-sm" role="status">{{ message }}</div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          {% if form.errors %}
+            <div class="alert" role="alert">
+              <span class="alert-icon" aria-hidden="true">!</span>
+              <span>Periksa kembali kolom yang ditandai di bawah ini.</span>
+            </div>
+          {% endif %}
+
+          <label class="field">
+            <span class="field__label">Nama lembaga</span>
+            <input
+              class="input"
+              id="{{ form.name.id_for_label }}"
+              type="text"
+              name="name"
+              value="{{ form.name.value|default:'' }}"
+              required
+              {% if form.name.errors %}aria-invalid="true" aria-describedby="name-error"{% endif %}>
+            {% for error in form.name.errors %}
+              <span class="field__error" id="name-error" role="alert">
+                <span class="alert-icon alert-icon--sm" aria-hidden="true">!</span><span>{{ error }}</span>
+              </span>
+            {% endfor %}
+          </label>
+
+          <fieldset class="field">
+            <legend class="field__label">Jenis lembaga</legend>
+            <div class="choice-grid choice-grid--4 grid grid-cols-2 md:grid-cols-4">
+              <label class="choice choice--inline">
+                <input type="radio" name="institution_type" value="PANTI_ASUHAN" {% if form.institution_type.value == 'PANTI_ASUHAN' or not form.institution_type.value %}checked{% endif %}> Panti asuhan
+              </label>
+              <label class="choice choice--inline">
+                <input type="radio" name="institution_type" value="PANTI_WERDHA" {% if form.institution_type.value == 'PANTI_WERDHA' %}checked{% endif %}> Panti werdha
+              </label>
+              <label class="choice choice--inline">
+                <input type="radio" name="institution_type" value="SEKOLAH" {% if form.institution_type.value == 'SEKOLAH' %}checked{% endif %}> Sekolah
+              </label>
+              <label class="choice choice--inline">
+                <input type="radio" name="institution_type" value="KOMUNITAS" {% if form.institution_type.value == 'KOMUNITAS' %}checked{% endif %}> Komunitas
+              </label>
+            </div>
+            {% for error in form.institution_type.errors %}
+              <span class="field__error" role="alert">
+                <span class="alert-icon alert-icon--sm" aria-hidden="true">!</span><span>{{ error }}</span>
+              </span>
+            {% endfor %}
+          </fieldset>
+
+          <label class="field">
+            <span class="field__label">Alamat lembaga</span>
+            <textarea
+              class="textarea"
+              id="{{ form.address.id_for_label }}"
+              name="address"
+              rows="2"
+              required
+              {% if form.address.errors %}aria-invalid="true" aria-describedby="address-error"{% endif %}>{{ form.address.value|default:'' }}</textarea>
+            {% for error in form.address.errors %}
+              <span class="field__error" id="address-error" role="alert">
+                <span class="alert-icon alert-icon--sm" aria-hidden="true">!</span><span>{{ error }}</span>
+              </span>
+            {% endfor %}
+          </label>
+
+          <div class="form-row grid grid-cols-1 md:grid-cols-2">
+            <label class="field">
+              <span class="field__label">Penanggung jawab</span>
+              <input
+                class="input"
+                id="{{ form.person_in_charge.id_for_label }}"
+                type="text"
+                name="person_in_charge"
+                value="{{ form.person_in_charge.value|default:'' }}">
+            </label>
+            <label class="field">
+              <span class="field__label">Nomor HP</span>
+              <input
+                class="input"
+                id="{{ form.contact_phone.id_for_label }}"
+                type="tel"
+                name="contact_phone"
+                value="{{ form.contact_phone.value|default:'' }}">
+            </label>
+          </div>
+
+          <div class="field">
+            <span class="field__label">Dokumen legalitas</span>
+            <label class="dropzone dropzone--row">
+              <input class="visually-hidden" type="file" name="legal_document" accept="application/pdf,image/*" data-file-input>
+              <span data-file-label>
+                {% if institution and institution.legal_document_name %}
+                  Terunggah: {{ institution.legal_document_name }} <span class="only-desktop hidden md:inline">(Klik untuk ganti)</span>
+                {% else %}
+                  + Unggah akta / surat izin <span class="only-desktop hidden md:inline">(PDF atau foto)</span>
+                {% endif %}
+              </span>
+            </label>
+            <span class="field__hint only-mobile md:hidden">Verifikasi 1–3 hari kerja. Dokumen hanya dilihat admin.</span>
+          </div>
+
+          <div class="form-actions flex items-center justify-between">
+            <a class="btn btn--outline btn--lg only-desktop hidden md:inline-flex" href="{% if institution and institution.name %}{% url 'main:show_lembaga_profile' %}{% else %}{% url 'main:show_main' %}{% endif %}">Kembali</a>
+            <button class="btn btn--primary btn--lg" type="submit">Kirim untuk verifikasi</button>
+          </div>
+        </form>
+      </main>
+    </div>
+  </div>
+
+  <script src="{% static 'js/auth.js' %}" defer></script>
+</body>
+</html>

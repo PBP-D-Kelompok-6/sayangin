@@ -1,0 +1,4 @@
+{# Jumlah pesanan per status (gaya Shopee). counts: [(label, jumlah), ...] #}
+<div class="active-filters" aria-label="Jumlah pesanan per status">
+    {% for label, n in counts %}<span class="bubble{% if not n %} muted{% endif %}">{{ label }} <b>{{ n }}</b></span>{% endfor %}
+</div>

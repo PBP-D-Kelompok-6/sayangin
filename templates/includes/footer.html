@@ -1,0 +1,34 @@
+<footer class="site-footer">
+  <div class="site-footer__top">
+    <form class="newsletter" action="#" method="get" onsubmit="return false;">
+      <label class="eyebrow" for="footer-newsletter-email">Kabar barang baru &amp; tantangan bulanan</label>
+      <span class="row">
+        <input id="footer-newsletter-email" type="email" placeholder="Email kamu">
+        <button class="btn btn--primary" type="submit" style="--btn-h: 44px">Daftar</button>
+      </span>
+    </form>
+    <nav aria-label="Produk">
+      <span class="eyebrow">Produk</span>
+      <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
+      <a href="{% url 'main:show_main' %}#lemari">Lemari Digital</a>
+      <a href="{% url 'main:show_main' %}#pilihan">Tunda Beli</a>
+    </nav>
+    <nav aria-label="Komunitas">
+      <span class="eyebrow">Komunitas</span>
+      <a href="{% url 'main:show_main' %}#kebutuhan">Donasi</a>
+      <a href="{% url 'main:show_main' %}#dampak">Papan peringkat</a>
+      <a href="{% url 'main:show_register' %}?tipe=lembaga">Jadi mitra</a>
+    </nav>
+    <nav aria-label="Bantuan">
+      <span class="eyebrow">Bantuan</span>
+      <a href="{% url 'main:show_main' %}#faq">FAQ</a>
+      <a href="#">Kontak</a>
+    </nav>
+  </div>
+  <span class="site-footer__wordmark" aria-hidden="true">Sayangin</span>
+  <div class="site-footer__bottom">
+    <span>© 2026 Sayangin</span>
+    <span class="only-desktop">Barang lama, disayang lagi</span>
+    <span>PBP D · Kelompok 6</span>
+  </div>
+</footer>
