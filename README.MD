@@ -2,7 +2,7 @@
 
 ## Tautan Penting
 - PWS Deployment: [PWS](https://muhammad-ghazi51-sayang-in.pws.cs.ui.ac.id)
-- Figma Design: [Figma](https://www.figma.com/design/S8q8mgXES8W0DCOCbV5cL3)
+- Figma Design: [Figma](https://www.figma.com/design/gwE9NWB3Qvtjp4aHCL2q0R)
 
 ## Deskripsi dan Overview
 Sayangin merupakan platform belanja online untuk barang *preloved* yang masih layak pakai. Hal yang membedakan kami dari produk serupa lainnya adalah setiap pengguna memiliki lemari digital untuk mendata barang-barang miliknya. Pengguna yang sudah lama tidak menggunakan suatu barang akan diberi pengingat dari sistem, dan akan diberikan opsi untuk menjual, mendonasikan, atau menyimpannya.
@@ -21,7 +21,7 @@ Untuk meningkatkan inisiatif dan motivasi pengguna untuk membuat dampak yang ber
 | **Lemari Digital** |  Memungkinkan pengguna untuk mendata dan mengelola barang-barang pribadi mereka secara virtual. Sistem akan melacak kapan terakhir kali barang dipakai, memberikan notifikasi pengingat untuk barang yang sudah lama menganggur, dan menyediakan opsi untuk menjual, mendonasikan, atau menyimpannya kembali. | Daffa |
 | **Donasi Tepat Sasaran** | Menjembatani niat baik pengguna dengan kebutuhan nyata di lapangan guna mencegah penumpukan barang donasi yang tidak berguna. Lembaga mitra bisa membuat dan mempublikasikan daftar kebutuhan barang yang spesifik, dan sistem akan mencocokkannya dengan barang-barang yang tidak terpakai dalam Lemari Digital pengguna. | Zaki |
 | **Dampak dan Sosial (Gamifikasi)** | Memotivasi, memvalidasi, dan merayakan kontribusi pengguna terhadap gaya hidup berkelanjutan. Pengguna diberikan dasbor pribadi yang menampilkan poin dampak dan jumlah aksi mereka (barang terjual, beli *preloved*, donasi diterima lembaga, dan barang dicatat di lemari), dihitung otomatis dari modul lain untuk bulan ini atau sepanjang waktu. Modul ini dilengkapi dengan papan peringkat (*leaderboard*) publik yang bisa dilihat tanpa login, tantangan pribadi yang targetnya dibuat sendiri oleh pengguna, dan lencana pencapaian (*awards*). | Rena |
-| **Tunda Beli (tentatif)** | Alat *eco-mindfulness* untuk meredam kebiasaan belanja impulsif. Pengguna bisa memasukkan barang baru yang ingin dibeli ke dalam wishlist dengan masa tunggu. Selama masa tunggu masih berjalan, sistem akan mencarikan dan menawarkan alternatif barang *preloved* serupa yang tersedia di dalam platform. | TBD |
+| **Tunda Beli (ABANDONED)** | Alat *eco-mindfulness* untuk meredam kebiasaan belanja impulsif. Pengguna bisa memasukkan barang baru yang ingin dibeli ke dalam wishlist dengan masa tunggu. Selama masa tunggu masih berjalan, sistem akan mencarikan dan menawarkan alternatif barang *preloved* serupa yang tersedia di dalam platform. | N/A |
 
 ## Application Programming Interface (API)
 

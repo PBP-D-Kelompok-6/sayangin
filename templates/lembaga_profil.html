@@ -19,23 +19,33 @@
 
   <div class="onboard min-h-screen flex flex-col">
     <header class="onboard__header only-desktop hidden md:flex items-center justify-between">
-      <a class="logo" href="{% url 'main:show_main' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span></a>
-      <ol aria-label="Langkah pendaftaran lembaga" class="steps flex items-center">
-        <li class="is-done"><span class="steps__dot">✓</span>Akun</li>
-        <li class="steps__line is-done" aria-hidden="true"></li>
-        <li aria-current="step"><span class="steps__dot">2</span>Data lembaga</li>
-        <li class="steps__line" aria-hidden="true"></li>
-        <li><span class="steps__dot">3</span>Verifikasi</li>
-      </ol>
-      <span class="onboard__spacer"></span>
+      <a class="logo" href="{% if is_onboarding %}{% url 'main:edit_institution_profile' %}{% else %}{% url 'donasi:dashboard_lembaga' %}{% endif %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span></a>
+      {% if is_onboarding %}
+        <ol aria-label="Langkah pendaftaran lembaga" class="steps flex items-center">
+          <li class="is-done"><span class="steps__dot">✓</span>Akun</li>
+          <li class="steps__line is-done" aria-hidden="true"></li>
+          <li aria-current="step"><span class="steps__dot">2</span>Data lembaga</li>
+          <li class="steps__line" aria-hidden="true"></li>
+          <li><span class="steps__dot">3</span>Verifikasi</li>
+        </ol>
+        <span class="onboard__spacer"></span>
+      {% else %}
+        <a href="{% url 'main:show_lembaga_profile' %}">Kembali ke profil</a>
+      {% endif %}
     </header>
 
     <header class="app-bar app-bar--back only-mobile flex md:hidden items-center">
-      <a class="icon-btn" href="{% if institution and institution.name %}{% url 'main:show_lembaga_profile' %}{% else %}{% url 'main:show_main' %}{% endif %}" aria-label="Kembali">←</a>
-      <span class="app-bar__label">Data lembaga</span>
-      <span class="text-sm text-soft">Langkah 2 / 3</span>
+      {% if not is_onboarding %}
+        <a class="icon-btn" href="{% url 'main:show_lembaga_profile' %}" aria-label="Kembali">←</a>
+      {% endif %}
+      <span class="app-bar__label">{% if is_onboarding %}Data lembaga{% else %}Ubah data lembaga{% endif %}</span>
+      {% if is_onboarding %}
+        <span class="text-sm text-soft">Langkah 2 / 3</span>
+      {% endif %}
     </header>
-    <div class="progress progress--step2 only-mobile md:hidden"><span></span></div>
+    {% if is_onboarding %}
+      <div class="progress progress--step2 only-mobile md:hidden"><span></span></div>
+    {% endif %}
 
     <div class="onboard__body flex-1 flex">
       <aside class="onboard__aside dark-panel only-desktop hidden md:flex flex-col justify-end">
@@ -74,7 +84,7 @@
             {% endfor %}
           {% endif %}
 
-          {% if form.errors %}
+          {% if form.errors or email_error %}
             <div class="alert" role="alert">
               <span class="alert-icon" aria-hidden="true">!</span>
               <span>Periksa kembali kolom yang ditandai di bawah ini.</span>
@@ -158,6 +168,23 @@
             </label>
           </div>
 
+          <label class="field">
+            <span class="field__label">Email akun lembaga</span>
+            <input
+              class="input"
+              id="id_email"
+              type="email"
+              name="email"
+              value="{{ email_value|default:user.email|default:'' }}"
+              autocomplete="email"
+              {% if email_error %}aria-invalid="true" aria-describedby="email-error"{% endif %}>
+            {% if email_error %}
+              <span class="field__error" id="email-error" role="alert">
+                <span class="alert-icon alert-icon--sm" aria-hidden="true">!</span><span>{{ email_error }}</span>
+              </span>
+            {% endif %}
+          </label>
+
           <div class="field">
             <span class="field__label">Dokumen legalitas</span>
             <label class="dropzone dropzone--row">
@@ -174,8 +201,13 @@
           </div>
 
           <div class="form-actions flex items-center justify-between">
-            <a class="btn btn--outline btn--lg only-desktop hidden md:inline-flex" href="{% if institution and institution.name %}{% url 'main:show_lembaga_profile' %}{% else %}{% url 'main:show_main' %}{% endif %}">Kembali</a>
-            <button class="btn btn--primary btn--lg" type="submit">Kirim untuk verifikasi</button>
+            {% if is_onboarding %}
+              <span class="only-desktop hidden md:inline"></span>
+              <button class="btn btn--primary btn--lg" type="submit">Kirim untuk verifikasi</button>
+            {% else %}
+              <a class="btn btn--outline btn--lg only-desktop hidden md:inline-flex" href="{% url 'main:show_lembaga_profile' %}">Kembali</a>
+              <button class="btn btn--primary btn--lg" type="submit">Simpan perubahan</button>
+            {% endif %}
           </div>
         </form>
       </main>

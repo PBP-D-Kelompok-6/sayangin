@@ -4,7 +4,7 @@
 {% block page_class %} has-bottom-nav{% endblock %}
 {% block header %}
 {% include "donasi/_header_lembaga.html" with aktif="dashboard" %}
-<header class="app-bar only-mobile"><a class="logo" href="{% url 'donasi:dashboard_lembaga' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span></a><span class="spacer"></span><span class="avatar avatar--sm" aria-hidden="true"></span></header>
+<header class="app-bar only-mobile"><a class="logo" href="{% url 'donasi:dashboard_lembaga' %}"><img src="{% static 'img/logo.svg' %}" alt="" width="35" height="35">sayangin <span class="logo__tag">MITRA</span></a><span class="spacer"></span><a class="avatar avatar--sm" href="{% url 'main:show_lembaga_profile' %}" aria-label="Profil lembaga"></a></header>
 {% endblock %}
 {% block content %}
 <main class="page__main container org-dash" id="konten">

@@ -562,3 +562,100 @@ class SecurityAndGoogleAuthTests(TestCase):
 
         self.assertEqual(bypass_res.status_code, 400)
         self.assertTrue(User.objects.filter(username='nadia.r').exists())
+
+
+class LembagaUXAndRoutingTests(TestCase):
+    def setUp(self):
+        self.personal_user = User.objects.create_user(
+            username='personal_u',
+            email='personal@email.com',
+            password='password123',
+        )
+        self.lembaga_user = User.objects.create_user(
+            username='lembaga_u',
+            email='lembaga@email.com',
+            password='password123',
+        )
+        self.lembaga_user.profile.role = 'LEMBAGA' # type: ignore
+        self.lembaga_user.profile.save() # type: ignore
+
+    def test_cross_role_profile_pages_redirect_gracefully_instead_of_403(self):
+        # Lembaga visiting personal profile/edit redirects to lembaga profile/edit
+        InstitutionProfile.objects.create(
+            user=self.lembaga_user,
+            name='Panti Kasih Ibu',
+            address='Jl. Merdeka No. 1',
+        )
+        self.client.login(username='lembaga_u', password='password123')
+        res_prof = self.client.get(reverse('main:show_profile'))
+        self.assertRedirects(res_prof, reverse('main:show_lembaga_profile'))
+        res_edit = self.client.get(reverse('main:edit_profile'))
+        self.assertRedirects(res_edit, reverse('main:edit_institution_profile'))
+        self.client.logout()
+
+        # Personal visiting lembaga profile/edit redirects to personal profile/edit
+        self.client.login(username='personal_u', password='password123')
+        res_l_prof = self.client.get(reverse('main:show_lembaga_profile'))
+        self.assertRedirects(res_l_prof, reverse('main:show_profile'))
+        res_l_edit = self.client.get(reverse('main:edit_institution_profile'))
+        self.assertRedirects(res_l_edit, reverse('main:edit_profile'))
+
+    def test_authenticated_lembaga_on_register_and_landing_redirects_appropriately(self):
+        self.client.login(username='lembaga_u', password='password123')
+        # Incomplete lembaga on / or /register/ redirects to edit_institution_profile
+        self.assertRedirects(self.client.get(reverse('main:show_main')), reverse('main:edit_institution_profile'))
+        self.assertRedirects(self.client.get(reverse('main:show_register')), reverse('main:edit_institution_profile'))
+
+        # Complete lembaga on /register/ redirects to donasi:dashboard_lembaga
+        InstitutionProfile.objects.create(
+            user=self.lembaga_user,
+            name='Panti Kasih Ibu',
+            address='Jl. Merdeka No. 1',
+        )
+        self.assertRedirects(self.client.get(reverse('main:show_register')), reverse('donasi:dashboard_lembaga'))
+
+        # Complete lembaga on / renders lembaga-specific navigation and CTAs
+        landing_res = self.client.get(reverse('main:show_main'))
+        self.assertEqual(landing_res.status_code, 200)
+        self.assertContains(landing_res, reverse('donasi:dashboard_lembaga'))
+        self.assertContains(landing_res, reverse('donasi:kebutuhan_buat'))
+
+    def test_mobile_menu_renders_lembaga_navigation_for_lembaga_user(self):
+        InstitutionProfile.objects.create(
+            user=self.lembaga_user,
+            name='Panti Kasih Ibu',
+            address='Jl. Merdeka No. 1',
+        )
+        self.client.login(username='lembaga_u', password='password123')
+        menu_res = self.client.get(reverse('main:show_menu'))
+        self.assertEqual(menu_res.status_code, 200)
+        self.assertContains(menu_res, 'Menu Mitra')
+        self.assertContains(menu_res, 'Dashboard Donasi')
+        self.assertContains(menu_res, 'Kelola Kebutuhan')
+        self.assertNotContains(menu_res, 'Jadi lembaga mitra')
+
+    def test_login_respects_next_parameter_when_profile_complete(self):
+        InstitutionProfile.objects.create(
+            user=self.lembaga_user,
+            name='Panti Kasih Ibu',
+            address='Jl. Merdeka No. 1',
+        )
+        target_next = reverse('donasi:kebutuhan_list')
+        login_res = self.client.post(reverse('main:show_login'), {
+            'identity': 'lembaga@email.com',
+            'password': 'password123',
+            'next': target_next,
+        })
+        self.assertRedirects(login_res, target_next)
+
+    def test_google_callback_enforces_institution_onboarding_even_with_next_url(self):
+        init_res = self.client.get(reverse('main:google_login') + '?mode=chooser&jenis=lembaga&next=/donasi/lembaga/kebutuhan/')
+        state = init_res.context['state']
+        cb_res = self.client.post(reverse('main:google_callback'), {
+            'state': state,
+            'email': 'panti.baru@gmail.com',
+            'full_name': 'Panti Baru',
+            'jenis': 'lembaga',
+            'next': '/donasi/lembaga/kebutuhan/',
+        })
+        self.assertRedirects(cb_res, reverse('main:edit_institution_profile'))
