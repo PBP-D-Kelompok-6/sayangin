@@ -58,17 +58,17 @@
         <nav class="only-desktop hidden md:block" aria-label="Pintasan akun">
           <a class="list-row list-row--link" href="{% url 'marketplace:orders' %}">
             <span class="spacer">Pesanan saya</span>
-            <span class="text-sm text-muted">2 dalam pengiriman</span>
+            <span class="text-sm text-muted">{{ pesanan_berjalan }} berjalan</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
           <a class="list-row list-row--link" href="{% url 'marketplace:my_products' %}">
             <span class="spacer">Barang dijual</span>
-            <span class="text-sm text-muted">3 tayang</span>
+            <span class="text-sm text-muted">{{ barang_tayang }} tayang</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
-          <a class="list-row list-row--link" href="{% url 'donasi:pilih_lembaga' %}">
+          <a class="list-row list-row--link" href="{% url 'donasi:tawaran_saya' %}">
             <span class="spacer">Donasi saya</span>
-            <span class="text-sm text-muted">5 tersalurkan</span>
+            <span class="text-sm text-muted">{{ donasi_tersalurkan }} tersalurkan</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
         </nav>
@@ -237,17 +237,17 @@
           <h2 class="eyebrow">Aktivitas</h2>
           <a class="list-row list-row--link" href="{% url 'marketplace:orders' %}">
             <span class="spacer">Pesanan saya</span>
-            <span class="text-sm text-muted">2 dalam pengiriman</span>
+            <span class="text-sm text-muted">{{ pesanan_berjalan }} berjalan</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
           <a class="list-row list-row--link" href="{% url 'marketplace:my_products' %}">
             <span class="spacer">Barang dijual</span>
-            <span class="text-sm text-muted">3 tayang</span>
+            <span class="text-sm text-muted">{{ barang_tayang }} tayang</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
-          <a class="list-row list-row--link" href="{% url 'donasi:pilih_lembaga' %}">
+          <a class="list-row list-row--link" href="{% url 'donasi:tawaran_saya' %}">
             <span class="spacer">Donasi saya</span>
-            <span class="text-sm text-muted">5 tersalurkan</span>
+            <span class="text-sm text-muted">{{ donasi_tersalurkan }} tersalurkan</span>
             <svg class="icon icon--sm chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           </a>
         </section>

@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/barang/', views.products_api, name='products_api'),
     path('foto/<path:path>', views.photo, name='photo'),
     path('keranjang/', views.cart, name='cart'),
+    path('keranjang/jumlah/', views.cart_count_api, name='cart_count_api'),
     path('keranjang/<int:pk>/hapus/', views.remove_from_cart, name='remove_from_cart'),
     path('checkout/', views.checkout, name='checkout'),
     path('checkout/alamat/', views.checkout_address, name='checkout_address'),

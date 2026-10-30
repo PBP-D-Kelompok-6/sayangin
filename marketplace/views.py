@@ -11,8 +11,10 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.crypto import get_random_string
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from django.views.static import serve
+
+from sayangin.pilihan import UKURAN_ANAK, UKURAN_BAJU
 
 from .forms import PHOTO_TYPES, ProductForm
 from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product, ProductPhoto
@@ -145,7 +147,7 @@ def catalog(request):
         'active_filters': active,
         'categories': Product.CATEGORY_CHOICES,
         'conditions': Product.CONDITION_CHOICES,
-        'sizes': ['S', 'M', 'L', 'XL'],
+        'sizes': UKURAN_BAJU + UKURAN_ANAK,
         'cities': Product.objects.available().values_list('city', flat=True).distinct().order_by('city'),
         'selected': {'kategori': categories, 'kondisi': conditions, 'ukuran': sizes, 'lokasi': city,
                      'penjual': seller, 'min': request.GET.get('min', ''), 'maks': request.GET.get('maks', '')},
@@ -275,6 +277,12 @@ def _is_ajax(request):
 
 def _cart_count(user):
     return CartItem.objects.filter(user=user, product__is_sold=False).count()
+
+
+@login_required
+@require_GET
+def cart_count_api(request):
+    return JsonResponse({'cart_count': _cart_count(request.user)})
 
 
 @login_required

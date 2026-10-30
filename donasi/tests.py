@@ -46,7 +46,7 @@ class DonasiBaseTestCase(TestCase):
         self.jaket = Kebutuhan.objects.create(
             lembaga=self.lembaga,
             nama_barang="Jaket anak",
-            kategori=Kategori.PAKAIAN_LUARAN,
+            kategori=Kategori.LUARAN,
             jumlah=12,
             terpenuhi=3,
             ukuran="6 th,8 th",
@@ -58,7 +58,7 @@ class DonasiBaseTestCase(TestCase):
         self.sepatu = Kebutuhan.objects.create(
             lembaga=self.lembaga2,
             nama_barang="Sepatu sekolah",
-            kategori=Kategori.ALAS_KAKI,
+            kategori=Kategori.SEPATU,
             jumlah=20,
             terpenuhi=15,
             kondisi_min=Kondisi.SEPERTI_BARU,
@@ -116,7 +116,7 @@ class ModelTest(DonasiBaseTestCase):
     def test_kondisi_yang_memenuhi(self):
         self.assertIn(Kondisi.TERAWAT, _kondisi_yang_memenuhi(Kondisi.SEPERTI_BARU))
         self.assertIn(Kondisi.SEPERTI_BARU, _kondisi_yang_memenuhi(Kondisi.SEPERTI_BARU))
-        self.assertEqual(_kondisi_yang_memenuhi(Kondisi.ADA_CACAT), [])
+        self.assertEqual(_kondisi_yang_memenuhi(Kondisi.CACAT), [])
         self.assertEqual(_kondisi_yang_memenuhi("invalid"), [])
 
     def test_aktif_hanya_yang_tayang_belum_lewat_dan_belum_penuh(self):
@@ -139,20 +139,20 @@ class ModelTest(DonasiBaseTestCase):
 
     def test_cocok_dengan_kategori_ukuran_kondisi(self):
         self.assertEqual(
-            Kebutuhan.objects.cocok_dengan(kategori="pakaian-luaran"), [self.jaket]
+            Kebutuhan.objects.cocok_dengan(kategori="luaran"), [self.jaket]
         )
         self.assertEqual(
-            Kebutuhan.objects.cocok_dengan(kategori="pakaian-luaran", ukuran="8 th"),
+            Kebutuhan.objects.cocok_dengan(kategori="luaran", ukuran="8 th"),
             [self.jaket],
         )
         self.assertEqual(
-            Kebutuhan.objects.cocok_dengan(kategori="pakaian-luaran", ukuran="XL"), []
+            Kebutuhan.objects.cocok_dengan(kategori="luaran", ukuran="XL"), []
         )
         self.assertEqual(
-            Kebutuhan.objects.cocok_dengan(kategori="alas-kaki", kondisi="terawat"), []
+            Kebutuhan.objects.cocok_dengan(kategori="sepatu", kondisi="terawat"), []
         )
         self.assertEqual(
-            Kebutuhan.objects.cocok_dengan(kategori="alas-kaki", kondisi="seperti-baru"),
+            Kebutuhan.objects.cocok_dengan(kategori="sepatu", kondisi="seperti_baru"),
             [self.sepatu],
         )
 
@@ -190,7 +190,7 @@ class FormTest(DonasiBaseTestCase):
     def data_kebutuhan(self, **kwargs):
         data = {
             "nama_barang": "Tas sekolah",
-            "kategori": Kategori.PERLENGKAPAN_SEKOLAH,
+            "kategori": Kategori.LAINNYA,
             "jumlah": 5,
             "ukuran": [],
             "kondisi_min": Kondisi.TERAWAT,
@@ -293,6 +293,40 @@ class SisiDonaturTest(DonasiBaseTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn("login", response["Location"])
 
+    def test_barang_lainnya_cocok_dengan_kebutuhan_lainnya(self):
+        Kebutuhan.objects.create(
+            lembaga=self.lembaga, nama_barang="Apa saja", kategori=Kategori.LAINNYA, jumlah=3, status=Kebutuhan.Status.AKTIF
+        )
+        self.client.force_login(self.donatur)
+        response = self.client.get(reverse("donasi:pilih_lembaga"), {"nama": "Jam", "kategori": "lainnya"})
+        self.assertContains(response, "Apa saja")
+
+    def test_dari_kebutuhan_pilih_barang_lemari_yang_cocok_lalu_kirim(self):
+        from lemari.models import WardrobeItem
+        cocok = WardrobeItem.objects.create(owner=self.donatur, name="Jaket cocok", category="luaran", size="8 th", last_used="Lupa")
+        WardrobeItem.objects.create(owner=self.donatur, name="Jaket besar", category="luaran", size="XL", last_used="Lupa")
+        self.client.force_login(self.donatur)
+        self.assertContains(self.client.get(reverse("donasi:pilih_lembaga")), reverse("donasi:pilih_barang", args=[self.jaket.pk]))
+
+        response = self.client.get(reverse("donasi:pilih_barang", args=[self.jaket.pk]))
+        self.assertEqual([i.name for i in response.context["cocok"]], ["Jaket cocok"])
+        self.assertEqual([i.name for i in response.context["tidak_cocok"]], ["Jaket besar"])
+
+        url = reverse("donasi:kirim_donasi", args=[self.jaket.pk]) + "?" + response.context["cocok"][0].query
+        data = {"metode": "antar", "tanggal_rencana": besok().isoformat(), "jam": "pagi", "bersih": "on"}
+        self.assertRedirects(self.client.post(url, data), reverse("donasi:tawaran_saya"))
+        tawaran = Penawaran.objects.get(donatur=self.donatur)
+        self.assertEqual(tawaran.lemari_id, str(cocok.pk))
+
+        # Statusnya terlihat di Donasiku, dan barang yang sama tidak bisa ditawarkan lagi.
+        self.assertContains(self.client.get(reverse("donasi:tawaran_saya")), "Menunggu keputusan")
+        self.assertRedirects(self.client.get(url), reverse("donasi:tawaran_saya"))
+        self.assertEqual(self.client.get(reverse("donasi:pilih_barang", args=[self.jaket.pk])).context["cocok"], [])
+
+    def test_barang_all_size_cocok_dengan_kebutuhan_berukuran(self):
+        hasil = Kebutuhan.objects.cocok_dengan(kategori="luaran", ukuran="All size", kondisi=Kondisi.TERAWAT)
+        self.assertIn(self.jaket, hasil)
+
     def test_lembaga_tidak_boleh_mendonasikan(self):
         self.client.force_login(self.lembaga)
         response = self.client.get(reverse("donasi:pilih_lembaga"))
@@ -310,7 +344,7 @@ class SisiDonaturTest(DonasiBaseTestCase):
         self.client.force_login(self.donatur)
         response = self.client.get(
             reverse("donasi:pilih_lembaga"),
-            {"nama": "Jaket", "kategori": "pakaian-luaran"},
+            {"nama": "Jaket", "kategori": "luaran"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "donasi/pilih_lembaga.html")
@@ -482,7 +516,7 @@ class SisiLembagaTest(DonasiBaseTestCase):
             reverse("donasi:kebutuhan_buat"),
             {
                 "nama_barang": "Selimut",
-                "kategori": Kategori.PERABOT,
+                "kategori": Kategori.RUMAH,
                 "jumlah": 4,
                 "ukuran": [],
                 "kondisi_min": Kondisi.TERAWAT,
@@ -501,7 +535,7 @@ class SisiLembagaTest(DonasiBaseTestCase):
             reverse("donasi:kebutuhan_buat"),
             {
                 "nama_barang": "Selimut Draf",
-                "kategori": Kategori.PERABOT,
+                "kategori": Kategori.RUMAH,
                 "jumlah": 4,
                 "kondisi_min": Kondisi.TERAWAT,
                 "aksi": "draf",
@@ -555,7 +589,7 @@ class SisiLembagaTest(DonasiBaseTestCase):
             reverse("donasi:kebutuhan_ubah", args=[self.jaket.pk]),
             {
                 "nama_barang": "Jaket Hujan",
-                "kategori": Kategori.PAKAIAN_LUARAN,
+                "kategori": Kategori.LUARAN,
                 "jumlah": 15,
                 "ukuran": ["6 th"],
                 "kondisi_min": Kondisi.TERAWAT,
@@ -671,7 +705,7 @@ class JsonTest(DonasiBaseTestCase):
     def test_kebutuhan_json_filter_dan_info_login(self):
         self.client.force_login(self.donatur)
         data = self.client.get(
-            reverse("donasi:kebutuhan_json"), {"kategori": "alas-kaki", "q": "sepatu"}
+            reverse("donasi:kebutuhan_json"), {"kategori": "sepatu", "q": "sepatu"}
         ).json()
         self.assertEqual([k["nama_barang"] for k in data["results"]], ["Sepatu sekolah"])
         self.assertIn("jumlah_tawaran_menunggu", data["results"][0])

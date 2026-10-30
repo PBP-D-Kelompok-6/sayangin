@@ -5,7 +5,86 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .models import ListingPhoto, SaleListing, WardrobeItem
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.urls import reverse
+from django.utils.crypto import get_random_string
 from datetime import datetime
+from pathlib import Path
+
+from donasi.models import Penawaran
+from marketplace import views as marketplace_views
+from marketplace.forms import PHOTO_TYPES
+from marketplace.models import Product, ProductPhoto
+from sayangin.pilihan import KATEGORI, KONDISI, UKURAN
+
+FOTO_KOSONG = "img/logo.svg"  # Product.image wajib terisi; dipakai kalau iklan tanpa foto
+
+
+def _simpan_foto(file):
+    suffix = PHOTO_TYPES.get(Path(file.name).suffix.lower(), ".jpg")
+    photos = marketplace_views.PHOTOS
+    return photos.url(photos.save(f"{get_random_string(16)}{suffix}", file))
+
+
+def _tayangkan_di_marketplace(listing, uploaded, source_item):
+    """Buat/perbarui Product dari iklan Lemari supaya tampil di Marketplace dan Jualanku."""
+    product = listing.product or Product(seller=listing.owner)
+    product.name = listing.title[:120]
+    product.description = listing.condition_notes
+    product.price = listing.price
+    product.category = listing.category
+    product.condition = listing.condition
+    product.condition_note = listing.condition_notes[:200]
+    product.size = listing.size[:10]
+    # "Alamat utama · Jakarta Selatan" -> "Jakarta Selatan"
+    product.city = listing.shipped_from.split("·")[-1].strip()[:60]
+    product.weight_grams = listing.weight
+    if source_item:
+        product.used_duration = source_item.last_used[:30]
+
+    paths = [_simpan_foto(file) for file in uploaded[:4]]  # Marketplace menampung maksimal 4 foto
+    if paths:
+        product.image = paths[0]
+    elif not product.image:
+        if source_item and source_item.photo:
+            with source_item.photo.open("rb") as photo:
+                product.image = _simpan_foto(photo)
+        else:
+            product.image = FOTO_KOSONG
+    product.save()
+    if paths:
+        product.extra_photos.all().delete()
+        ProductPhoto.objects.bulk_create([ProductPhoto(product=product, image=path) for path in paths[1:]])
+    listing.product = product
+    listing.save(update_fields=["product"])
+
+
+def _status_barang(user):
+    """{id barang: status} untuk barang yang sedang dijual, terjual, atau didonasikan."""
+    status = {}
+    listings = SaleListing.objects.filter(
+        owner=user, product__isnull=False, source_item__isnull=False
+    ).select_related("product")
+    for listing in listings:
+        terjual = listing.product.is_sold
+        status[listing.source_item_id] = {
+            "jenis": "dijual",
+            "label": "Terjual" if terjual else "Dijual",
+            "url": reverse("marketplace:detail", args=[listing.product_id]),
+            "aksi": "Lihat di Marketplace",
+        }
+    tawaran = Penawaran.objects.filter(
+        donatur=user,
+        status__in=[Penawaran.Status.MENUNGGU, Penawaran.Status.DITERIMA, Penawaran.Status.SELESAI],
+    ).exclude(lemari_id="")
+    for p in tawaran:
+        if p.lemari_id.isdigit():
+            status[int(p.lemari_id)] = {
+                "jenis": "didonasikan",
+                "label": "Didonasikan" if p.status == Penawaran.Status.SELESAI else p.get_status_display(),
+                "url": reverse("donasi:tawaran_saya"),
+                "aksi": "Lihat donasiku",
+            }
+    return status
 
 
 @login_required(login_url="/login/")
@@ -35,7 +114,15 @@ def index(request):
     wardrobe_items = WardrobeItem.objects.filter(owner=request.user)
     if not wardrobe_items.exists():
         return render(request, "lemari/kosong.html")
-    reminder_items = WardrobeItem.objects.filter(owner=request.user, reminder_enabled=True)
+    status = _status_barang(request.user)
+    # Barang yang sudah dijual/didonasikan tidak perlu diingatkan lagi.
+    reminder_items = WardrobeItem.objects.filter(owner=request.user, reminder_enabled=True).exclude(pk__in=status)
+    wardrobe_count = wardrobe_items.count()
+    tab = request.GET.get("tab", "")
+    if tab in ("dijual", "didonasikan"):
+        wardrobe_items = wardrobe_items.filter(pk__in=[pk for pk, s in status.items() if s["jenis"] == tab])
+    else:
+        tab = ""
     sort = request.GET.get("sort", "listed")
     usage_order = Case(
         When(last_used="Lebih dari 6 bulan", then=0),
@@ -55,14 +142,20 @@ def index(request):
     else:
         sort = "listed"
         wardrobe_items = wardrobe_items.order_by("-created_at")
+    wardrobe_items = list(wardrobe_items)
+    for item in wardrobe_items:
+        item.status = status.get(item.pk)
     return render(
         request,
         "lemari/index.html",
         {
             "wardrobe_items": wardrobe_items,
-            "wardrobe_count": wardrobe_items.count(),
+            "wardrobe_count": wardrobe_count,
+            "dijual_count": sum(s["jenis"] == "dijual" for s in status.values()),
+            "didonasikan_count": sum(s["jenis"] == "didonasikan" for s in status.values()),
+            "tab": tab,
             "current_sort": sort,
-            "reminder_items": reminder_items,
+            "reminder_items": [] if tab else reminder_items,  # pengingat hanya di tab Semua
         },
     )
 
@@ -87,7 +180,7 @@ def awal(request):
                 continue
             if not name:
                 errors[number] = "Isi nama barang."
-            elif not category or not last_used:
+            elif category not in dict(KATEGORI) or not last_used:
                 errors[number] = "Lengkapi kategori dan terakhir dipakai."
             elif len(name) > 160:
                 errors[number] = "Nama barang maksimal 160 karakter."
@@ -126,7 +219,7 @@ def tambah_barang(request):
         photo = request.FILES.get("foto")
         text_limits = ((name, 160, "Nama barang"), (category, 80, "Kategori"), (size, 40, "Ukuran"), (last_used, 40, "Terakhir dipakai"), (color, 80, "Warna"), (purchased_at, 40, "Kapan dibeli"), (notes, 2000, "Catatan"))
         too_long = next((f"{label} maksimal {limit} karakter." for value, limit, label in text_limits if len(value) > limit), "")
-        if too_long or not name or not category or not last_used or (not item and not photo):
+        if too_long or not name or category not in dict(KATEGORI) or not last_used or (not item and not photo):
             return render(
                 request,
                 "lemari/tambah_barang.html",
@@ -174,7 +267,11 @@ def detail_barang(request, item_id):
             month_name = f"{months[purchased_date.month - 1]} {purchased_date.year}"
         except ValueError:
             month_name = item.purchased_at
-    return render(request, "lemari/detail_barang.html", {"item": item, "purchased_label": month_name})
+    return render(request, "lemari/detail_barang.html", {
+        "item": item,
+        "purchased_label": month_name,
+        "item_status": _status_barang(request.user).get(item.pk),
+    })
 
 
 @login_required(login_url="/login/")
@@ -219,6 +316,14 @@ def jual(request):
         if source_id
         else None
     )
+    # Barang yang masih tayang cukup diubah iklannya, jangan sampai tayang dua kali.
+    if listing is None and source_item:
+        listing = SaleListing.objects.filter(
+            owner=request.user, source_item=source_item, product__isnull=False, product__is_sold=False
+        ).first()
+    if listing and listing.product and listing.product.is_sold:
+        messages.error(request, "Barang ini sudah terjual, iklannya tidak bisa diubah.")
+        return redirect("lemari:jual_sukses", listing_id=listing.pk)
     if request.method == "POST":
         values = _listing_values(request)
         errors = {}
@@ -237,11 +342,11 @@ def jual(request):
                     errors[field] = message
         if not values["title"]:
             errors["judul"] = "Isi judul barang."
-        if not values["category"]:
+        if values["category"] not in dict(KATEGORI):
             errors["kategori"] = "Pilih kategori."
-        if not values["size"]:
+        if values["size"] not in UKURAN:
             errors["ukuran"] = "Pilih ukuran."
-        if not values["condition"]:
+        if values["condition"] not in dict(KONDISI):
             errors["kondisi"] = (
                 "Pilih kondisi supaya pembeli tahu apa yang mereka dapat."
             )
@@ -278,6 +383,7 @@ def jual(request):
             and not listing.photos.exists()
         ):
             ListingPhoto.objects.create(listing=listing, image=source_item.photo.name)
+        _tayangkan_di_marketplace(listing, request.FILES.getlist("photos"), source_item)
         return redirect("lemari:jual_sukses", listing_id=listing.pk)
     values = {
         "title": (
@@ -288,9 +394,9 @@ def jual(request):
         "category": (
             listing.category
             if listing
-            else (source_item.category if source_item else "Pakaian · Luaran")
+            else (source_item.category if source_item else "")
         ),
-        "size": listing.size if listing else "M",
+        "size": listing.size if listing else (source_item.size if source_item else ""),
         "condition": listing.condition if listing else "terawat",
         "condition_notes": (
             listing.condition_notes
