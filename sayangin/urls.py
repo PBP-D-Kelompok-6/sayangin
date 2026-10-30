@@ -20,7 +20,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('marketplace/', include('marketplace.urls')),
-    path('', include('main.urls')), # Replace 'main' with your app folder name
-    path('dampak/', include ('impact.urls'))
+    path('dampak/', include ('impact.urls')),
+    path('', include('main.urls')), 
 ]
 
