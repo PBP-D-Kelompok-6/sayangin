@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}Ubah{% else %}Tambah{% endif %} tantangan — Sayangin{% endblock %}
+{% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
+
+{# Bar atas versi HP (form ini khusus akun personal) #}
+{% block app_bar %}
+<header class="app-bar only-mobile">
+  <span class="app-bar__title">{% if is_edit %}Ubah{% else %}Tambah{% endif %} tantangan</span>
+  <a class="avatar-link" href="{% url 'main:show_profile' %}" aria-label="Profil"><span class="avatar"></span></a>
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="page__main container dampak dampak--narrow" id="konten">
+  <nav class="breadcrumb"><a href="{% url 'impact:show_impact_challenges' %}">Tantangan pribadi</a> / {% if is_edit %}Ubah{% else %}Tambah{% endif %}</nav>
+  <h1 class="page-title">{% if is_edit %}Ubah{% else %}Tambah{% endif %} <em>tantangan</em></h1>
+
+  <form class="dampak-card dampak-form" method="post" novalidate>
+    {% csrf_token %}
+    <div class="grid grid-cols-2 gap-4">
+      {% for field in form %}
+      <label class="field {% if field.name == 'title' %}col-span-2{% elif field.name == 'kind' or field.name == 'target' %}col-span-2 sm:col-span-1{% endif %}">
+        <span class="field__label">{{ field.label }}</span>
+        {{ field }}
+        {% for error in field.errors %}
+        <span class="field__error">
+          <svg class="icon icon--sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg>
+          {{ error }}
+        </span>
+        {% endfor %}
+      </label>
+      {% endfor %}
+    </div>
+    <div class="flex gap-3">
+      <button class="btn btn--primary" type="submit">Simpan</button>
+      <a class="btn btn--outline" href="{% url 'impact:show_impact_challenges' %}">Batal</a>
+    </div>
+  </form>
+</main>
+{% endblock %}

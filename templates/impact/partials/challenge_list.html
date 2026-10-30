@@ -1,0 +1,50 @@
+{% comment %} Daftar tantangan pribadi. Dikirim ulang oleh view saat filter (HTMX) berubah.{% endcomment %}
+
+{# show_impact_challenges(request), hanya jika HX-Request #}
+
+{% if rows %}
+<ul class="dampak-list grid md:grid-cols-2 gap-3">
+
+  {% for row in rows %}
+  <li class="dampak-card">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="pill {% if not row.challenge.is_running %}pill--soft{% endif %}">{% if row.challenge.is_running %}Berjalan{% else %}Berakhir{% endif %}</span>
+      <span class="mono">{{ row.challenge.get_kind_display }}</span>
+    </div>
+    <h3 class="serif">{{ row.challenge.title }}</h3>
+    <div class="progress"><span style="--value: {{ row.percent }}%"></span></div>
+    <p class="text-soft">{{ row.done }} / {{ row.challenge.target }} · {{ row.challenge.start_date|date:"j M" }} – {{ row.challenge.end_date|date:"j M Y" }}</p>
+    <div class="flex gap-2">
+      <a class="btn btn--sm btn--outline" href="{% url 'impact:edit_impact_challenge' row.challenge.pk %}">Ubah</a>
+      <form method="post" action="{% url 'impact:delete_impact_challenge' row.challenge.pk %}">
+        {% csrf_token %}
+        {# data-confirm-title: judul yang ditampilkan di dialog konfirmasi hapus (challenges.html) #}
+        <button class="btn btn--sm btn--danger" type="submit"
+                hx-post="{% url 'impact:delete_impact_challenge' row.challenge.pk %}"
+                hx-target="closest li" hx-swap="outerHTML" data-confirm-title="{{ row.challenge.title }}">Hapus</button>
+      </form>
+    </div>
+  </li>
+  {% endfor %}
+
+</ul>
+{% elif has_any %}
+{# Empty state "filter tanpa hasil": user punya tantangan, tapi tidak ada yang cocok dengan filter #}
+<div class="dampak-card dampak-card--dashed dampak-empty">
+  <span class="dampak-empty__icon"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></span>
+  <h2 class="serif">Tidak ada yang <em>cocok</em></h2>
+  <p class="text-soft">Belum ada tantangan{% if kind_label %} {{ kind_label|lower }}{% endif %}{% if status_label %} yang {{ status_label }}{% endif %}. Coba ubah jenis atau status.</p>
+  {# link biasa tanpa ?jenis=&status= -> halaman dimuat ulang, dropdown ikut kembali ke "Semua" #}
+  <a class="btn btn--outline" href="{% url 'impact:show_impact_challenges' %}">Hapus filter</a>
+</div>
+{% else %}
+{# Empty state "belum ada": user sama sekali belum punya tantangan (filter juga disembunyikan di challenges.html) #}
+<div class="dampak-card dampak-card--dashed dampak-empty">
+  {# ikon target: tidak ada di icons.html tim, jadi digambar langsung (2 lingkaran + titik) #}
+  <span class="dampak-empty__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></span>
+  <h2 class="serif">Belum ada <em>tantangan</em></h2>
+  <p class="text-soft">Buat target kecil, misalnya jual 3 barang minggu ini. Progresnya dihitung otomatis dari aksimu.</p>
+  <a class="btn btn--primary" href="{% url 'impact:create_impact_challenge' %}">+ Buat tantangan pertama</a>
+</div>
+
+{% endif %}

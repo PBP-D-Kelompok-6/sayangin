@@ -1,0 +1,11 @@
+{% load static %}
+
+{# Tailwind sudah dimuat base.html (includes/tailwind.html), jadi tidak dimuat lagi di sini #}
+{# dulu dimuat ulang dengan prefix "tw-" -> menimpa pengaturan tim dan merusak navbar di halaman Dampak #}
+
+{# HTMX: atribut hx- bisa meminta potongan halaman tanpa reload #}
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.11/dist/htmx.min.js" defer></script>
+
+{# CSS untuk footer #}
+<link rel="stylesheet" href="{% static 'css/umum.css' %}"> 
+<link rel="stylesheet" href="{% static 'css/impact.css' %}">

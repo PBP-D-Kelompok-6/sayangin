@@ -1,0 +1,13 @@
+{# Toast pesan sukses (django messages) di halaman tantangan, sesuai frame "Sukses" di Figma #}
+{# dipakai 2 kali: di-include challenges.html, dan dikirim sendiri oleh delete_impact_challenge() lewat HTMX #}
+{# oob=True -> hx-swap-oob: HTMX mengganti #impact-messages yang sudah ada di halaman, bukan kartu yang dihapus #}
+<div id="impact-messages" class="dampak-toasts" {% if oob %}hx-swap-oob="true"{% endif %}>
+  {% for message in messages %}
+  <div class="toast dampak-toast" role="status">
+    <span class="dampak-toast__icon"><svg class="icon icon--sm" aria-hidden="true"><use href="#i-check"/></svg></span>
+    <span class="toast__text">{{ message }}</span>
+    {# ditutup lewat script kecil di challenges.html (cari data-toast-close) #}
+    <button class="dampak-toast__close" type="button" data-toast-close>Tutup</button>
+  </div>
+  {% endfor %}
+</div>

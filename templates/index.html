@@ -27,7 +27,7 @@
         <a href="{% url 'marketplace:catalog' %}">Marketplace</a>
         <a href="#lemari">Lemari Digital</a>
         <a href="#kebutuhan">Donasi</a>
-        <a href="#dampak">Dampak</a>
+        <a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a>
       </nav>
       <div class="row landing-header__actions flex items-center">
         <a class="icon-btn only-desktop hidden md:inline-flex" href="#baru-masuk" aria-label="Cari">
@@ -192,7 +192,7 @@
           <span class="impact__divider" aria-hidden="true"></span>
           <div class="impact__item flex flex-col items-center"><span class="impact__value">480</span><span>donasi tersalurkan</span></div>
         </div>
-        <a class="btn btn--outline" href="#dampak">Lihat dampak →</a>
+        <a class="btn btn--outline" href="{% url 'impact:show_impact_dashboard' %}">Lihat dampak →</a>
       </section>
 
       <section class="needs container flex flex-col" id="kebutuhan">

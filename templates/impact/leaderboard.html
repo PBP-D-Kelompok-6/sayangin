@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Papan peringkat — Sayangin{% endblock %}
+{% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
+
+{# Bar atas versi HP (sesuai Figma): judul serif besar, avatar di kanan untuk yang login #}
+{% block app_bar %}
+<header class="app-bar only-mobile">
+  <span class="app-bar__title">Papan peringkat</span>
+  {% if user.is_authenticated %}
+    {# avatar ke halaman profil; akun lembaga punya halaman profil sendiri #}
+    <a class="avatar-link" href="{% if user.profile.role == 'LEMBAGA' %}{% url 'main:show_lembaga_profile' %}{% else %}{% url 'main:show_profile' %}{% endif %}" aria-label="Profil"><span class="avatar"></span></a>
+  {% endif %}
+</header>
+{% endblock %}
+
+{% block content %}
+<main class="page__main container dampak dampak--narrow dampak-peringkat" id="konten">
+  <nav class="breadcrumb"><a href="{% url 'impact:show_impact_dashboard' %}">Dampak</a> / Papan peringkat</nav>
+
+  {# Judul + tombol periode (link biasa; reload halaman dengan ?periode=...) #}
+  <div class="dampak-head">
+    <h1 class="page-title">
+      <span class="eyebrow">Komunitas Sayangin</span>Papan <em>peringkat</em>
+      {# hanya untuk user yang login dan sudah punya poin di periode ini #}
+      {% if my_rank %}<span class="dampak-me-pill">Kamu #{{ my_rank.rank }}</span>{% endif %}
+    </h1>
+    <div class="dampak-switch" role="group" aria-label="Pilih periode">
+      <a href="?periode=bulan" class="chip {% if period == 'bulan' %}chip--on{% endif %}">Bulan ini</a>
+      <a href="?periode=semua" class="chip {% if period == 'semua' %}chip--on{% endif %}">Sepanjang waktu</a>
+    </div>
+  </div>
+
+  {# Cara dapat poin, dari sources.POINTS (kalau poinnya diubah, kalimat ini ikut berubah) #}
+  {% if leaderboard %}
+  <p class="text-soft">
+    Poin dari {% for label, point in points_info %}{{ label|lower }} (+{{ point }}){% if not forloop.last %}, {% endif %}{% endfor %}.
+    Akun lembaga tidak ikut.
+  </p>
+  {% endif %}
+
+  {# Daftar 10 teratas; untuk tamu, username sudah disamarkan di views.show_impact_leaderboard() #}
+  <section class="dampak-card">
+    {% if leaderboard %}
+    <ol class="dampak-list dampak-rank">
+      {% for row in leaderboard %}
+      {# is-me: baris milik user yang login disorot (tamu tidak punya is_me) #}
+      <li class="{% if row.is_me %}is-me{% endif %}">
+        <span class="dampak-rank__no">{{ row.rank }}</span>
+        <span>@{{ row.username }}{% if row.is_me %} (kamu){% endif %}</span>
+        <strong class="mono">{{ row.points }} poin</strong>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    {# Empty state: belum ada yang punya poin di periode ini #}
+    <div class="dampak-empty">
+      <span class="dampak-empty__icon"><svg class="icon" aria-hidden="true"><use href="#i-award"/></svg></span>
+      <h2 class="serif">Belum ada <em>peringkat</em> {% if period == 'bulan' %}bulan ini{% else %}sepanjang waktu{% endif %}</h2>
+      <p class="text-soft">Peringkat muncul setelah ada aksi: jual, beli, donasi, atau catat barang di lemari.</p>
+      <div class="dampak-empty__actions">
+        <a class="btn btn--primary" href="/lemari/">Catat barang di lemari</a>
+        {# tombol pindah periode hanya muncul kalau sedang di "Bulan ini" #}
+        {% if period == 'bulan' %}<a class="btn btn--outline" href="?periode=semua">Lihat sepanjang waktu</a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  {# Khusus tamu: keterangan nama disamarkan + ajakan masuk (filter berbasis autentikasi) #}
+  {% if not user.is_authenticated %}
+    {% if leaderboard %}<p class="text-soft">Nama pengguna disamarkan untuk tamu.</p>{% endif %}
+    <section class="dampak-cta">
+      <div>
+        <h2 class="serif">Mau tahu <em>posisimu</em>?</h2>
+        <p class="text-soft">Masuk untuk melihat nama lengkap, poinmu, dan peringkatmu.</p>
+      </div>
+      <a class="btn btn--dark" href="{% url 'main:show_login' %}">Masuk untuk lihat posisimu</a>
+    </section>
+  {% endif %}
+</main>
+{% endblock %}
