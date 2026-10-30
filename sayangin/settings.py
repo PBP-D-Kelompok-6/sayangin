@@ -152,7 +152,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 WHITENOISE_USE_FINDERS = True
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 MAILERS = {
     "default": {
