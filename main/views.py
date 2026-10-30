@@ -88,15 +88,12 @@ def show_login(request):
         if user is not None:
             login(request, user)
             profile, _ = UserProfile.objects.get_or_create(user=user)
-            if user is not None:
-                login(request, user)
-                profile, _ = UserProfile.objects.get_or_create(user=user)
-                if profile.role == 'LEMBAGA':
-                    if not _is_institution_profile_complete(user):
-                        messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
-                        return redirect('main:edit_institution_profile')
-                    return redirect('donasi:dashboard_lembaga')  # Diarahkan ke Dashboard Donasi
-                return redirect('main:show_main')
+            if profile.role == 'LEMBAGA':
+                if not _is_institution_profile_complete(user):
+                    messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
+                    return redirect('main:edit_institution_profile')
+                return redirect('donasi:dashboard_lembaga')  # Diarahkan ke Dashboard Donasi
+            return redirect('main:show_main')
         else:
             messages.error(request, 'Email/username atau kata sandi salah.')
             return render(request, 'login.html', {

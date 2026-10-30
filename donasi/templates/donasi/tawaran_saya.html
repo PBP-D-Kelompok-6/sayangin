@@ -19,7 +19,7 @@
     {% for p in daftar %}
     <div class="offer" id="tawaran-{{ p.pk }}">
       <span class="offer__img" style="--img: url('{{ p.foto_url|default:placeholder }}')"></span>
-      <span class="text-sm text-soft">ke {{ p.lembaga.institution_profile.name|default:p.lembaga.get_full_name|default:p.lembaga.username }} · {{ p.get_status_display }} · {{ p.dibuat|date:"j M Y" }}</span>
+      <span class="spacer"><b>{{ p.jumlah }} {{ p.nama_barang }}</b><br><span class="text-sm text-soft">ke {{ p.lembaga.institution_profile.name|default:p.lembaga.get_full_name|default:p.lembaga.username }} · {{ p.get_status_display }} · {{ p.dibuat|date:"j M Y" }}</span></span>
       <span class="offer__actions">
         {% if p.status == "menunggu" %}
         <button class="btn btn--outline btn--sm" type="button" hx-delete="{% url 'donasi:batalkan_tawaran' p.pk %}" hx-target="#tawaran-{{ p.pk }}" hx-swap="outerHTML" hx-confirm="Batalkan tawaran donasi ini?">Batalkan</button>

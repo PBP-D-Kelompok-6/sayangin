@@ -275,7 +275,8 @@ class PermissionsAndHelpersTest(DonasiBaseTestCase):
 
         # Urut berdasarkan progres
         sorted_progres = urutkan_kebutuhan(daftar, "progres")
-        self.assertEqual(sorted_progres[0], self.jaket)
+        self.assertEqual(sorted_progres[0], k_tanpa_tenggat)
+        self.assertEqual(sorted_progres[1], self.jaket)
 
         # Urut berdasarkan terbaru
         sorted_terbaru = urutkan_kebutuhan(daftar, "terbaru")

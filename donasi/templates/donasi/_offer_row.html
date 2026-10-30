@@ -1,7 +1,7 @@
 {% load static %}{% static 'img/logo.svg' as placeholder %}
 <div class="offer" id="offer-{{ p.pk }}">
   <span class="offer__img" style="--img: url('{{ p.foto_url|default:placeholder }}')"></span>
-  <span class="spacer"><b>{{ p.jumlah }} {{ p.nama_barang|lower }}{% if p.ukuran %}, ukuran {{ p.ukuran }}{% endif %}</b><br>
+  <span class="spacer"><b>{{ p.jumlah }} {{ p.nama_barang }}{% if p.ukuran %}, ukuran {{ p.ukuran }}{% endif %}</b><br>
     <span class="text-sm text-soft"><span class="only-desktop">dari @{{ p.donatur.username }} · {% if p.kebutuhan %}untuk kebutuhan "{{ p.kebutuhan.nama_barang }}"{% else %}tidak ada kebutuhan yang cocok{% endif %} · {{ p.get_kondisi_display|lower }}</span><span class="only-mobile">@{{ p.donatur.username }} · {{ p.get_kondisi_display|lower }}</span></span>
     {% if p.pesan %}<br><span class="text-sm">“{{ p.pesan }}”</span>{% endif %}
   </span>

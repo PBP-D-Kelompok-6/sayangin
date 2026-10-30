@@ -109,6 +109,8 @@ def kirim_donasi(request, kebutuhan_id):
     kondisi = barang["kondisi"] if barang["kondisi"] in Kondisi.values else Kondisi.TERAWAT
     FOTO_AMAN = re.compile(r"^(https?://|/)[^\s'\"()\\]+$")
     foto = barang["foto"] if FOTO_AMAN.match(barang["foto"]) else ""
+    if foto.startswith("/"):
+        foto = request.build_absolute_uri(foto)
 
     if request.method == "POST":
         form = PenawaranForm(request.POST, kebutuhan=kebutuhan)
