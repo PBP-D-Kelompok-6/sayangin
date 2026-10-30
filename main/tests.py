@@ -199,7 +199,7 @@ class ProfileAndLogoutTests(TestCase):
         self.assertContains(response, 'Rumah · utama')
         self.assertContains(response, 'Jl. Margonda Raya No. 10, Depok 16424')
         self.assertContains(response, 'Bantuan &amp; kebijakan')
-        self.assertContains(response, 'site-header__actions')
+        self.assertContains(response, 'sg-actions')  # navbar bersama (partials/site_header.html)
         self.assertContains(response, 'cdn.tailwindcss.com')
         self.assertContains(response, 'id="keluar"')
         self.assertContains(response, 'Keluar dari <em>Sayangin</em>?')

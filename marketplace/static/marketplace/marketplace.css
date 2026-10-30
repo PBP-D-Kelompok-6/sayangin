@@ -32,7 +32,7 @@ p { margin: 0; }
 .eyebrow { font-family: var(--font-label); font-size: 11px; letter-spacing: .14em; color: var(--ink-faint); text-transform: uppercase; }
 .muted { color: var(--ink-faint); }
 .soft { color: var(--ink-muted); }
-.page { max-width: 1280px; margin: 0 auto; padding: 24px 32px 64px; display: flex; flex-direction: column; gap: 18px; }
+.page { max-width: 1280px; margin: 0 auto; padding: 24px 40px 64px; /* 40px kiri-kanan = sama dengan navbar & halaman lain */ display: flex; flex-direction: column; gap: 18px; }
 .desk-only { display: revert; }
 .m-only { display: none !important; }
 
