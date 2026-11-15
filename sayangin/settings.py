@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'impact',
     'marketplace',
     'lemari',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
