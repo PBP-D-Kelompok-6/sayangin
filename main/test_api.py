@@ -1,7 +1,7 @@
 from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
-from django.test import override_settings
+from django.test import Client, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 
@@ -146,6 +146,81 @@ class MainAuthAndRoleApiTests(APITestCase):
         self.assertEqual(r_tok.status_code, 200)
         self.assertFalse(r_tok.json()["is_new_user"])
         self.assertEqual(r_tok.json()["user"]["username"], "nadia")
+
+    def test_pbp_django_auth_endpoints_login_logout_register(self):
+        # Pakai Django Client standar dengan enforce_csrf_checks=True & form-encoded POST
+        # persis seperti pbp_django_auth CookieRequest dari Flutter.
+        flutter = Client(enforce_csrf_checks=True)
+
+        # 1. Login gagal -> 401 dengan status: false
+        bad = flutter.post(reverse("main:auth_login"), {"username": "nadia", "password": "wrong"})
+        self.assertEqual(bad.status_code, 401)
+        self.assertEqual(
+            bad.json(),
+            {"status": False, "message": "Email/username atau kata sandi salah."},
+        )
+
+        # 2. Login berhasil pakai username -> 200, session cookie terbentuk, role PERSONAL
+        ok_user = flutter.post(reverse("main:auth_login"), {"username": "nadia", "password": "password123"})
+        self.assertEqual(ok_user.status_code, 200)
+        self.assertEqual(
+            ok_user.json(),
+            {
+                "status": True,
+                "message": "Login berhasil",
+                "username": "nadia",
+                "role": "PERSONAL",
+            },
+        )
+        self.assertIn("sessionid", ok_user.cookies)
+        self.assertEqual(flutter.get(reverse("main:api_auth_me")).status_code, 200)
+
+        # 3. Logout tanpa CSRF token -> 200 & session terhapus
+        out = flutter.post(reverse("main:auth_logout"))
+        self.assertEqual(out.status_code, 200)
+        self.assertEqual(out.json(), {"status": True, "message": "Logout berhasil"})
+        self.assertEqual(flutter.get(reverse("main:api_auth_me")).status_code, 403)
+
+        # 4. Login pakai email di field `username` untuk akun LEMBAGA -> role LEMBAGA
+        ok_email = flutter.post(
+            reverse("main:auth_login"),
+            {"username": "panti@email.com", "password": "password123"},
+        )
+        self.assertEqual(ok_email.status_code, 200)
+        self.assertEqual(
+            ok_email.json(),
+            {
+                "status": True,
+                "message": "Login berhasil",
+                "username": "panti_harapan",
+                "role": "LEMBAGA",
+            },
+        )
+        flutter.post(reverse("main:auth_logout"))
+
+        # 5. Register dari HP (/auth/register/)
+        bad_reg = flutter.post(
+            reverse("main:auth_register"),
+            {"username": "baru", "email": "bukan-email", "password": "123"},
+        )
+        self.assertEqual(bad_reg.status_code, 400)
+        self.assertIs(bad_reg.json()["status"], False)
+
+        ok_reg = flutter.post(
+            reverse("main:auth_register"),
+            {"username": "renates", "email": "rena.hp@email.com", "password": "password123"},
+        )
+        self.assertEqual(ok_reg.status_code, 201)
+        self.assertEqual(
+            ok_reg.json(),
+            {
+                "status": True,
+                "message": "Akun berhasil dibuat.",
+                "username": "renates",
+                "role": "PERSONAL",
+            },
+        )
+        self.assertEqual(flutter.get(reverse("main:api_auth_me")).status_code, 200)
 
 
 class MainAddressAndProfileViewSetTests(APITestCase):

@@ -58,11 +58,19 @@ class RegisterSerializer(serializers.Serializer):
             "blank": "Masukkan alamat email yang valid.",
         },
     )
-    password = serializers.CharField(write_only=True, allow_blank=True)
+    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
     confirm = serializers.CharField(write_only=True, required=False, allow_blank=True)
     role = serializers.CharField(required=False, allow_blank=True)
     account_type = serializers.CharField(required=False, allow_blank=True)
     jenis = serializers.CharField(required=False, allow_blank=True)
+
+    def to_internal_value(self, data):
+        mutable = data.copy() if hasattr(data, "copy") else dict(data)
+        if "password" not in mutable and "password1" in mutable:
+            mutable["password"] = mutable["password1"]
+        if "confirm" not in mutable and "password2" in mutable:
+            mutable["confirm"] = mutable["password2"]
+        return super().to_internal_value(mutable)
 
     def validate_username(self, value):
         raw = (value or "").strip()

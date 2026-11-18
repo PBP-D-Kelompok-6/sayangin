@@ -284,6 +284,84 @@ def api_google_auth(request):
 
 
 # ---------------------------------------------------------------------------
+# Mobile Auth Endpoints (pbp_django_auth / CookieRequest compatibility)
+# ---------------------------------------------------------------------------
+
+@api_view(["POST"])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([permissions.AllowAny])
+def auth_login_pbp(request):
+    """POST /auth/login/ untuk Flutter pbp_django_auth (CookieRequest.login)."""
+    serializer = LoginSerializer(data=request.data, context={"request": request._request})
+    if not serializer.is_valid():
+        return Response(
+            {
+                "status": False,
+                "message": "Email/username atau kata sandi salah.",
+            },
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    user = serializer.validated_data["user"]
+    login(request._request, user)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    return Response(
+        {
+            "status": True,
+            "message": "Login berhasil",
+            "username": user.username,
+            "role": profile.role,
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([permissions.AllowAny])
+def auth_logout_pbp(request):
+    """POST /auth/logout/ untuk Flutter pbp_django_auth (CookieRequest.logout)."""
+    logout(request._request)
+    return Response(
+        {
+            "status": True,
+            "message": "Logout berhasil",
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["POST"])
+@authentication_classes([CsrfExemptSessionAuthentication])
+@permission_classes([permissions.AllowAny])
+def auth_register_pbp(request):
+    """POST /auth/register/ untuk Flutter pbp_django_auth."""
+    serializer = RegisterSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {
+                "status": False,
+                "message": first_error_message(serializer.errors),
+                "errors": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    user = serializer.save()
+    login(request._request, user)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    return Response(
+        {
+            "status": True,
+            "message": "Akun berhasil dibuat.",
+            "username": user.username,
+            "role": profile.role,
+        },
+        status=status.HTTP_201_CREATED,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Personal Profile & Preferences
 # ---------------------------------------------------------------------------
 
