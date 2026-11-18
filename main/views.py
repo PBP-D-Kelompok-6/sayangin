@@ -1,35 +1,40 @@
-import json
 import os
 import re
 import secrets
 from urllib.parse import urlencode
 import requests
-from django.db.models import Q
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.utils import timezone
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core import serializers
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST, require_GET
 from main.models import UserProfile, UserAddress, InstitutionProfile
-from main.forms import InstitutionProfileForm, ProfileForm, UserAddressForm, CITY_CHOICES
+from main.forms import InstitutionProfileForm, ProfileForm, CITY_CHOICES
 from main.decorators import personal_required, lembaga_required
+from main.serializers import ChangePasswordSerializer, DeleteAccountSerializer
+from main.services import (
+    ensure_user_addresses_synced,
+    filter_user_addresses,
+    first_error_message,
+    generate_unique_username,
+    get_name_parts,
+    is_institution_profile_complete,
+)
 from donasi.models import Kebutuhan, Penawaran
 from impact.views import get_user_impact_summary
 from marketplace.models import Order, Product
-from marketplace.ongkir import search_destinations
 from sayangin.wilayah import get_city_groups
 
 
 def show_main(request):
     if request.user.is_authenticated:
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        if profile.role == 'LEMBAGA' and not _is_institution_profile_complete(request.user):
+        if profile.role == 'LEMBAGA' and not is_institution_profile_complete(request.user):
             return redirect('main:edit_institution_profile')
 
     daftar_kebutuhan = Kebutuhan.objects.aktif().select_related("lembaga")[:5] # type: ignore
@@ -43,11 +48,6 @@ def show_menu(request):
     return render(request, 'menu.html')
 
 
-def _is_institution_profile_complete(user) -> bool:
-    institution = InstitutionProfile.objects.filter(user=user).first()
-    return bool(institution and institution.name.strip() and institution.address.strip())
-
-
 def _is_safe_next_url(request, next_url: str) -> bool:
     return bool(
         next_url
@@ -58,7 +58,7 @@ def _is_safe_next_url(request, next_url: str) -> bool:
 def _redirect_authenticated_user(request, user, next_url: str = ''):
     profile, _ = UserProfile.objects.get_or_create(user=user)
     if profile.role == 'LEMBAGA':
-        if not _is_institution_profile_complete(user):
+        if not is_institution_profile_complete(user):
             return redirect('main:edit_institution_profile')
         if _is_safe_next_url(request, next_url):
             return redirect(next_url)
@@ -66,35 +66,6 @@ def _redirect_authenticated_user(request, user, next_url: str = ''):
     if _is_safe_next_url(request, next_url):
         return redirect(next_url)
     return redirect('main:show_main')
-
-
-def _ensure_user_addresses_synced(user, profile: UserProfile):
-    """
-    Ensures that if UserProfile has legacy/flat address fields populated
-    but no UserAddress rows yet, an initial UserAddress is created and synced.
-    """
-    addresses_qs = UserAddress.objects.filter(user=user)
-    if not addresses_qs.exists() and (profile.address.strip() or profile.city.strip()):
-        UserAddress.objects.create(
-            user=user,
-            label=profile.address_label or 'RUMAH',
-            recipient_name=profile.full_name,
-            phone_number=profile.phone_number,
-            address=profile.address,
-            city=profile.city,
-            postal_code=profile.postal_code,
-            is_primary=True,
-        )
-    return UserAddress.objects.filter(user=user)
-
-
-def _parse_request_payload(request) -> dict:
-    if request.content_type and 'application/json' in request.content_type:
-        try:
-            return json.loads(request.body.decode('utf-8'))
-        except (ValueError, UnicodeDecodeError):
-            return {}
-    return request.POST.dict()
 
 
 def show_login(request):
@@ -113,7 +84,7 @@ def show_login(request):
         if user is not None:
             login(request, user)
             profile, _ = UserProfile.objects.get_or_create(user=user)
-            if profile.role == 'LEMBAGA' and not _is_institution_profile_complete(user):
+            if profile.role == 'LEMBAGA' and not is_institution_profile_complete(user):
                 messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
                 return redirect('main:edit_institution_profile')
             return _redirect_authenticated_user(request, user, next_url)
@@ -126,20 +97,6 @@ def show_login(request):
             })
 
     return render(request, 'login.html', {'next_url': next_url})
-
-
-def _generate_unique_username(email: str) -> str:
-    local_part = email.split('@')[0].lower() if '@' in email else email.lower()
-    cleaned = re.sub(r'[^a-z0-9._]+', '_', local_part).strip('._')
-    if len(cleaned) < 3:
-        cleaned = (cleaned + 'user')[:4] if cleaned else 'pengguna'
-    base = cleaned[:24]
-    candidate = base
-    counter = 1
-    while User.objects.filter(username__iexact=candidate).exists():
-        candidate = f"{base}{counter}"
-        counter += 1
-    return candidate
 
 
 def show_register(request):
@@ -202,7 +159,7 @@ def show_register(request):
                 messages.error(request, msg)
             return render(request, 'register.html', context)
 
-        username = raw_username if raw_username else _generate_unique_username(email)
+        username = raw_username if raw_username else generate_unique_username(email)
         new_user = User.objects.create_user(username=username, email=email, password=password)
         profile, _ = UserProfile.objects.get_or_create(user=new_user)
 
@@ -223,14 +180,8 @@ def show_profile(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     if profile.role == 'LEMBAGA':
         return redirect('main:show_lembaga_profile')
-    all_addresses = _ensure_user_addresses_synced(request.user, profile)
-    display_name = (profile.full_name or request.user.username).strip()
-    parts = display_name.split()
-    first_name = parts[0] if parts else request.user.username
-    if len(parts) >= 2:
-        initials = (parts[0][0] + parts[1][0]).upper()
-    else:
-        initials = display_name[:2].upper()
+    all_addresses = ensure_user_addresses_synced(request.user, profile)
+    _, first_name, initials = get_name_parts(request.user, profile)
 
     primary_addr = all_addresses.filter(is_primary=True).first() or all_addresses.first()
     if primary_addr:
@@ -241,22 +192,9 @@ def show_profile(request):
         if profile.postal_code:
             formatted_address = f"{formatted_address} {profile.postal_code}".strip()
 
-    addresses = all_addresses
     label_filter = (request.GET.get('label') or '').strip().upper()
-    if label_filter and label_filter != 'ALL':
-        addresses = addresses.filter(label=label_filter)
-
     q = (request.GET.get('q') or '').strip()
-    if q:
-        addresses = addresses.filter(
-            Q(address__icontains=q) |
-            Q(district__icontains=q) |
-            Q(subdistrict__icontains=q) |
-            Q(city__icontains=q) |
-            Q(province__icontains=q) |
-            Q(postal_code__icontains=q) |
-            Q(recipient_name__icontains=q)
-        )
+    addresses = filter_user_addresses(all_addresses, label=label_filter, query=q)
 
     raw_next = (request.GET.get('next') or '').strip()
     next_url = raw_next if _is_safe_next_url(request, raw_next) else ''
@@ -300,7 +238,7 @@ def edit_profile(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     if profile.role == 'LEMBAGA':
         return redirect('main:edit_institution_profile')
-    _ensure_user_addresses_synced(request.user, profile)
+    ensure_user_addresses_synced(request.user, profile)
 
     mode = (request.POST.get('mode') or request.GET.get('mode') or '').strip().lower()
     address_id = request.POST.get('address_id') or request.GET.get('address_id')
@@ -433,329 +371,14 @@ def show_profile_json(request):
 @require_GET
 def show_addresses_json(request):
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    _ensure_user_addresses_synced(request.user, profile)
-
-    addresses = UserAddress.objects.filter(user=request.user)
-    label_filter = (request.GET.get('label') or '').strip().upper()
-    if label_filter and label_filter != 'ALL':
-        addresses = addresses.filter(label=label_filter)
-
-    q = (request.GET.get('q') or '').strip()
-    if q:
-        addresses = addresses.filter(
-            Q(address__icontains=q) |
-            Q(district__icontains=q) |
-            Q(subdistrict__icontains=q) |
-            Q(city__icontains=q) |
-            Q(province__icontains=q) |
-            Q(postal_code__icontains=q) |
-            Q(recipient_name__icontains=q)
-        )
-
+    all_addresses = ensure_user_addresses_synced(request.user, profile)
+    addresses = filter_user_addresses(
+        all_addresses,
+        label=request.GET.get('label', ''),
+        query=request.GET.get('q', ''),
+    )
     data = serializers.serialize('json', addresses)
     return HttpResponse(data, content_type="application/json")
-
-
-@login_required(login_url='main:show_login')
-@require_GET
-def api_profile_data(request):
-    """Returns structured JSON with user profile, preferences, and RajaOngkir-ready addresses."""
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    addresses = _ensure_user_addresses_synced(request.user, profile)
-    display_name = (profile.full_name or request.user.username).strip()
-    parts = display_name.split()
-    first_name = parts[0] if parts else request.user.username
-    primary_addr = addresses.filter(is_primary=True).first() or addresses.first()
-
-    label_filter = (request.GET.get('label') or '').strip().upper()
-    if label_filter and label_filter != 'ALL':
-        addresses = addresses.filter(label=label_filter)
-
-    q = (request.GET.get('q') or '').strip()
-    if q:
-        addresses = addresses.filter(
-            Q(address__icontains=q) |
-            Q(district__icontains=q) |
-            Q(subdistrict__icontains=q) |
-            Q(city__icontains=q) |
-            Q(province__icontains=q) |
-            Q(postal_code__icontains=q) |
-            Q(recipient_name__icontains=q)
-        )
-
-    return JsonResponse({
-        "status": "ok",
-        "user": {
-            "id": request.user.pk,
-            "username": request.user.username,
-            "email": request.user.email,
-            "first_name": first_name,
-            "full_name": profile.full_name,
-            "phone_number": profile.phone_number,
-            "role": profile.role,
-        },
-        "impact": get_user_impact_summary(request.user),
-        "preferences": profile.get_preferences_dict(),
-        "addresses": [a.to_dict() for a in addresses],
-        "primary_address": primary_addr.to_dict() if primary_addr else None,
-        "serialized_addresses": json.loads(serializers.serialize("json", addresses)),
-    })
-
-
-@login_required(login_url='main:show_login')
-@personal_required
-@require_POST
-def api_add_address(request):
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    _ensure_user_addresses_synced(request.user, profile)
-    payload = _parse_request_payload(request)
-
-    label = (payload.get('label') or payload.get('address_label') or 'RUMAH').strip().upper()
-    if label not in dict(UserAddress.ADDRESS_LABEL_CHOICES):
-        label = 'RUMAH'
-    address_text = (payload.get('address') or payload.get('alamat') or '').strip()
-    city = (payload.get('city') or payload.get('kota') or '').strip()
-    province = (payload.get('province') or '').strip()
-    district = (payload.get('district') or '').strip()
-    subdistrict = (payload.get('subdistrict') or '').strip()
-    rajaongkir_destination_id = (payload.get('rajaongkir_destination_id') or '').strip()
-    postal_code = (payload.get('postal_code') or payload.get('kodepos') or '').strip()
-    recipient_name = (payload.get('recipient_name') or profile.full_name or request.user.username).strip()
-    phone_number = (payload.get('phone_number') or profile.phone_number or '').strip()
-    raw_primary = payload.get('is_primary')
-    is_primary = raw_primary in (True, 'true', 'True', 'on', '1', 1)
-
-    if not address_text or not city:
-        return JsonResponse({
-            "status": "error",
-            "message": "Alamat lengkap dan kota wajib diisi.",
-        }, status=400)
-
-    new_addr = UserAddress.objects.create(
-        user=request.user,
-        label=label,
-        recipient_name=recipient_name,
-        phone_number=phone_number,
-        address=address_text,
-        subdistrict=subdistrict,
-        district=district,
-        city=city,
-        province=province,
-        rajaongkir_destination_id=rajaongkir_destination_id,
-        postal_code=postal_code,
-        is_primary=is_primary,
-    )
-    all_addresses = UserAddress.objects.filter(user=request.user)
-    return JsonResponse({
-        "status": "ok",
-        "message": "Alamat baru berhasil ditambahkan.",
-        "address": new_addr.to_dict(),
-        "addresses": [a.to_dict() for a in all_addresses],
-    }, status=201)
-
-
-@login_required(login_url='main:show_login')
-@personal_required
-@require_POST
-def api_edit_address(request, address_id: int):
-    addr = get_object_or_404(UserAddress, pk=address_id, user=request.user)
-    payload = _parse_request_payload(request)
-
-    label = (payload.get('label') or payload.get('address_label') or addr.label).strip().upper()
-    if label in dict(UserAddress.ADDRESS_LABEL_CHOICES):
-        addr.label = label
-
-    address_text = (payload.get('address') or payload.get('alamat') or '').strip()
-    city = (payload.get('city') or payload.get('kota') or '').strip()
-    if not address_text or not city:
-        return JsonResponse({
-            "status": "error",
-            "message": "Alamat lengkap dan kota wajib diisi.",
-        }, status=400)
-
-    city_changed = addr.city.strip().lower() != city.lower()
-    addr.address = address_text
-    addr.city = city
-    if 'province' in payload:
-        addr.province = (payload.get('province') or '').strip()
-    elif city_changed:
-        addr.province = ''
-    if 'district' in payload:
-        addr.district = (payload.get('district') or '').strip()
-    elif city_changed:
-        addr.district = ''
-    if 'subdistrict' in payload:
-        addr.subdistrict = (payload.get('subdistrict') or '').strip()
-    elif city_changed:
-        addr.subdistrict = ''
-    if 'rajaongkir_destination_id' in payload:
-        addr.rajaongkir_destination_id = (payload.get('rajaongkir_destination_id') or '').strip()
-    elif city_changed:
-        addr.rajaongkir_destination_id = ''
-    if 'postal_code' in payload or 'kodepos' in payload:
-        addr.postal_code = (payload.get('postal_code') or payload.get('kodepos') or '').strip()
-    if 'recipient_name' in payload:
-        addr.recipient_name = (payload.get('recipient_name') or '').strip()
-    if 'phone_number' in payload:
-        addr.phone_number = (payload.get('phone_number') or '').strip()
-    if 'is_primary' in payload:
-        addr.is_primary = payload.get('is_primary') in (True, 'true', 'True', 'on', '1', 1)
-
-    addr.save()
-    all_addresses = UserAddress.objects.filter(user=request.user)
-    return JsonResponse({
-        "status": "ok",
-        "message": "Alamat berhasil diperbarui.",
-        "address": addr.to_dict(),
-        "addresses": [a.to_dict() for a in all_addresses],
-    })
-
-
-@login_required(login_url='main:show_login')
-@require_GET
-def api_rajaongkir_destinations(request):
-    """Pencarian kota, kecamatan, kelurahan, atau kode pos via RajaOngkir (fallback lokal)."""
-    q = (request.GET.get('q') or request.GET.get('search') or '').strip()
-    raw_limit = request.GET.get('limit', '15')
-    limit = min(max(int(raw_limit), 1), 25) if raw_limit.isdigit() else 15
-    data = search_destinations(q, limit=limit)
-    return JsonResponse({
-        "status": "ok",
-        "query": q,
-        "source": data["source"],
-        "results": data["results"],
-    })
-
-
-@login_required(login_url='main:show_login')
-@personal_required
-@require_POST
-def api_delete_address(request, address_id: int):
-    addr = get_object_or_404(UserAddress, pk=address_id, user=request.user)
-    was_primary = addr.is_primary
-    addr.delete()
-
-    remaining = UserAddress.objects.filter(user=request.user)
-    if was_primary and remaining.exists():
-        next_primary = remaining.first()
-        if next_primary:
-            next_primary.is_primary = True
-            next_primary.save()
-    elif not remaining.exists():
-        UserProfile.objects.filter(user=request.user).update(
-            address='',
-            city='',
-            postal_code='',
-        )
-
-    return JsonResponse({
-        "status": "ok",
-        "message": "Alamat berhasil dihapus.",
-        "addresses": [a.to_dict() for a in UserAddress.objects.filter(user=request.user)],
-    })
-
-
-@login_required(login_url='main:show_login')
-@personal_required
-@require_POST
-def api_set_primary_address(request, address_id: int):
-    addr = get_object_or_404(UserAddress, pk=address_id, user=request.user)
-    addr.is_primary = True
-    addr.save()
-    all_addresses = UserAddress.objects.filter(user=request.user)
-    return JsonResponse({
-        "status": "ok",
-        "message": "Alamat utama berhasil diubah.",
-        "address": addr.to_dict(),
-        "addresses": [a.to_dict() for a in all_addresses],
-    })
-
-
-@login_required(login_url='main:show_login')
-@personal_required
-@require_POST
-def api_update_profile(request):
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    payload = _parse_request_payload(request)
-
-    full_name = (payload.get('full_name') or '').strip()
-    email = (payload.get('email') or '').strip()
-    phone_number = (payload.get('phone_number') or '').strip()
-
-    if not full_name:
-        return JsonResponse({"status": "error", "message": "Nama lengkap wajib diisi."}, status=400)
-
-    if email and email.lower() != request.user.email.lower():
-        if not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', email):
-            return JsonResponse({"status": "error", "message": "Format email belum benar."}, status=400)
-        if User.objects.filter(email__iexact=email).exclude(pk=request.user.pk).exists():
-            return JsonResponse({"status": "error", "message": "Email sudah terpakai oleh akun lain."}, status=400)
-        request.user.email = email
-        request.user.save(update_fields=['email'])
-
-    profile.full_name = full_name
-    profile.phone_number = phone_number
-    profile.save(update_fields=['full_name', 'phone_number'])
-
-    parts = full_name.split()
-    first_name = parts[0] if parts else request.user.username
-
-    return JsonResponse({
-        "status": "ok",
-        "message": "Data diri berhasil diperbarui.",
-        "user": {
-            "username": request.user.username,
-            "email": request.user.email,
-            "first_name": first_name,
-            "full_name": profile.full_name,
-            "phone_number": profile.phone_number,
-        },
-    })
-
-
-@login_required(login_url='main:show_login')
-@personal_required
-@require_POST
-def api_update_preferences(request):
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    payload = _parse_request_payload(request)
-
-    current_prefs = profile.get_preferences_dict()
-    sizes = payload.get('sizes', current_prefs['sizes'])
-    if isinstance(sizes, str):
-        sizes = [s.strip() for s in sizes.split(',') if s.strip()]
-    categories = payload.get('categories', current_prefs['categories'])
-    if isinstance(categories, str):
-        categories = [c.strip() for c in categories.split(',') if c.strip()]
-
-    reminder_raw = payload.get('reminder', payload.get('reminder_enabled', current_prefs['reminder']))
-    if isinstance(reminder_raw, str):
-        reminder_enabled = reminder_raw.lower() in ('true', 'on', '1')
-    else:
-        reminder_enabled = bool(reminder_raw)
-
-    email_raw = payload.get('email_newsletter', payload.get('email_news_enabled', current_prefs['email_newsletter']))
-    if isinstance(email_raw, str):
-        email_news_enabled = email_raw.lower() in ('true', 'on', '1')
-    else:
-        email_news_enabled = bool(email_raw)
-
-    new_prefs = {
-        'sizes': list(sizes),
-        'categories': list(categories),
-        'reminder': bool(reminder_enabled),
-        'email_newsletter': bool(email_news_enabled),
-        'reminder_enabled': bool(reminder_enabled),
-        'email_news_enabled': bool(email_news_enabled),
-    }
-    profile.preferences = json.dumps(new_prefs)
-    profile.save(update_fields=['preferences'])
-
-    return JsonResponse({
-        "status": "ok",
-        "message": "Preferensi berhasil disimpan.",
-        "preferences": new_prefs,
-    })
 
 
 @require_POST
@@ -898,7 +521,7 @@ def google_callback(request):
         is_new_user = user is None
 
     if is_new_user:
-        username = _generate_unique_username(google_email)
+        username = generate_unique_username(google_email)
         user = User(username=username, email=google_email)
         user.set_unusable_password()
         user.save()
@@ -919,7 +542,7 @@ def google_callback(request):
     login(request, user)
 
     if profile.role == 'LEMBAGA':
-        if not _is_institution_profile_complete(user):
+        if not is_institution_profile_complete(user):
             return redirect('main:edit_institution_profile')
         if _is_safe_next_url(request, next_url):
             return redirect(next_url)
@@ -937,140 +560,25 @@ def google_callback(request):
 
 @login_required(login_url='main:show_login')
 @require_POST
-def api_disconnect_google(request):
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    if not request.user.has_usable_password():
-        return JsonResponse({
-            "status": "error",
-            "message": "Atur kata sandi terlebih dahulu sebelum memutuskan akun Google agar Anda tetap bisa masuk.",
-        }, status=400)
-
-    profile.google_connected = False
-    profile.google_email = ''
-    profile.save(update_fields=['google_connected', 'google_email'])
-    return JsonResponse({
-        "status": "ok",
-        "message": "Akun Google berhasil diputuskan.",
-        "google_connected": False,
-        "connect_url": f"{reverse('main:google_login')}?action=connect",
-    })
-
-
-def _process_password_change(request, payload: dict) -> tuple[bool, dict, str]:
-    user = request.user
-    old_password = payload.get('old_password') or ''
-    new_password1 = payload.get('new_password1') or ''
-    new_password2 = payload.get('new_password2') or ''
-
-    errors = {}
-    if user.has_usable_password():
-        if not old_password:
-            errors['old_password'] = ['Masukkan kata sandi saat ini.']
-        elif not user.check_password(old_password):
-            errors['old_password'] = ['Kata sandi saat ini belum tepat.']
-
-    if not new_password1 or len(new_password1) < 8:
-        errors['new_password1'] = ['Kata sandi baru minimal 8 karakter.']
-    elif new_password1 != new_password2:
-        errors['new_password2'] = ['Konfirmasi kata sandi baru belum cocok.']
-
-    if errors:
-        first_msg = next(iter(errors.values()))[0]
-        return False, errors, first_msg
-
-    user.set_password(new_password1)
-    user.save()
-    update_session_auth_hash(request, user)
-
-    profile, _ = UserProfile.objects.get_or_create(user=user)
-    profile.password_updated_at = timezone.now()
-    profile.save(update_fields=['password_updated_at'])
-
-    return True, {}, "Kata sandi berhasil diperbarui."
-
-
-@login_required(login_url='main:show_login')
-@require_POST
-def api_change_password(request):
-    payload = _parse_request_payload(request)
-    ok, errors, message = _process_password_change(request, payload)
-    if not ok:
-        return JsonResponse({
-            "status": "error",
-            "message": message,
-            "errors": errors,
-        }, status=400)
-
-    return JsonResponse({
-        "status": "ok",
-        "message": message,
-        "has_usable_password": True,
-        "password_status": "Baru saja diperbarui",
-    })
-
-
-@login_required(login_url='main:show_login')
-@require_POST
 def change_password(request):
-    ok, _, message = _process_password_change(request, request.POST.dict())
-    if ok:
-        messages.success(request, message)
+    serializer = ChangePasswordSerializer(data=request.POST.dict(), context={"request": request})
+    if serializer.is_valid():
+        serializer.save()
+        messages.success(request, "Kata sandi berhasil diperbarui.")
     else:
-        messages.error(request, message)
+        messages.error(request, first_error_message(serializer.errors))
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     if profile.role == 'LEMBAGA':
         return redirect('main:show_lembaga_profile')
     return redirect('main:show_profile')
 
 
-def _validate_account_deletion(user, payload: dict) -> tuple[bool, str]:
-    password = (payload.get('password') or '').strip()
-    confirm_text = (payload.get('confirm_text') or '').strip().upper()
-
-    if user.has_usable_password():
-        if not password:
-            return False, "Masukkan kata sandi Anda untuk mengonfirmasi penghapusan akun."
-
-        if not user.check_password(password):
-            return False, "Kata sandi Anda salah."
-
-        return True, ""
-
-    if not confirm_text:
-        return False, "Ketik HAPUS untuk mengonfirmasi penghapusan akun."
-    if confirm_text != 'HAPUS':
-        return False, "Teks konfirmasi tidak cocok. Ketik Hapus dengan benar."
-
-    return True, ""
-
-
-@login_required(login_url='main:show_login')
-@require_POST
-def api_delete_account(request):
-    payload = _parse_request_payload(request)
-    ok, err_msg = _validate_account_deletion(request.user, payload)
-    if not ok:
-        return JsonResponse({
-            "status": "error",
-            "message": err_msg,
-        }, status=400)
-
-    user = request.user
-    logout(request)
-    user.delete()
-    return JsonResponse({
-        "status": "ok",
-        "message": "Akun Anda telah dihapus.",
-        "redirect_url": reverse('main:show_main'),
-    })
-
-
 @login_required(login_url='main:show_login')
 @require_POST
 def delete_account(request):
-    ok, err_msg = _validate_account_deletion(request.user, request.POST.dict())
-    if not ok:
-        messages.error(request, err_msg)
+    serializer = DeleteAccountSerializer(data=request.POST.dict(), context={"request": request})
+    if not serializer.is_valid():
+        messages.error(request, first_error_message(serializer.errors))
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         if profile.role == 'LEMBAGA':
             return redirect('main:show_lembaga_profile')
