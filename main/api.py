@@ -163,6 +163,11 @@ def api_google_auth(request):
     google_name = ""
 
     if id_token:
+        if not settings.DEBUG and not client_id:
+            return Response(
+                {"status": "error", "message": "Login Google belum tersedia."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         try:
             res = requests.get(
                 "https://oauth2.googleapis.com/tokeninfo",

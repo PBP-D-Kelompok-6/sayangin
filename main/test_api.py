@@ -147,6 +147,17 @@ class MainAuthAndRoleApiTests(APITestCase):
         self.assertFalse(r_tok.json()["is_new_user"])
         self.assertEqual(r_tok.json()["user"]["username"], "nadia")
 
+        # Saat DEBUG=False dan GOOGLE_CLIENT_ID kosong, id_token harus ditolak (bukan diterima tanpa cek aud).
+        self.client.post(reverse("main:api_logout"))
+        with override_settings(DEBUG=False), patch.dict("os.environ", {"GOOGLE_CLIENT_ID": ""}):
+            r_unconf = self.client.post(
+                reverse("main:api_google_auth"),
+                {"id_token": "some-token"},
+                format="json",
+            )
+            self.assertEqual(r_unconf.status_code, 503)
+            self.assertEqual(r_unconf.json()["status"], "error")
+
     def test_pbp_django_auth_endpoints_login_logout_register(self):
         # Pakai Django Client standar dengan enforce_csrf_checks=True & form-encoded POST
         # persis seperti pbp_django_auth CookieRequest dari Flutter.

@@ -3,6 +3,7 @@ import re
 import secrets
 from urllib.parse import urlencode
 import requests
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
@@ -408,8 +409,9 @@ def google_login(request):
 
     client_id = os.getenv('GOOGLE_CLIENT_ID', '').strip()
     client_secret = os.getenv('GOOGLE_CLIENT_SECRET', '').strip()
+    use_chooser = settings.DEBUG and request.GET.get('mode') == 'chooser'
 
-    if client_id and client_secret and request.GET.get('mode') != 'chooser':
+    if client_id and client_secret and not use_chooser:
         redirect_uri = request.build_absolute_uri(reverse('main:google_callback'))
         params = {
             'client_id': client_id,
@@ -420,6 +422,14 @@ def google_login(request):
             'prompt': 'select_account',
         }
         return redirect(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
+
+    if not settings.DEBUG:
+        request.session.pop('google_oauth_state', None)
+        request.session.pop('google_oauth_jenis', None)
+        request.session.pop('google_oauth_action', None)
+        request.session.pop('google_oauth_next', None)
+        messages.error(request, "Login Google belum tersedia.")
+        return redirect('main:show_login')
 
     return render(request, 'google_oauth.html', {
         'state': state,
@@ -432,7 +442,7 @@ def google_login(request):
 def google_callback(request):
     """
     Handles the Google OAuth 2.0 callback (both live OAuth code exchange and
-    the built-in development/test account chooser).
+    the built-in development/test account chooser when settings.DEBUG is True).
     """
     expected_state = request.session.get('google_oauth_state')
     incoming_state = (request.GET.get('state') or request.POST.get('state') or '').strip()
@@ -475,18 +485,25 @@ def google_callback(request):
                     timeout=10,
                 )
                 userinfo = userinfo_res.json()
-                google_email = (userinfo.get('email') or '').strip().lower()
-                google_name = (userinfo.get('name') or '').strip()
+                if str(userinfo.get('email_verified', '')).lower() in ('true', '1'):
+                    google_email = (userinfo.get('email') or '').strip().lower()
+                    google_name = (userinfo.get('name') or '').strip()
         except requests.RequestException:
             messages.error(request, "Gagal menghubungi layanan Google. Silakan coba lagi.")
             return redirect('main:show_login')
-    elif request.method == 'POST':
+    elif settings.DEBUG and request.method == 'POST':
         google_email = (request.POST.get('email') or '').strip().lower()
         google_name = (request.POST.get('full_name') or '').strip()
+    elif not settings.DEBUG and not (client_id and client_secret):
+        messages.error(request, "Login Google belum tersedia.")
+        return redirect('main:show_login')
+    elif not settings.DEBUG and request.method == 'POST':
+        messages.error(request, "Login Google belum tersedia.")
+        return redirect('main:show_login')
 
     if not google_email or not re.match(r'^[^\s@]+@[^\s@]+\.[^\s@]+$', google_email):
         messages.error(request, "Pilih atau masukkan alamat email Google yang valid.")
-        return redirect('main:google_login')
+        return redirect('main:google_login' if settings.DEBUG else 'main:show_login')
 
     if not google_name:
         local_part = google_email.split('@')[0].replace('.', ' ').replace('_', ' ')
