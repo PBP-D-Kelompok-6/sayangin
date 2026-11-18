@@ -680,6 +680,20 @@ class SecurityAndGoogleAuthTests(TestCase):
         self.assertEqual(res.status_code, 302)
         self.assertTrue(res['Location'].startswith('https://accounts.google.com/o/oauth2/v2/auth?'))
 
+    @override_settings(DEBUG=False, SECURE_PROXY_SSL_HEADER=('HTTP_X_FORWARDED_PROTO', 'https'))
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': 'real-cid', 'GOOGLE_CLIENT_SECRET': 'real-secret'})
+    def test_google_login_builds_https_redirect_uri_behind_proxy(self):
+        res = self.client.get(
+            reverse('main:google_login'),
+            HTTP_HOST='muhammad-ghazi51-sayang-in.pws.cs.ui.ac.id',
+            HTTP_X_FORWARDED_PROTO='https',
+        )
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(
+            'redirect_uri=https%3A%2F%2Fmuhammad-ghazi51-sayang-in.pws.cs.ui.ac.id%2Fauth%2Fgoogle%2Fcallback%2F',
+            res['Location'],
+        )
+
     def test_delete_account_validates_password_and_removes_user(self):
         self.client.login(username='nadia.r', password='password123')
 
