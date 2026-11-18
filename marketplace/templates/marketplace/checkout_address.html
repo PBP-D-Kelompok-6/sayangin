@@ -2,29 +2,265 @@
 
 {% block steps %}
 <section class="co-block">
-    <span class="eyebrow">Dikirim ke</span>
-    <div class="form-grid grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div class="co-head">
+        <div>
+            <span class="eyebrow">Dikirim ke</span>
+            {% if saved_addresses %}
+            <p class="soft" style="margin-top:4px">Pilih alamat dari profilmu supaya tidak perlu mengisi ulang.</p>
+            {% endif %}
+        </div>
+        <a class="btn" href="{{ profile_add_address_url }}">+ Tambah alamat</a>
+    </div>
+
+    {% if saved_addresses %}
+    {% if errors.selected_address_id %}
+    <span class="err" role="alert">{{ errors.selected_address_id }}</span>
+    {% endif %}
+
+    <fieldset class="options-list address-picker">
+        <legend class="visually-hidden">Pilih alamat pengiriman dari profil</legend>
+        {% for card in saved_addresses %}
+        <div class="address-card{% if selected_address_id == card.id %} is-selected{% endif %}" data-address-card>
+            <label class="option option--address">
+                <input type="radio"
+                       name="selected_address_id"
+                       value="{{ card.id }}"
+                       data-has-phone="{{ card.has_phone|yesno:'true,false' }}"
+                       required
+                       {% if selected_address_id == card.id %}checked{% endif %}>
+                <span class="address-card__body">
+                    <span class="address-card__top">
+                        <span class="address-tag">{{ card.label_display }}</span>
+                        {% if card.is_primary %}<span class="address-tag address-tag--primary">Utama</span>{% endif %}
+                        <b>{{ card.recipient }}</b>
+                        {% if card.phone %}
+                        <span class="soft">· {{ card.phone }}</span>
+                        {% else %}
+                        <span class="err-inline">· No. HP belum diisi</span>
+                        {% endif %}
+                    </span>
+                    <span class="soft address-card__line">
+                        {{ card.formatted_address }}{% if card.province %}, {{ card.province }}{% endif %}
+                    </span>
+                    {% if card.rajaongkir_destination_id or card.postal_code or card.rajaongkir_city_id %}
+                    <span class="ro-meta">
+                        RajaOngkir siap{% if card.postal_code %} · Kode pos {{ card.postal_code }}{% elif card.rajaongkir_city_id %} · Kota #{{ card.rajaongkir_city_id }}{% endif %}
+                    </span>
+                    {% endif %}
+                </span>
+            </label>
+            <a class="address-card__edit" href="{{ profile_manage_url }}&edit_address={{ card.id }}">Ubah</a>
+        </div>
+        {% endfor %}
+    </fieldset>
+
+    <div class="co-phone-fallback" data-phone-fallback-wrap {% if not errors.phone_fallback %}hidden{% endif %}>
+        <label class="form-grid-single">
+            <span>No. HP penerima <span class="muted">(akan ikut disimpan ke profilmu)</span></span>
+            <input class="input"
+                   type="tel"
+                   name="phone_fallback"
+                   value="{{ phone_fallback }}"
+                   placeholder="08…"
+                   autocomplete="tel"
+                   data-phone-fallback-input
+                   {% if errors.phone_fallback %}aria-invalid="true" aria-describedby="err-phone-fallback"{% endif %}>
+            {% if errors.phone_fallback %}<span class="err" id="err-phone-fallback">{{ errors.phone_fallback }}</span>{% endif %}
+        </label>
+    </div>
+
+    <div class="co-address-foot">
+        <span class="soft">Perlu alamat lain seperti Kos, Apartemen, atau Kantor?</span>
+        <a href="{{ profile_manage_url }}">Kelola semua alamat di profil →</a>
+    </div>
+
+    {% else %}
+    <div class="co-empty-callout">
+        <div>
+            <b>Belum ada alamat di profilmu.</b>
+            <p class="soft">Tambahkan alamat di profil, atau isi langsung di bawah — alamat akan otomatis tersimpan ke profilmu.</p>
+        </div>
+        <a class="btn btn-ink" href="{{ profile_add_address_url }}">+ Tambah alamat di profil</a>
+    </div>
+
+    <div class="co-ro-box" data-ro-lookup data-ro-url="{% url 'main:api_rajaongkir_destinations' %}">
+        <label class="form-grid-single">
+            <span>Cari kecamatan, kota, atau kode pos <span class="ro-badge">RajaOngkir</span></span>
+            <input class="input"
+                   type="search"
+                   placeholder="Contoh: Beji, Depok, Bandung, Balikpapan, atau 16424…"
+                   autocomplete="off"
+                   data-ro-query>
+            <small class="muted" data-ro-status>Ketik minimal 2 huruf/angka untuk mengisi kota &amp; kode pos otomatis.</small>
+        </label>
+        <div class="ro-results" data-ro-results hidden></div>
+        <input type="hidden" name="province" value="{{ form.province }}" data-ro-province>
+        <input type="hidden" name="district" value="{{ form.district }}" data-ro-district>
+        <input type="hidden" name="subdistrict" value="{{ form.subdistrict }}" data-ro-subdistrict>
+        <input type="hidden" name="rajaongkir_destination_id" value="{{ form.rajaongkir_destination_id }}" data-ro-dest-id>
+    </div>
+
+    <div class="form-grid grid grid-cols-1 md:grid-cols-2 gap-3" style="margin-top:8px">
+        <fieldset class="md:col-span-2 co-label-chips">
+            <legend>Label alamat</legend>
+            <div class="co-chip-row">
+                {% for val, lbl in address_label_choices %}
+                <label class="chip">
+                    <input type="radio" name="label" value="{{ val }}" {% if form.label == val or not form.label and val == 'RUMAH' %}checked{% endif %}>
+                    <span>{{ lbl }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
         <label>Nama penerima
             <input class="input" name="recipient" value="{{ form.recipient }}" autocomplete="name" required {% if errors.recipient %}aria-invalid="true" aria-describedby="err-recipient"{% endif %}>
             {% if errors.recipient %}<span class="err" id="err-recipient">{{ errors.recipient }}</span>{% endif %}
         </label>
         <label>No. HP
-            <input class="input" name="phone" type="tel" value="{{ form.phone }}" autocomplete="tel" required {% if errors.phone %}aria-invalid="true" aria-describedby="err-phone"{% endif %}>
+            <input class="input" name="phone" type="tel" value="{{ form.phone }}" placeholder="08…" autocomplete="tel" required {% if errors.phone %}aria-invalid="true" aria-describedby="err-phone"{% endif %}>
             {% if errors.phone %}<span class="err" id="err-phone">{{ errors.phone }}</span>{% endif %}
         </label>
         <label class="md:col-span-2">Alamat lengkap
-            <textarea class="input" name="address" rows="2" autocomplete="street-address" required {% if errors.address %}aria-invalid="true" aria-describedby="err-address"{% endif %}>{{ form.address }}</textarea>
+            <textarea class="input" name="address" rows="2" placeholder="Nama jalan, nomor rumah/unit, RT/RW" autocomplete="street-address" required {% if errors.address %}aria-invalid="true" aria-describedby="err-address"{% endif %}>{{ form.address }}</textarea>
             {% if errors.address %}<span class="err" id="err-address">{{ errors.address }}</span>{% endif %}
         </label>
-        <label>Kota
-            <input class="input" name="city" value="{{ form.city }}" autocomplete="address-level2" required {% if errors.city %}aria-invalid="true" aria-describedby="err-city"{% endif %}>
+        <label>Kota / kabupaten
+            <select class="input" name="city" required data-ro-city {% if errors.city %}aria-invalid="true" aria-describedby="err-city"{% endif %}>
+                <option value="">Pilih kota / kabupaten</option>
+                {% for prov, cities in city_groups %}
+                <optgroup label="{{ prov }}">
+                    {% for c in cities %}
+                    <option value="{{ c.name }}" data-postal="{{ c.postal_code }}" {% if form.city == c.name %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
             {% if errors.city %}<span class="err" id="err-city">{{ errors.city }}</span>{% endif %}
         </label>
+        <label>Kode pos <span class="muted" style="font-weight:400">(opsional, disarankan untuk RajaOngkir)</span>
+            <input class="input" name="postal_code" value="{{ form.postal_code }}" inputmode="numeric" placeholder="Contoh: 16424" autocomplete="postal-code" data-ro-postal>
+        </label>
     </div>
+    {% endif %}
 </section>
 {% endblock %}
 
 {% block submit %}
 <button type="submit" class="btn btn-lg btn-chrome" id="pay">Lanjut ke pengiriman</button>
 <small id="pay-hint">Tombol aktif setelah alamat lengkap.</small>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+(() => {
+    const form = document.getElementById('checkout');
+    const radios = [...document.querySelectorAll('input[name="selected_address_id"]')];
+    const phoneWrap = document.querySelector('[data-phone-fallback-wrap]');
+    const phoneInput = document.querySelector('[data-phone-fallback-input]');
+
+    const syncSavedSelection = () => {
+        if (!radios.length) return;
+        const checked = radios.find(r => r.checked);
+        document.querySelectorAll('[data-address-card]').forEach(card => {
+            const radio = card.querySelector('input[name="selected_address_id"]');
+            card.classList.toggle('is-selected', !!(radio && radio.checked));
+        });
+        if (phoneWrap && phoneInput) {
+            const needsPhone = !!(checked && checked.dataset.hasPhone === 'false');
+            phoneWrap.hidden = !needsPhone;
+            phoneInput.disabled = !needsPhone;
+            phoneInput.required = needsPhone;
+        }
+        form?.dispatchEvent(new Event('change'));
+    };
+
+    radios.forEach(r => r.addEventListener('change', syncSavedSelection));
+    syncSavedSelection();
+
+    // RajaOngkir live search pada form cepat (bila profil belum memiliki alamat).
+    const lookup = document.querySelector('[data-ro-lookup]');
+    if (!lookup) return;
+    const url = lookup.dataset.roUrl;
+    const qInput = lookup.querySelector('[data-ro-query]');
+    const resultsBox = lookup.querySelector('[data-ro-results]');
+    const statusEl = lookup.querySelector('[data-ro-status]');
+    const citySelect = form.querySelector('[data-ro-city]');
+    const postalInput = form.querySelector('[data-ro-postal]');
+    const provInput = lookup.querySelector('[data-ro-province]');
+    const distInput = lookup.querySelector('[data-ro-district]');
+    const subInput = lookup.querySelector('[data-ro-subdistrict]');
+    const destIdInput = lookup.querySelector('[data-ro-dest-id]');
+    let timer = null;
+
+    const ensureCityOption = (cityName) => {
+        if (!citySelect || !cityName) return;
+        const existing = [...citySelect.options].find(o => o.value.toLowerCase() === cityName.toLowerCase());
+        if (existing) {
+            citySelect.value = existing.value;
+        } else {
+            const opt = new Option(cityName, cityName, true, true);
+            citySelect.add(opt);
+            citySelect.value = cityName;
+        }
+    };
+
+    qInput?.addEventListener('input', () => {
+        const q = qInput.value.trim();
+        clearTimeout(timer);
+        if (q.length < 2) {
+            resultsBox.hidden = true;
+            resultsBox.innerHTML = '';
+            return;
+        }
+        timer = setTimeout(async () => {
+            try {
+                const res = await fetch(`${url}?q=${encodeURIComponent(q)}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const data = await res.json();
+                const items = data.results || [];
+                if (!items.length) {
+                    resultsBox.innerHTML = '<div class="ro-empty">Lokasi tidak ditemukan. Coba nama kota atau kode pos lain.</div>';
+                    resultsBox.hidden = false;
+                    return;
+                }
+                resultsBox.innerHTML = '';
+                items.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'ro-item';
+                    const lbl = document.createElement('span');
+                    lbl.textContent = item.label;
+                    const src = document.createElement('small');
+                    src.textContent = item.source === 'rajaongkir' ? 'RajaOngkir' : 'Katalog';
+                    btn.append(lbl, src);
+                    btn.addEventListener('click', () => {
+                        ensureCityOption(item.city);
+                        if (postalInput && item.postal_code) postalInput.value = item.postal_code;
+                        if (provInput) provInput.value = item.province || '';
+                        if (distInput) distInput.value = item.district || '';
+                        if (subInput) subInput.value = item.subdistrict || '';
+                        if (destIdInput) destIdInput.value = item.destination_id || '';
+                        qInput.value = item.label;
+                        if (statusEl) statusEl.textContent = `Terpilih: ${item.city}${item.postal_code ? ' · ' + item.postal_code : ''}`;
+                        resultsBox.hidden = true;
+                        form?.dispatchEvent(new Event('change'));
+                    });
+                    resultsBox.appendChild(btn);
+                });
+                resultsBox.hidden = false;
+            } catch {
+                resultsBox.hidden = true;
+            }
+        }, 250);
+    });
+
+    citySelect?.addEventListener('change', () => {
+        const opt = citySelect.selectedOptions[0];
+        if (opt && opt.dataset.postal && postalInput && !postalInput.value) {
+            postalInput.placeholder = `Contoh: ${opt.dataset.postal}`;
+        }
+        if (destIdInput) destIdInput.value = '';
+    });
+})();
+</script>
 {% endblock %}

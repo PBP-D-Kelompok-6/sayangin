@@ -1,8 +1,9 @@
 import json
-from django.test import TestCase
+from unittest.mock import patch
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
-from main.models import UserProfile, InstitutionProfile, UserAddress
+from main.models import UserProfile, InstitutionProfile, UserAddress, resolve_rajaongkir_city
 
 
 class LandingAndMenuViewTests(TestCase):
@@ -206,6 +207,63 @@ class ProfileAndLogoutTests(TestCase):
         self.assertContains(response, 'value="XS"')
         self.assertContains(response, 'value="XL"')
         self.assertContains(response, 'value="XXL"')
+
+    def test_profile_stats_linked_to_dampak_numbers(self):
+        from django.utils import timezone
+        from donasi.models import Penawaran
+        from lemari.models import WardrobeItem
+        from marketplace.models import Order
+
+        self.client.login(username='nadia.r', password='password123')
+
+        # Awalnya belum ada aksi -> semua 0 (bukan angka statis 410 / 2 / 24).
+        empty_res = self.client.get(reverse('main:show_profile'))
+        self.assertEqual(empty_res.context['impact_points'], 0)
+        self.assertEqual(empty_res.context['impact_badges_count'], 0)
+        self.assertEqual(empty_res.context['impact_wardrobe_count'], 0)
+        self.assertContains(empty_res, 'data-impact-points>0</b>')
+        self.assertContains(empty_res, 'data-impact-badges>0</b>')
+        self.assertContains(empty_res, 'data-impact-wardrobe>0</b>')
+
+        other = User.objects.create_user(username='mitra_tes', email='mitra@email.com', password='password123')
+        # 2 barang di lemari (2 * 2 = 4 poin, meraih lencana "Sayangin Starter")
+        WardrobeItem.objects.create(owner=self.user, name='Kemeja Linen', category='atasan', last_used='1–3 bulan lalu')
+        WardrobeItem.objects.create(owner=self.user, name='Jaket Denim', category='luaran', last_used='3–6 bulan lalu')
+        # 1 penjualan selesai (10 poin, meraih lencana "Second Life") + 1 pembelian selesai (5 poin)
+        Order.objects.create(
+            buyer=other, seller=self.user, recipient='Mitra', phone='0812',
+            address='Jl. A', city='Depok', courier='reguler', shipping_cost=15000,
+            payment_method='transfer', status='selesai',
+        )
+        Order.objects.create(
+            buyer=self.user, seller=other, recipient='Nadia', phone='0812',
+            address='Jl. B', city='Depok', courier='reguler', shipping_cost=15000,
+            payment_method='transfer', status='selesai',
+        )
+        # 1 donasi diterima lembaga (20 poin, meraih lencana "First Giving")
+        Penawaran.objects.create(
+            donatur=self.user, lembaga=other, nama_barang='Kemeja Linen',
+            status=Penawaran.Status.SELESAI, diterima_pada=timezone.now(),
+        )
+        # Total = 4 + 10 + 5 + 20 = 39 poin, 3 lencana, 2 barang di lemari.
+        prof_res = self.client.get(reverse('main:show_profile'))
+        self.assertEqual(prof_res.context['impact_points'], 39)
+        self.assertEqual(prof_res.context['impact_badges_count'], 3)
+        self.assertEqual(prof_res.context['impact_wardrobe_count'], 2)
+        self.assertContains(prof_res, 'data-impact-points>39</b>')
+        self.assertContains(prof_res, 'data-impact-badges>3</b>')
+        self.assertContains(prof_res, 'data-impact-wardrobe>2</b>')
+        self.assertContains(prof_res, reverse('impact:show_impact_dashboard') + '?periode=semua')
+
+        # Angka di profil sama persis dengan JSON Dampak (/dampak/json/?periode=semua) & api_profile_data.
+        dampak_json = self.client.get(reverse('impact:show_impact_json') + '?periode=semua').json()
+        self.assertEqual(prof_res.context['impact_points'], dampak_json['points'])
+        self.assertEqual(prof_res.context['impact_badges_count'], dampak_json['earned_count'])
+
+        api_res = self.client.get(reverse('main:api_profile_data')).json()
+        self.assertEqual(api_res['impact']['points'], 39)
+        self.assertEqual(api_res['impact']['earned_badges'], 3)
+        self.assertEqual(api_res['impact']['wardrobe_count'], 2)
 
     def test_logout_post_clears_session_and_redirects_to_landing(self):
         self.client.login(username='nadia.r', password='password123')
@@ -453,6 +511,56 @@ class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
         self.assertContains(profile_page, 'data-address-filter="KOS"')
         self.assertContains(profile_page, 'Jl. Cisitu Indah No. 4')
 
+    @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': ''})
+    def test_expanded_cities_rajaongkir_api_and_checkout_profile_return(self):
+        # Cek kota tambahan lintas provinsi & pastikan tidak terjadi tabrakan substring.
+        self.assertEqual(resolve_rajaongkir_city('Palembang'), ('327', '33', 'Sumatera Selatan'))
+        self.assertEqual(resolve_rajaongkir_city('Balikpapan'), ('19', '15', 'Kalimantan Timur'))
+        self.assertEqual(resolve_rajaongkir_city('Batam'), ('48', '17', 'Kepulauan Riau'))
+        self.assertEqual(resolve_rajaongkir_city('Jayapura'), ('158', '24', 'Papua'))
+        self.assertEqual(resolve_rajaongkir_city('Kab. Bandung'), ('22', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Bandung'), ('23', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Banjarmasin'), ('36', '13', 'Kalimantan Selatan'))
+        self.assertEqual(resolve_rajaongkir_city('Banjar'), ('34', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Solo'), ('445', '10', 'Jawa Tengah'))
+
+        # Endpoint pencarian tujuan RajaOngkir (fallback lokal saat API key kosong).
+        dest_res = self.client.get(reverse('main:api_rajaongkir_destinations'), {'q': 'Palembang'})
+        self.assertEqual(dest_res.status_code, 200)
+        dest_data = dest_res.json()
+        self.assertEqual(dest_data['status'], 'ok')
+        self.assertEqual(dest_data['results'][0]['city'], 'Palembang')
+        self.assertEqual(dest_data['results'][0]['postal_code'], '30111')
+
+        # Tambah alamat dengan district/subdistrict/rajaongkir_destination_id.
+        add_res = self.client.post(reverse('main:api_add_address'), {
+            'label': 'KANTOR',
+            'address': 'Jl. Jenderal Sudirman No. 1',
+            'district': 'Ilir Timur I',
+            'subdistrict': 'Sungai Pangeran',
+            'city': 'Palembang',
+            'province': 'Sumatera Selatan',
+            'postal_code': '30121',
+            'rajaongkir_destination_id': '32701',
+        })
+        self.assertEqual(add_res.status_code, 201)
+        addr_payload = add_res.json()['address']
+        self.assertEqual(addr_payload['rajaongkir_city_id'], '327')
+        self.assertEqual(addr_payload['rajaongkir_destination_id'], '32701')
+        self.assertEqual(addr_payload['district'], 'Ilir Timur I')
+
+        # Kunjungi profil dari tombol + Tambah alamat checkout -> tampilkan banner kembali & auto-open flag.
+        checkout_url = reverse('marketplace:checkout_address')
+        prof_res = self.client.get(reverse('main:show_profile'), {'add_address': '1', 'next': checkout_url})
+        self.assertEqual(prof_res.status_code, 200)
+        self.assertTrue(prof_res.context['open_add_address'])
+        self.assertEqual(prof_res.context['next_url'], checkout_url)
+        self.assertContains(prof_res, 'Kembali ke Checkout')
+
+        # URL next eksternal ditolak.
+        unsafe_res = self.client.get(reverse('main:show_profile'), {'next': 'https://evil.example.com/'})
+        self.assertEqual(unsafe_res.context['next_url'], '')
+
 
 class SecurityAndGoogleAuthTests(TestCase):
     def setUp(self):
@@ -489,6 +597,8 @@ class SecurityAndGoogleAuthTests(TestCase):
         self.assertTrue(self.user.check_password('newsecurepass123'))
         self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
 
+    @override_settings(DEBUG=True)
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': '', 'GOOGLE_CLIENT_SECRET': ''})
     def test_google_login_and_register_personal_and_lembaga(self):
         # 1. Google OAuth page renders
         get_res = self.client.get(reverse('main:google_login') + '?mode=chooser')
@@ -542,6 +652,47 @@ class SecurityAndGoogleAuthTests(TestCase):
         yayasan = User.objects.get(email='yayasan.cahaya@gmail.com')
         self.assertEqual(yayasan.profile.role, 'LEMBAGA') # type: ignore
         self.assertTrue(yayasan.profile.google_connected) # type: ignore
+
+    @override_settings(DEBUG=False)
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': '', 'GOOGLE_CLIENT_SECRET': ''})
+    def test_google_chooser_and_post_callback_blocked_when_not_debug(self):
+        # 1. Tanpa kredensial OAuth di produksi (DEBUG=False), /auth/google/ ditolak ke login.
+        res_login = self.client.get(reverse('main:google_login') + '?mode=chooser', follow=True)
+        self.assertRedirects(res_login, reverse('main:show_login'))
+        self.assertContains(res_login, 'Login Google belum tersedia.')
+
+        # 2. Meskipun ada state di session, POST email langsung ke callback ditolak saat DEBUG=False.
+        session = self.client.session
+        session['google_oauth_state'] = 'test-state-123'
+        session.save()
+        res_cb = self.client.post(reverse('main:google_callback'), {
+            'state': 'test-state-123',
+            'email': 'nadia@email.com',
+            'full_name': 'Penyerang',
+        }, follow=True)
+        self.assertRedirects(res_cb, reverse('main:show_login'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    @override_settings(DEBUG=False)
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': 'real-cid', 'GOOGLE_CLIENT_SECRET': 'real-secret'})
+    def test_google_mode_chooser_ignored_when_not_debug_even_with_credentials(self):
+        res = self.client.get(reverse('main:google_login') + '?mode=chooser')
+        self.assertEqual(res.status_code, 302)
+        self.assertTrue(res['Location'].startswith('https://accounts.google.com/o/oauth2/v2/auth?'))
+
+    @override_settings(DEBUG=False, SECURE_PROXY_SSL_HEADER=('HTTP_X_FORWARDED_PROTO', 'https'))
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': 'real-cid', 'GOOGLE_CLIENT_SECRET': 'real-secret'})
+    def test_google_login_builds_https_redirect_uri_behind_proxy(self):
+        res = self.client.get(
+            reverse('main:google_login'),
+            HTTP_HOST='muhammad-ghazi51-sayang-in.pws.cs.ui.ac.id',
+            HTTP_X_FORWARDED_PROTO='https',
+        )
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(
+            'redirect_uri=https%3A%2F%2Fmuhammad-ghazi51-sayang-in.pws.cs.ui.ac.id%2Fauth%2Fgoogle%2Fcallback%2F',
+            res['Location'],
+        )
 
     def test_delete_account_validates_password_and_removes_user(self):
         self.client.login(username='nadia.r', password='password123')
@@ -660,6 +811,8 @@ class LembagaUXAndRoutingTests(TestCase):
         })
         self.assertRedirects(login_res, target_next)
 
+    @override_settings(DEBUG=True)
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': '', 'GOOGLE_CLIENT_SECRET': ''})
     def test_google_callback_enforces_institution_onboarding_even_with_next_url(self):
         init_res = self.client.get(reverse('main:google_login') + '?mode=chooser&jenis=lembaga&next=/donasi/lembaga/kebutuhan/')
         state = init_res.context['state']

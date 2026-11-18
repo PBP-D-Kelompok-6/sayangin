@@ -1,27 +1,6 @@
 from django import forms
 from main.models import UserProfile, UserAddress, InstitutionProfile
-
-CITY_CHOICES = [
-    ("", "Pilih kota"),
-    ("Jakarta Selatan", "Jakarta Selatan"),
-    ("Jakarta Pusat", "Jakarta Pusat"),
-    ("Jakarta Barat", "Jakarta Barat"),
-    ("Jakarta Timur", "Jakarta Timur"),
-    ("Jakarta Utara", "Jakarta Utara"),
-    ("Depok", "Depok"),
-    ("Bogor", "Bogor"),
-    ("Tangerang", "Tangerang"),
-    ("Tangerang Selatan", "Tangerang Selatan"),
-    ("Bekasi", "Bekasi"),
-    ("Bandung", "Bandung"),
-    ("Yogyakarta", "Yogyakarta"),
-    ("Semarang", "Semarang"),
-    ("Surabaya", "Surabaya"),
-    ("Malang", "Malang"),
-    ("Medan", "Medan"),
-    ("Makassar", "Makassar"),
-    ("Denpasar", "Denpasar"),
-]
+from sayangin.wilayah import CITY_CHOICES
 
 class ProfileForm(forms.ModelForm):
     class Meta:
@@ -84,6 +63,13 @@ class ProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["full_name"].required = True
+        current_city = (
+            self.initial.get("city")
+            or getattr(self.instance, "city", "")
+            or ""
+        ).strip()
+        if current_city and current_city not in {val for val, _ in CITY_CHOICES}:
+            self.fields["city"].widget.choices = list(CITY_CHOICES) + [(current_city, current_city)]
 
 
 class InstitutionProfileForm(forms.ModelForm):
@@ -184,4 +170,14 @@ class UserAddressForm(forms.ModelForm):
             }),
             "is_primary": forms.CheckboxInput(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        current_city = (
+            self.initial.get("city")
+            or getattr(self.instance, "city", "")
+            or ""
+        ).strip()
+        if current_city and current_city not in {val for val, _ in CITY_CHOICES}:
+            self.fields["city"].widget.choices = list(CITY_CHOICES) + [(current_city, current_city)]
 
