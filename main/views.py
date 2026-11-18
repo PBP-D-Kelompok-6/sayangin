@@ -21,6 +21,8 @@ from main.forms import InstitutionProfileForm, ProfileForm, UserAddressForm, CIT
 from main.decorators import personal_required, lembaga_required
 from donasi.models import Kebutuhan, Penawaran
 from marketplace.models import Order, Product
+from marketplace.ongkir import search_destinations
+from sayangin.wilayah import get_city_groups
 
 
 def show_main(request):
@@ -247,9 +249,18 @@ def show_profile(request):
     if q:
         addresses = addresses.filter(
             Q(address__icontains=q) |
+            Q(district__icontains=q) |
+            Q(subdistrict__icontains=q) |
             Q(city__icontains=q) |
+            Q(province__icontains=q) |
+            Q(postal_code__icontains=q) |
             Q(recipient_name__icontains=q)
         )
+
+    raw_next = (request.GET.get('next') or '').strip()
+    next_url = raw_next if _is_safe_next_url(request, raw_next) else ''
+    open_add_address = request.GET.get('add_address') in ('1', 'true', 'True')
+    edit_address_id = (request.GET.get('edit_address') or '').strip()
 
     prefs = profile.get_preferences_dict()
 
@@ -264,7 +275,11 @@ def show_profile(request):
         "initials": initials,
         "formatted_address": formatted_address,
         "city_choices": [c for c in CITY_CHOICES if c[0]],
+        "city_groups": get_city_groups(),
         "address_label_choices": UserProfile.ADDRESS_LABEL_CHOICES,
+        "next_url": next_url,
+        "open_add_address": open_add_address,
+        "edit_address_id": edit_address_id,
         "has_usable_password": request.user.has_usable_password(),
         "pesanan_berjalan": Order.objects.filter(buyer=request.user).exclude(status='selesai').count(),
         "barang_tayang": Product.objects.filter(seller=request.user).available().count(),
@@ -283,6 +298,8 @@ def edit_profile(request):
 
     mode = (request.POST.get('mode') or request.GET.get('mode') or '').strip().lower()
     address_id = request.POST.get('address_id') or request.GET.get('address_id')
+    raw_next = (request.POST.get('next') or request.GET.get('next') or '').strip()
+    next_url = raw_next if _is_safe_next_url(request, raw_next) else ''
     target_address = None
     if address_id:
         target_address = UserAddress.objects.filter(user=request.user, pk=address_id).first()
@@ -313,31 +330,57 @@ def edit_profile(request):
             city_text = (post_data.get("city") or "").strip()
             label_val = (post_data.get("address_label") or "RUMAH").strip().upper()
             postal_val = (post_data.get("postal_code") or "").strip()
+            province_val = (post_data.get("province") or "").strip()
+            district_val = (post_data.get("district") or "").strip()
+            subdistrict_val = (post_data.get("subdistrict") or "").strip()
+            ro_dest_val = (post_data.get("rajaongkir_destination_id") or "").strip()
             is_primary_val = bool(form.cleaned_data.get("is_primary_address"))
 
+            saved_addr = None
             if addr_text or city_text:
                 if target_address and mode != 'add':
+                    city_changed = target_address.city.strip().lower() != city_text.lower()
                     target_address.label = label_val
                     target_address.recipient_name = saved_profile.full_name
                     target_address.phone_number = saved_profile.phone_number
                     target_address.address = addr_text
                     target_address.city = city_text
                     target_address.postal_code = postal_val
+                    if province_val:
+                        target_address.province = province_val
+                    elif city_changed:
+                        target_address.province = ""
+                    if district_val or city_changed:
+                        target_address.district = district_val
+                    if subdistrict_val or city_changed:
+                        target_address.subdistrict = subdistrict_val
+                    if ro_dest_val or city_changed:
+                        target_address.rajaongkir_destination_id = ro_dest_val
                     target_address.is_primary = is_primary_val
                     target_address.save()
+                    saved_addr = target_address
                 else:
-                    UserAddress.objects.create(
+                    saved_addr = UserAddress.objects.create(
                         user=request.user,
                         label=label_val,
                         recipient_name=saved_profile.full_name,
                         phone_number=saved_profile.phone_number,
                         address=addr_text,
+                        subdistrict=subdistrict_val,
+                        district=district_val,
                         city=city_text,
+                        province=province_val,
+                        rajaongkir_destination_id=ro_dest_val,
                         postal_code=postal_val,
                         is_primary=is_primary_val,
                     )
 
             messages.success(request, "Profil anda berhasil diperbarui.")
+            if next_url:
+                if saved_addr:
+                    sep = "&" if "?" in next_url else "?"
+                    return redirect(f"{next_url}{sep}address_id={saved_addr.pk}")
+                return redirect(next_url)
             return redirect('main:show_profile')
     else:
         initial = {}
@@ -364,6 +407,8 @@ def edit_profile(request):
         "profile": profile,
         "mode": mode,
         "target_address": target_address,
+        "city_groups": get_city_groups(),
+        "next_url": next_url,
     }
 
     return render(request, "edit_profil.html", context)
@@ -393,7 +438,11 @@ def show_addresses_json(request):
     if q:
         addresses = addresses.filter(
             Q(address__icontains=q) |
+            Q(district__icontains=q) |
+            Q(subdistrict__icontains=q) |
             Q(city__icontains=q) |
+            Q(province__icontains=q) |
+            Q(postal_code__icontains=q) |
             Q(recipient_name__icontains=q)
         )
 
@@ -420,7 +469,11 @@ def api_profile_data(request):
     if q:
         addresses = addresses.filter(
             Q(address__icontains=q) |
+            Q(district__icontains=q) |
+            Q(subdistrict__icontains=q) |
             Q(city__icontains=q) |
+            Q(province__icontains=q) |
+            Q(postal_code__icontains=q) |
             Q(recipient_name__icontains=q)
         )
 
@@ -455,6 +508,10 @@ def api_add_address(request):
         label = 'RUMAH'
     address_text = (payload.get('address') or payload.get('alamat') or '').strip()
     city = (payload.get('city') or payload.get('kota') or '').strip()
+    province = (payload.get('province') or '').strip()
+    district = (payload.get('district') or '').strip()
+    subdistrict = (payload.get('subdistrict') or '').strip()
+    rajaongkir_destination_id = (payload.get('rajaongkir_destination_id') or '').strip()
     postal_code = (payload.get('postal_code') or payload.get('kodepos') or '').strip()
     recipient_name = (payload.get('recipient_name') or profile.full_name or request.user.username).strip()
     phone_number = (payload.get('phone_number') or profile.phone_number or '').strip()
@@ -473,7 +530,11 @@ def api_add_address(request):
         recipient_name=recipient_name,
         phone_number=phone_number,
         address=address_text,
+        subdistrict=subdistrict,
+        district=district,
         city=city,
+        province=province,
+        rajaongkir_destination_id=rajaongkir_destination_id,
         postal_code=postal_code,
         is_primary=is_primary,
     )
@@ -505,8 +566,25 @@ def api_edit_address(request, address_id: int):
             "message": "Alamat lengkap dan kota wajib diisi.",
         }, status=400)
 
+    city_changed = addr.city.strip().lower() != city.lower()
     addr.address = address_text
     addr.city = city
+    if 'province' in payload:
+        addr.province = (payload.get('province') or '').strip()
+    elif city_changed:
+        addr.province = ''
+    if 'district' in payload:
+        addr.district = (payload.get('district') or '').strip()
+    elif city_changed:
+        addr.district = ''
+    if 'subdistrict' in payload:
+        addr.subdistrict = (payload.get('subdistrict') or '').strip()
+    elif city_changed:
+        addr.subdistrict = ''
+    if 'rajaongkir_destination_id' in payload:
+        addr.rajaongkir_destination_id = (payload.get('rajaongkir_destination_id') or '').strip()
+    elif city_changed:
+        addr.rajaongkir_destination_id = ''
     if 'postal_code' in payload or 'kodepos' in payload:
         addr.postal_code = (payload.get('postal_code') or payload.get('kodepos') or '').strip()
     if 'recipient_name' in payload:
@@ -523,6 +601,22 @@ def api_edit_address(request, address_id: int):
         "message": "Alamat berhasil diperbarui.",
         "address": addr.to_dict(),
         "addresses": [a.to_dict() for a in all_addresses],
+    })
+
+
+@login_required(login_url='main:show_login')
+@require_GET
+def api_rajaongkir_destinations(request):
+    """Pencarian kota, kecamatan, kelurahan, atau kode pos via RajaOngkir (fallback lokal)."""
+    q = (request.GET.get('q') or request.GET.get('search') or '').strip()
+    raw_limit = request.GET.get('limit', '15')
+    limit = min(max(int(raw_limit), 1), 25) if raw_limit.isdigit() else 15
+    data = search_destinations(q, limit=limit)
+    return JsonResponse({
+        "status": "ok",
+        "query": q,
+        "source": data["source"],
+        "results": data["results"],
     })
 
 

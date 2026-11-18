@@ -7,9 +7,16 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from main.models import UserAddress
 from . import views
 from .models import CartItem, Order, Product
-from .ongkir import _destination_id, ongkir
+from .ongkir import (
+    _destination_id,
+    _destination_id_by_postal,
+    ongkir,
+    ongkir_detail,
+    search_destinations,
+)
 
 
 @override_settings(STORAGES={'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
@@ -96,6 +103,88 @@ class MarketplaceFlowTest(TestCase):
         self.client.post(url, {'action': 'confirm'})
         order.refresh_from_db()
         self.assertEqual(order.status, 'selesai')
+
+    def test_checkout_uses_saved_profile_addresses_and_links_to_profile(self):
+        rumah = UserAddress.objects.create(
+            user=self.buyer, label='RUMAH', recipient_name='Ira Arianti', phone_number='081200001111',
+            address='Jl. Margonda No. 1', city='Depok', postal_code='16424', is_primary=True,
+        )
+        kos = UserAddress.objects.create(
+            user=self.buyer, label='KOS', recipient_name='Ira Arianti', phone_number='081200001111',
+            address='Jl. Cisitu Indah No. 4', district='Coblong', city='Bandung',
+            postal_code='40135', rajaongkir_destination_id='17545', is_primary=False,
+        )
+        apt = UserAddress.objects.create(
+            user=self.buyer, label='APARTEMEN', recipient_name='Ira Arianti', phone_number='081200001111',
+            address='Apartemen Kalibata City', city='Jakarta Selatan', postal_code='12750', is_primary=False,
+        )
+        self.client.login(username='ira', password='x')
+        self.client.post(reverse('marketplace:add_to_cart', args=[self.p1.pk]))
+
+        # Step 1 menampilkan semua alamat profil, memilih utama secara default, & punya tombol + Tambah alamat ke profil.
+        r = self.client.get(reverse('marketplace:checkout_address'))
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.context['selected_address_id'], rumah.pk)
+        self.assertContains(r, 'Rumah')
+        self.assertContains(r, 'Kos')
+        self.assertContains(r, 'Apartemen')
+        self.assertContains(r, '+ Tambah alamat')
+        self.assertContains(r, f'{reverse("main:show_profile")}?add_address=1&amp;next={reverse("marketplace:checkout_address")}')
+
+        # Kembali dari profil dengan ?address_id memilih alamat baru/tertentu secara otomatis.
+        r_sel = self.client.get(reverse('marketplace:checkout_address'), {'address_id': apt.pk})
+        self.assertEqual(r_sel.context['selected_address_id'], apt.pk)
+
+        # Pilih Kos langsung lanjut ke pengiriman tanpa mengetik alamat lagi.
+        r_post = self.client.post(reverse('marketplace:checkout_address'), {'selected_address_id': kos.pk})
+        self.assertRedirects(r_post, reverse('marketplace:checkout_shipping'))
+        ship = self.client.get(reverse('marketplace:checkout_shipping'))
+        self.assertContains(ship, 'Kos · Bandung 40135')
+
+        self.client.post(reverse('marketplace:checkout_shipping'), {f'courier_{self.seller.pk}': 'reguler'})
+        self.client.post(reverse('marketplace:checkout_payment'), {'payment': 'transfer'})
+        order = Order.objects.get()
+        self.assertEqual(order.city, 'Bandung')
+        self.assertEqual(order.postal_code, '40135')
+        self.assertEqual(order.address_label, 'Kos')
+        self.assertEqual(order.recipient, 'Ira Arianti')
+
+    def test_checkout_saved_address_missing_phone_prompts_and_saves_back(self):
+        addr = UserAddress.objects.create(
+            user=self.buyer, label='KANTOR', recipient_name='Ira Arianti', phone_number='',
+            address='Jl. Sudirman Kav. 52', city='Jakarta Selatan', postal_code='12190', is_primary=True,
+        )
+        self.client.login(username='ira', password='x')
+        self.client.post(reverse('marketplace:add_to_cart', args=[self.p1.pk]))
+
+        r_err = self.client.post(reverse('marketplace:checkout_address'), {'selected_address_id': addr.pk})
+        self.assertEqual(r_err.status_code, 200)
+        self.assertIn('phone_fallback', r_err.context['errors'])
+
+        r_ok = self.client.post(reverse('marketplace:checkout_address'), {
+            'selected_address_id': addr.pk, 'phone_fallback': '08123456789',
+        })
+        self.assertRedirects(r_ok, reverse('marketplace:checkout_shipping'))
+        addr.refresh_from_db()
+        self.assertEqual(addr.phone_number, '08123456789')
+        self.buyer.profile.refresh_from_db()
+        self.assertEqual(self.buyer.profile.phone_number, '08123456789')
+
+    def test_checkout_manual_address_saves_into_user_profile(self):
+        self.client.login(username='ira', password='x')
+        self.client.post(reverse('marketplace:add_to_cart', args=[self.p1.pk]))
+
+        r = self.client.post(reverse('marketplace:checkout_address'), {
+            'label': 'APARTEMEN', 'recipient': 'Ira', 'phone': '08129999',
+            'address': 'Jl. Jenderal Sudirman No. 88', 'city': 'Balikpapan', 'postal_code': '76111',
+        })
+        self.assertRedirects(r, reverse('marketplace:checkout_shipping'))
+        saved = UserAddress.objects.get(user=self.buyer)
+        self.assertEqual(saved.label, 'APARTEMEN')
+        self.assertEqual(saved.city, 'Balikpapan')
+        self.assertEqual(saved.rajaongkir_city_id, '19')
+        self.assertEqual(saved.province, 'Kalimantan Timur')
+        self.assertTrue(saved.is_primary)
 
     def test_cannot_buy_own_product(self):
         self.client.login(username='nadia', password='x')
@@ -256,6 +345,7 @@ class PilihanBersamaTest(TestCase):
 class OngkirTest(TestCase):
     def setUp(self):
         _destination_id.cache_clear()
+        _destination_id_by_postal.cache_clear()
 
     @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': ''})
     def test_without_key_uses_flat_rate(self):
@@ -271,3 +361,69 @@ class OngkirTest(TestCase):
         self.assertEqual(req.post.call_args.kwargs['data']['destination'], 7)
         req.post.side_effect = Exception('down')
         self.assertEqual(ongkir('Jakarta', 'Depok', 500), Order.COURIER_COST)
+
+    @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': 'k'})
+    @patch('marketplace.ongkir.requests')
+    def test_ongkir_detail_uses_saved_destination_id_and_postal_code_and_ctc(self, req):
+        req.RequestException = Exception
+        req.post.return_value = Mock(json=lambda: {
+            'data': [
+                {'service': 'CTC', 'cost': 9000, 'etd': '1-2 day'},
+                {'service': 'CTCYES', 'cost': 18000, 'etd': '1 day'},
+            ]
+        })
+        res = ongkir_detail('Depok', 'Jakarta Selatan', 600, origin_id='101', dest_id='202')
+        self.assertEqual(res['source'], 'rajaongkir')
+        self.assertEqual(res['costs'], {'reguler': 9000, 'kilat': 18000})
+        self.assertIn('JNE CTC', res['labels']['reguler'])
+        self.assertIn('1–2 hari', res['labels']['reguler'])
+        # Karena origin_id & dest_id sudah ada, tidak perlu GET destination.
+        req.get.assert_not_called()
+        self.assertEqual(req.post.call_args.kwargs['data']['origin'], 101)
+        self.assertEqual(req.post.call_args.kwargs['data']['destination'], 202)
+
+        # Tanpa dest_id tapi dengan kode pos 5 digit -> cari berdasarkan kode pos.
+        req.get.return_value = Mock(json=lambda: {
+            'data': [{'id': 555, 'city_name': 'DEPOK', 'zip_code': '16424'}]
+        })
+        ongkir_detail('Depok', 'Depok', 500, origin_id='101', dest_postal_code='16424')
+        self.assertEqual(req.get.call_args.kwargs['params']['search'], '16424')
+        self.assertEqual(req.post.call_args.kwargs['data']['destination'], 555)
+
+    @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': ''})
+    def test_search_destinations_local_fallback_supports_expanded_cities_and_postcodes(self):
+        res_city = search_destinations('Balikpapan')
+        self.assertEqual(res_city['source'], 'local')
+        self.assertEqual(res_city['results'][0]['city'], 'Balikpapan')
+        self.assertEqual(res_city['results'][0]['province'], 'Kalimantan Timur')
+        self.assertEqual(res_city['results'][0]['postal_code'], '76111')
+
+        res_alias = search_destinations('Solo')
+        self.assertEqual(res_alias['results'][0]['city'], 'Surakarta')
+
+        res_zip = search_destinations('99111')
+        self.assertEqual(res_zip['results'][0]['city'], 'Jayapura')
+
+    @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': 'k'})
+    @patch('marketplace.ongkir.requests')
+    def test_search_destinations_live_rajaongkir(self, req):
+        req.RequestException = Exception
+        req.get.return_value = Mock(json=lambda: {
+            'data': [{
+                'id': 17545,
+                'province_name': 'JAWA BARAT',
+                'city_name': 'DEPOK',
+                'district_name': 'BEJI',
+                'subdistrict_name': 'PONDOK CINA',
+                'zip_code': '16424',
+            }]
+        })
+        res = search_destinations('16424')
+        self.assertEqual(res['source'], 'rajaongkir')
+        item = res['results'][0]
+        self.assertEqual(item['destination_id'], '17545')
+        self.assertEqual(item['city'], 'Depok')
+        self.assertEqual(item['district'], 'Beji')
+        self.assertEqual(item['subdistrict'], 'Pondok Cina')
+        self.assertEqual(item['postal_code'], '16424')
+        self.assertEqual(item['rajaongkir_city_id'], '115')

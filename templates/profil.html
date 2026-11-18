@@ -22,10 +22,23 @@
         data-api-profile-update-url="{% url 'main:api_update_profile' %}"
         data-api-preferences-url="{% url 'main:api_update_preferences' %}"
         data-api-address-add-url="{% url 'main:api_add_address' %}"
+        data-api-rajaongkir-url="{% url 'main:api_rajaongkir_destinations' %}"
         data-api-password-url="{% url 'main:api_change_password' %}"
         data-api-google-disconnect-url="{% url 'main:api_disconnect_google' %}"
         data-api-delete-account-url="{% url 'main:api_delete_account' %}"
-        data-edit-profile-url="{% url 'main:edit_profile' %}">
+        data-edit-profile-url="{% url 'main:edit_profile' %}"
+        data-next-url="{{ next_url|default:'' }}"
+        data-open-add-address="{{ open_add_address|yesno:'true,false' }}"
+        data-edit-address-id="{{ edit_address_id|default:'' }}">
+    {% if next_url %}
+      <div class="checkout-return-banner" role="region" aria-label="Kembali ke checkout">
+        <div>
+          <b>Menambahkan alamat untuk Checkout</b>
+          <div class="text-sm text-soft">Setelah alamat disimpan, kamu akan otomatis kembali ke halaman checkout.</div>
+        </div>
+        <a class="btn btn--outline btn--sm" href="{{ next_url }}">← Kembali ke Checkout</a>
+      </div>
+    {% endif %}
     {% if messages %}
       {% for message in messages %}
         {% if 'error' in message.tags %}
@@ -120,7 +133,7 @@
           </div>
         </section>
 
-        <section>
+        <section id="alamat">
           <div class="flex items-center justify-between mb-2">
             <h2 class="eyebrow m-0">Alamat</h2>
             <span class="text-sm text-muted" data-address-count>{{ total_addresses_count|default:addresses|length }} alamat</span>
@@ -161,7 +174,11 @@
                      data-recipient-name="{{ addr.recipient_name }}"
                      data-phone-number="{{ addr.phone_number }}"
                      data-address="{{ addr.address }}"
+                     data-subdistrict="{{ addr.subdistrict }}"
+                     data-district="{{ addr.district }}"
                      data-city="{{ addr.city }}"
+                     data-province="{{ addr.province }}"
+                     data-rajaongkir-destination-id="{{ addr.rajaongkir_destination_id }}"
                      data-postal-code="{{ addr.postal_code }}"
                      data-is-primary="{{ addr.is_primary|yesno:'true,false' }}">Ubah</a>
                   <button class="link-btn text-sm text-muted" type="button" data-address-delete="{{ addr.pk }}">Hapus</button>
@@ -391,22 +408,39 @@
 
         <label class="field">
           <span class="field__label">Alamat lengkap</span>
-          <textarea class="textarea" name="address" rows="2" placeholder="Nama jalan, nomor rumah/unit, RT/RW, kelurahan, kecamatan" required></textarea>
+          <textarea class="textarea" name="address" rows="2" placeholder="Nama jalan, nomor rumah/unit, RT/RW" required></textarea>
         </label>
+
+        <div class="field ro-lookup" data-ro-lookup data-ro-url="{% url 'main:api_rajaongkir_destinations' %}">
+          <label class="field" style="margin:0">
+            <span class="field__label">Cari kecamatan, kota, atau kode pos <span class="ro-badge">RajaOngkir</span></span>
+            <input class="input" type="search" placeholder="Contoh: Beji, Depok, Balikpapan, atau 16424…" autocomplete="off" data-ro-query>
+            <span class="field__hint" data-ro-status>Ketik nama daerah atau kode pos 5 digit untuk mengisi kota &amp; kode pos otomatis.</span>
+          </label>
+          <div class="ro-results" data-ro-results hidden></div>
+          <input type="hidden" name="province" value="" data-ro-province>
+          <input type="hidden" name="district" value="" data-ro-district>
+          <input type="hidden" name="subdistrict" value="" data-ro-subdistrict>
+          <input type="hidden" name="rajaongkir_destination_id" value="" data-ro-dest-id>
+        </div>
 
         <div class="form-row form-row--2-1 grid grid-cols-1 md:grid-cols-3">
           <label class="field md:col-span-2">
-            <span class="field__label">Kota / kabupaten (RajaOngkir)</span>
-            <select class="select" name="city" required>
+            <span class="field__label">Kota / kabupaten</span>
+            <select class="select" name="city" required data-ro-city>
               <option value="">Pilih kota / kabupaten</option>
-              {% for city_val, city_label in city_choices %}
-                <option value="{{ city_val }}">{{ city_label }}</option>
+              {% for prov, cities in city_groups %}
+                <optgroup label="{{ prov }}">
+                  {% for c in cities %}
+                    <option value="{{ c.name }}" data-postal="{{ c.postal_code }}">{{ c.name }}</option>
+                  {% endfor %}
+                </optgroup>
               {% endfor %}
             </select>
           </label>
           <label class="field">
             <span class="field__label">Kode pos</span>
-            <input class="input" type="text" name="postal_code" inputmode="numeric" placeholder="12345">
+            <input class="input" type="text" name="postal_code" inputmode="numeric" placeholder="Contoh: 16424" data-ro-postal>
           </label>
         </div>
 

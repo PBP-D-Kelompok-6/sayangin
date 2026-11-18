@@ -4,40 +4,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-
-RAJAONGKIR_CITY_MAP = {
-    'jakarta selatan': ('153', '6', 'DKI Jakarta'),
-    'jakarta pusat': ('152', '6', 'DKI Jakarta'),
-    'jakarta barat': ('151', '6', 'DKI Jakarta'),
-    'jakarta timur': ('154', '6', 'DKI Jakarta'),
-    'jakarta utara': ('155', '6', 'DKI Jakarta'),
-    'depok': ('115', '9', 'Jawa Barat'),
-    'bogor': ('79', '9', 'Jawa Barat'),
-    'bekasi': ('55', '9', 'Jawa Barat'),
-    'bandung': ('23', '9', 'Jawa Barat'),
-    'tangerang': ('456', '3', 'Banten'),
-    'tangerang selatan': ('457', '3', 'Banten'),
-    'surabaya': ('444', '11', 'Jawa Timur'),
-    'malang': ('256', '11', 'Jawa Timur'),
-    'yogyakarta': ('501', '5', 'DI Yogyakarta'),
-    'semarang': ('399', '10', 'Jawa Tengah'),
-    'surakarta': ('445', '10', 'Jawa Tengah'),
-    'medan': ('278', '34', 'Sumatera Utara'),
-    'denpasar': ('114', '1', 'Bali'),
-    'makassar': ('254', '28', 'Sulawesi Selatan'),
-}
-
-
-def resolve_rajaongkir_city(city_name: str):
-    if not city_name:
-        return ('', '', '')
-    key = city_name.strip().lower()
-    if key in RAJAONGKIR_CITY_MAP:
-        return RAJAONGKIR_CITY_MAP[key]
-    for map_key, val in RAJAONGKIR_CITY_MAP.items():
-        if map_key in key or key in map_key:
-            return val
-    return ('', '', '')
+from sayangin.wilayah import RAJAONGKIR_CITY_MAP, resolve_rajaongkir_city
 
 
 class UserProfile(models.Model):
@@ -107,6 +74,8 @@ class UserAddress(models.Model):
     recipient_name = models.CharField(max_length=255, blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
     address = models.TextField()
+    subdistrict = models.CharField(max_length=100, blank=True, default='')
+    district = models.CharField(max_length=100, blank=True, default='')
     city = models.CharField(max_length=100)
     province = models.CharField(max_length=100, blank=True)
     rajaongkir_city_id = models.CharField(
@@ -115,6 +84,12 @@ class UserAddress(models.Model):
         help_text="ID kota RajaOngkir untuk kalkulasi ongkir otomatis.",
     )
     rajaongkir_province_id = models.CharField(max_length=20, blank=True)
+    rajaongkir_destination_id = models.CharField(
+        max_length=30,
+        blank=True,
+        default='',
+        help_text="ID tujuan domestik RajaOngkir (Komerce) berdasarkan kelurahan/kode pos.",
+    )
     postal_code = models.CharField(max_length=10, blank=True)
     is_primary = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -125,7 +100,7 @@ class UserAddress(models.Model):
 
     @property
     def formatted_address(self) -> str:
-        parts = [p for p in [self.address, self.city] if p]
+        parts = [p for p in [self.address, self.district, self.city] if p]
         joined = ", ".join(parts)
         if self.postal_code:
             joined = f"{joined} {self.postal_code}".strip()
@@ -139,10 +114,13 @@ class UserAddress(models.Model):
             'recipient_name': self.recipient_name,
             'phone_number': self.phone_number,
             'address': self.address,
+            'subdistrict': self.subdistrict,
+            'district': self.district,
             'city': self.city,
             'province': self.province,
             'rajaongkir_city_id': self.rajaongkir_city_id,
             'rajaongkir_province_id': self.rajaongkir_province_id,
+            'rajaongkir_destination_id': self.rajaongkir_destination_id,
             'postal_code': self.postal_code,
             'is_primary': self.is_primary,
             'formatted_address': self.formatted_address,
@@ -155,6 +133,9 @@ class UserAddress(models.Model):
             self.rajaongkir_province_id = prov_id
             if not self.province:
                 self.province = prov_name
+        else:
+            self.rajaongkir_city_id = ''
+            self.rajaongkir_province_id = ''
 
         if not self.pk and not UserAddress.objects.filter(user=self.user).exists():
             self.is_primary = True

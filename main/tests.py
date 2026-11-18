@@ -1,8 +1,9 @@
 import json
+from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
-from main.models import UserProfile, InstitutionProfile, UserAddress
+from main.models import UserProfile, InstitutionProfile, UserAddress, resolve_rajaongkir_city
 
 
 class LandingAndMenuViewTests(TestCase):
@@ -452,6 +453,56 @@ class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
         self.assertEqual(profile_page.status_code, 200)
         self.assertContains(profile_page, 'data-address-filter="KOS"')
         self.assertContains(profile_page, 'Jl. Cisitu Indah No. 4')
+
+    @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': ''})
+    def test_expanded_cities_rajaongkir_api_and_checkout_profile_return(self):
+        # Cek kota tambahan lintas provinsi & pastikan tidak terjadi tabrakan substring.
+        self.assertEqual(resolve_rajaongkir_city('Palembang'), ('327', '33', 'Sumatera Selatan'))
+        self.assertEqual(resolve_rajaongkir_city('Balikpapan'), ('19', '15', 'Kalimantan Timur'))
+        self.assertEqual(resolve_rajaongkir_city('Batam'), ('48', '17', 'Kepulauan Riau'))
+        self.assertEqual(resolve_rajaongkir_city('Jayapura'), ('158', '24', 'Papua'))
+        self.assertEqual(resolve_rajaongkir_city('Kab. Bandung'), ('22', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Bandung'), ('23', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Banjarmasin'), ('36', '13', 'Kalimantan Selatan'))
+        self.assertEqual(resolve_rajaongkir_city('Banjar'), ('34', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Solo'), ('445', '10', 'Jawa Tengah'))
+
+        # Endpoint pencarian tujuan RajaOngkir (fallback lokal saat API key kosong).
+        dest_res = self.client.get(reverse('main:api_rajaongkir_destinations'), {'q': 'Palembang'})
+        self.assertEqual(dest_res.status_code, 200)
+        dest_data = dest_res.json()
+        self.assertEqual(dest_data['status'], 'ok')
+        self.assertEqual(dest_data['results'][0]['city'], 'Palembang')
+        self.assertEqual(dest_data['results'][0]['postal_code'], '30111')
+
+        # Tambah alamat dengan district/subdistrict/rajaongkir_destination_id.
+        add_res = self.client.post(reverse('main:api_add_address'), {
+            'label': 'KANTOR',
+            'address': 'Jl. Jenderal Sudirman No. 1',
+            'district': 'Ilir Timur I',
+            'subdistrict': 'Sungai Pangeran',
+            'city': 'Palembang',
+            'province': 'Sumatera Selatan',
+            'postal_code': '30121',
+            'rajaongkir_destination_id': '32701',
+        })
+        self.assertEqual(add_res.status_code, 201)
+        addr_payload = add_res.json()['address']
+        self.assertEqual(addr_payload['rajaongkir_city_id'], '327')
+        self.assertEqual(addr_payload['rajaongkir_destination_id'], '32701')
+        self.assertEqual(addr_payload['district'], 'Ilir Timur I')
+
+        # Kunjungi profil dari tombol + Tambah alamat checkout -> tampilkan banner kembali & auto-open flag.
+        checkout_url = reverse('marketplace:checkout_address')
+        prof_res = self.client.get(reverse('main:show_profile'), {'add_address': '1', 'next': checkout_url})
+        self.assertEqual(prof_res.status_code, 200)
+        self.assertTrue(prof_res.context['open_add_address'])
+        self.assertEqual(prof_res.context['next_url'], checkout_url)
+        self.assertContains(prof_res, 'Kembali ke Checkout')
+
+        # URL next eksternal ditolak.
+        unsafe_res = self.client.get(reverse('main:show_profile'), {'next': 'https://evil.example.com/'})
+        self.assertEqual(unsafe_res.context['next_url'], '')
 
 
 class SecurityAndGoogleAuthTests(TestCase):

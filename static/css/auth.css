@@ -25,6 +25,17 @@
 .profile__add { align-self: flex-start; padding: 12px 0; }
 .profile__delete { align-self: center; }
 
+/* ---------- RajaOngkir destination lookup & Checkout return banner ---------- */
+.checkout-return-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border: 1px solid var(--color-border-strong, rgba(26,18,16,.18)); border-radius: 12px; background: var(--color-surface, #fff); }
+.ro-lookup { position: relative; }
+.ro-badge { display: inline-flex; align-items: center; padding: 2px 8px; margin-left: 6px; border-radius: 999px; background: rgba(107,20,32,.08); color: #6B1420; font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; vertical-align: middle; }
+.ro-results { margin-top: 6px; border: 1px solid rgba(26,18,16,.18); border-radius: 12px; background: #fff; max-height: 220px; overflow-y: auto; box-shadow: 0 10px 24px rgba(18,11,9,.08); }
+.ro-item { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; padding: 10px 14px; border: 0; border-bottom: 1px solid rgba(26,18,16,.08); background: transparent; font: inherit; font-size: 13px; color: #1A1210; cursor: pointer; }
+.ro-item:last-child { border-bottom: 0; }
+.ro-item:hover, .ro-item:focus-visible { background: #EFEDEB; }
+.ro-item small { font-family: "IBM Plex Mono", monospace; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #6E625E; flex: none; }
+.ro-empty { padding: 12px 14px; font-size: 13px; color: #6E625E; }
+
 @media (max-width: 767px) {
   .profile { padding-block: 20px 28px; gap: 22px; }
   .profile__grid { flex-direction: column; gap: 22px; }

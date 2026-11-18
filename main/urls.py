@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/addresses/<int:address_id>/edit/', views.api_edit_address, name='api_edit_address'),
     path('api/addresses/<int:address_id>/delete/', views.api_delete_address, name='api_delete_address'),
     path('api/addresses/<int:address_id>/set-primary/', views.api_set_primary_address, name='api_set_primary_address'),
+    path('api/rajaongkir/destinations/', views.api_rajaongkir_destinations, name='api_rajaongkir_destinations'),
 
     # AJAX / API endpoints for security (password, Google link, delete account)
     path('api/security/password/', views.api_change_password, name='api_change_password'),
