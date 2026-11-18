@@ -271,3 +271,56 @@ class OngkirTest(TestCase):
         self.assertEqual(req.post.call_args.kwargs['data']['destination'], 7)
         req.post.side_effect = Exception('down')
         self.assertEqual(ongkir('Jakarta', 'Depok', 500), Order.COURIER_COST)
+
+
+@override_settings(STORAGES={'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}})
+class MarketplaceApiTest(TestCase):
+    """API DRF untuk Flutter: /marketplace/api/..."""
+
+    def setUp(self):
+        self.seller = User.objects.create_user('nadia', password='x')
+        self.buyer = User.objects.create_user('ira', password='x')
+        self.p1 = Product.objects.create(seller=self.seller, name='Blazer wol abu', price=185000, category='atasan',
+                                         condition='terawat', size='M', city='Jakarta', image='marketplace/img/blazer-abu.jpg')
+        self.p2 = Product.objects.create(seller=self.seller, name='Tas mesh', price=120000, category='tas',
+                                         condition='seperti_baru', city='Bandung', image='marketplace/img/tas-mesh.jpg')
+        self.draft = Product.objects.create(seller=self.seller, name='Draf', price=1, category='tas', condition='terawat',
+                                            city='Bandung', image='x.jpg', is_draft=True)
+
+    def test_catalog_is_public_and_uses_web_filters(self):
+        data = self.client.get(reverse('marketplace:api_catalog'), {'kategori': 'tas'}).json()
+        self.assertEqual([p['name'] for p in data['results']], ['Tas mesh'])  # draf tidak ikut
+        self.assertTrue(data['results'][0]['photo'].startswith('http://'))
+        self.assertEqual(self.client.get(reverse('marketplace:api_product', args=[self.p1.pk])).json()['in_cart'], False)
+        self.assertEqual(self.client.get(reverse('marketplace:api_product', args=[self.draft.pk])).status_code, 404)
+
+    def test_cart_needs_login(self):
+        self.assertEqual(self.client.get(reverse('marketplace:api_cart')).status_code, 403)
+
+    def test_cart_add_and_remove(self):
+        self.client.login(username='ira', password='x')
+        r = self.client.post(reverse('marketplace:api_cart'), {'product': self.p1.pk}, content_type='application/json')
+        self.assertEqual(r.status_code, 201)
+        self.assertEqual((r.json()['count'], r.json()['subtotal']), (1, 185000))
+        r = self.client.delete(reverse('marketplace:api_cart_item', args=[self.p1.pk]))
+        self.assertEqual(r.json()['count'], 0)
+
+    def test_cannot_buy_own_product(self):
+        self.client.login(username='nadia', password='x')
+        r = self.client.post(reverse('marketplace:api_cart'), {'product': self.p1.pk}, content_type='application/json')
+        self.assertEqual(r.status_code, 400)
+
+    def test_orders_only_for_buyer_or_seller(self):
+        order = Order(buyer=self.buyer, seller=self.seller, recipient='Ira', phone='08', address='Jl', city='Depok',
+                      courier='reguler', shipping_cost=15000, payment_method='transfer')
+        order.set_status('dibayar')
+        order.save()
+        order.items.create(product=self.p1, name=self.p1.name, price=self.p1.price, image=self.p1.image)
+        self.client.login(username='ira', password='x')
+        rows = self.client.get(reverse('marketplace:api_orders')).json()
+        self.assertEqual((rows[0]['code'], rows[0]['total']), (order.code, 200000))
+        detail = self.client.get(reverse('marketplace:api_order', args=[order.pk])).json()
+        self.assertEqual(len(detail['steps']), 5)
+        User.objects.create_user('lain', password='x')
+        self.client.login(username='lain', password='x')
+        self.assertEqual(self.client.get(reverse('marketplace:api_order', args=[order.pk])).status_code, 404)

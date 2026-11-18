@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import api, views
 
 app_name = 'marketplace'
 
@@ -24,4 +24,11 @@ urlpatterns = [
     path('checkout/pembayaran/', views.checkout_payment, name='checkout_payment'),
     path('pesanan/', views.orders, name='orders'),
     path('pesanan/<int:pk>/', views.order_detail, name='order_detail'),
+    # API DRF untuk aplikasi Flutter
+    path('api/katalog/', api.catalog_api, name='api_catalog'),
+    path('api/katalog/<int:pk>/', api.product_api, name='api_product'),
+    path('api/keranjang/', api.cart_api, name='api_cart'),
+    path('api/keranjang/<int:pk>/', api.cart_item_api, name='api_cart_item'),
+    path('api/pesanan/', api.orders_api, name='api_orders'),
+    path('api/pesanan/<int:pk>/', api.order_api, name='api_order'),
 ]
