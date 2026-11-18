@@ -64,9 +64,18 @@
         </div>
         <a class="text-sm only-mobile md:hidden" href="{% url 'main:edit_profile' %}" data-profile-edit>Ubah</a>
         <div class="profile__stats">
-          <span><b class="serif">410</b><span>poin dampak</span></span>
-          <span><b class="serif">2</b><span>lencana</span></span>
-          <span><b class="serif">24</b><span>barang di lemari</span></span>
+          <a href="{% url 'impact:show_impact_dashboard' %}?periode=semua">
+            <b class="serif" data-impact-points>{{ impact_points }}</b>
+            <span>poin dampak</span>
+          </a>
+          <a href="{% url 'impact:show_impact_dashboard' %}?periode=semua">
+            <b class="serif" data-impact-badges>{{ impact_badges_count }}</b>
+            <span>lencana</span>
+          </a>
+          <a href="{% url 'lemari:index' %}">
+            <b class="serif" data-impact-wardrobe>{{ impact_wardrobe_count }}</b>
+            <span>barang di lemari</span>
+          </a>
         </div>
         <nav class="only-desktop hidden md:block" aria-label="Pintasan akun">
           <a class="list-row list-row--link" href="{% url 'marketplace:orders' %}">

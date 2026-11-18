@@ -208,6 +208,63 @@ class ProfileAndLogoutTests(TestCase):
         self.assertContains(response, 'value="XL"')
         self.assertContains(response, 'value="XXL"')
 
+    def test_profile_stats_linked_to_dampak_numbers(self):
+        from django.utils import timezone
+        from donasi.models import Penawaran
+        from lemari.models import WardrobeItem
+        from marketplace.models import Order
+
+        self.client.login(username='nadia.r', password='password123')
+
+        # Awalnya belum ada aksi -> semua 0 (bukan angka statis 410 / 2 / 24).
+        empty_res = self.client.get(reverse('main:show_profile'))
+        self.assertEqual(empty_res.context['impact_points'], 0)
+        self.assertEqual(empty_res.context['impact_badges_count'], 0)
+        self.assertEqual(empty_res.context['impact_wardrobe_count'], 0)
+        self.assertContains(empty_res, 'data-impact-points>0</b>')
+        self.assertContains(empty_res, 'data-impact-badges>0</b>')
+        self.assertContains(empty_res, 'data-impact-wardrobe>0</b>')
+
+        other = User.objects.create_user(username='mitra_tes', email='mitra@email.com', password='password123')
+        # 2 barang di lemari (2 * 2 = 4 poin, meraih lencana "Sayangin Starter")
+        WardrobeItem.objects.create(owner=self.user, name='Kemeja Linen', category='atasan', last_used='1–3 bulan lalu')
+        WardrobeItem.objects.create(owner=self.user, name='Jaket Denim', category='luaran', last_used='3–6 bulan lalu')
+        # 1 penjualan selesai (10 poin, meraih lencana "Second Life") + 1 pembelian selesai (5 poin)
+        Order.objects.create(
+            buyer=other, seller=self.user, recipient='Mitra', phone='0812',
+            address='Jl. A', city='Depok', courier='reguler', shipping_cost=15000,
+            payment_method='transfer', status='selesai',
+        )
+        Order.objects.create(
+            buyer=self.user, seller=other, recipient='Nadia', phone='0812',
+            address='Jl. B', city='Depok', courier='reguler', shipping_cost=15000,
+            payment_method='transfer', status='selesai',
+        )
+        # 1 donasi diterima lembaga (20 poin, meraih lencana "First Giving")
+        Penawaran.objects.create(
+            donatur=self.user, lembaga=other, nama_barang='Kemeja Linen',
+            status=Penawaran.Status.SELESAI, diterima_pada=timezone.now(),
+        )
+        # Total = 4 + 10 + 5 + 20 = 39 poin, 3 lencana, 2 barang di lemari.
+        prof_res = self.client.get(reverse('main:show_profile'))
+        self.assertEqual(prof_res.context['impact_points'], 39)
+        self.assertEqual(prof_res.context['impact_badges_count'], 3)
+        self.assertEqual(prof_res.context['impact_wardrobe_count'], 2)
+        self.assertContains(prof_res, 'data-impact-points>39</b>')
+        self.assertContains(prof_res, 'data-impact-badges>3</b>')
+        self.assertContains(prof_res, 'data-impact-wardrobe>2</b>')
+        self.assertContains(prof_res, reverse('impact:show_impact_dashboard') + '?periode=semua')
+
+        # Angka di profil sama persis dengan JSON Dampak (/dampak/json/?periode=semua) & api_profile_data.
+        dampak_json = self.client.get(reverse('impact:show_impact_json') + '?periode=semua').json()
+        self.assertEqual(prof_res.context['impact_points'], dampak_json['points'])
+        self.assertEqual(prof_res.context['impact_badges_count'], dampak_json['earned_count'])
+
+        api_res = self.client.get(reverse('main:api_profile_data')).json()
+        self.assertEqual(api_res['impact']['points'], 39)
+        self.assertEqual(api_res['impact']['earned_badges'], 3)
+        self.assertEqual(api_res['impact']['wardrobe_count'], 2)
+
     def test_logout_post_clears_session_and_redirects_to_landing(self):
         self.client.login(username='nadia.r', password='password123')
         response = self.client.post(reverse('main:logout_user'))

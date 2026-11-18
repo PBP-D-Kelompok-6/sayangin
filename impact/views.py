@@ -39,6 +39,10 @@ def get_counts(user, since=None):
     return {key: sources.count_for_user(key, user, since) for key in sources.SOURCES}
 
 
+def calculate_points(counts):
+    return sum(counts[key] * sources.POINTS[key] for key in counts)
+
+
 # menerima hasil get_counts(), return status tiap lencana/badges
 # dipanggil build_dashboard() : dashboard.html {% for badges in BADGES %}
 # lencana tidak disimpan di database, selalu dihitung ulang dari jumlah aksi
@@ -48,6 +52,19 @@ def get_badges(counts):
          "percent": min(round(counts[key] / minimum * 100), 100)} # progres lencana, paling besar 100%
         for name, rule, key, minimum, image in BADGES
     ]
+
+
+def get_user_impact_summary(user):
+    """Ringkasan angka Dampak sepanjang waktu untuk halaman lain (mis. Profil)."""
+    counts = get_counts(user)
+    badges = get_badges(counts)
+    return {
+        "counts": counts,
+        "points": calculate_points(counts),
+        "earned_badges": sum(1 for badge in badges if badge["earned"]),
+        "total_badges": len(badges),
+        "wardrobe_count": counts.get("lemari", 0),
+    }
 
 # dipanggil get_dashboard_challenges() /dashboard dan show_impact_challenges() /daftar
 def challenge_progress(challenge, user):
@@ -81,8 +98,8 @@ def get_leaderboard(since=None):
         for user_id, total in sources.count_per_user(key, since).items():
             scores[user_id] = scores.get(user_id, 0) + total * point # jumlah aksi * poin aksi, ditambahkan per jenis
     users = User.objects.filter(id__in=scores, profile__role="PERSONAL") 
-    ranking = sorted(users, key=lambda u: (-scores[u.id], u.username)) # poin terbesar dulu: kalau seri, urut username
-    return [{"rank": i, "username": u.username, "user_id": u.id, "points": scores[u.id]}
+    ranking = sorted(users, key=lambda u: (-scores[u.id], u.username)) # type: ignore # poin terbesar dulu: kalau seri, urut username
+    return [{"rank": i, "username": u.username, "user_id": u.id, "points": scores[u.id]} # type: ignore
             for i, u in enumerate(ranking, start=1)]
 
 # Baca pilihan periode dari URL (?periode=semua / ?periode=bulan) -> (period, since)
@@ -102,7 +119,7 @@ def build_dashboard(request):
     leaderboard = get_leaderboard(since) # peringkat ikut periode, sama seperti angka & poin
     return {
         "period": period,
-        "points": sum(counts[key] * sources.POINTS[key] for key in counts), # jumlah aksi * poin aksi
+        "points": calculate_points(counts), # jumlah aksi * poin aksi
         "stats": [{"key": key, "label": sources.LABELS[key], "value": counts[key], "points": sources.POINTS[key]}
                   for key in counts], # kartu angka: label, angka, dan "+N poin/aksi"
         "badges": badges, # lencana

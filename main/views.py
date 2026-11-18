@@ -20,6 +20,7 @@ from main.models import UserProfile, UserAddress, InstitutionProfile
 from main.forms import InstitutionProfileForm, ProfileForm, UserAddressForm, CITY_CHOICES
 from main.decorators import personal_required, lembaga_required
 from donasi.models import Kebutuhan, Penawaran
+from impact.views import get_user_impact_summary
 from marketplace.models import Order, Product
 from marketplace.ongkir import search_destinations
 from sayangin.wilayah import get_city_groups
@@ -263,6 +264,7 @@ def show_profile(request):
     edit_address_id = (request.GET.get('edit_address') or '').strip()
 
     prefs = profile.get_preferences_dict()
+    impact_summary = get_user_impact_summary(request.user)
 
     context = {
         "profile": profile,
@@ -284,6 +286,10 @@ def show_profile(request):
         "pesanan_berjalan": Order.objects.filter(buyer=request.user).exclude(status='selesai').count(),
         "barang_tayang": Product.objects.filter(seller=request.user).available().count(),
         "donasi_tersalurkan": Penawaran.objects.filter(donatur=request.user, status=Penawaran.Status.SELESAI).count(),
+        "impact_summary": impact_summary,
+        "impact_points": impact_summary["points"],
+        "impact_badges_count": impact_summary["earned_badges"],
+        "impact_wardrobe_count": impact_summary["wardrobe_count"],
     }
 
     return render(request, 'profil.html', context)
@@ -488,6 +494,7 @@ def api_profile_data(request):
             "phone_number": profile.phone_number,
             "role": profile.role,
         },
+        "impact": get_user_impact_summary(request.user),
         "preferences": profile.get_preferences_dict(),
         "addresses": [a.to_dict() for a in addresses],
         "primary_address": primary_addr.to_dict() if primary_addr else None,
