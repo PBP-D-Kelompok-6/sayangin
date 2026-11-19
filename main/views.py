@@ -17,13 +17,6 @@ from django.views.decorators.http import require_POST, require_GET
 from main.models import UserProfile, UserAddress, InstitutionProfile
 from main.forms import InstitutionProfileForm, ProfileForm, CITY_CHOICES
 from main.decorators import personal_required, lembaga_required
-<<<<<<< HEAD
-from donasi.models import Kebutuhan
-
-
-def show_main(request):
-    daftar_kebutuhan = Kebutuhan.objects.aktif().select_related("lembaga")[:5]
-=======
 from main.serializers import ChangePasswordSerializer, DeleteAccountSerializer
 from main.services import (
     ensure_user_addresses_synced,
@@ -46,7 +39,6 @@ def show_main(request):
             return redirect('main:edit_institution_profile')
 
     daftar_kebutuhan = Kebutuhan.objects.aktif().select_related("lembaga")[:5] # type: ignore
->>>>>>> 2eb9b7da434c686c3ad06603596528b44e43d512
     
     return render(request, 'index.html', {
         'daftar_kebutuhan': daftar_kebutuhan,
@@ -80,16 +72,7 @@ def _redirect_authenticated_user(request, user, next_url: str = ''):
 def show_login(request):
     next_url = (request.POST.get('next') or request.GET.get('next') or '').strip()
     if request.user.is_authenticated:
-<<<<<<< HEAD
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        if profile.role == 'LEMBAGA':
-            if not _is_institution_profile_complete(request.user):
-                return redirect('main:edit_institution_profile')
-            return redirect('donasi:dashboard_lembaga')  # Diarahkan ke Dashboard Donasi
-        return redirect("main:show_main")
-=======
         return _redirect_authenticated_user(request, request.user, next_url)
->>>>>>> 2eb9b7da434c686c3ad06603596528b44e43d512
 
     if request.method == 'POST':
         identity = (request.POST.get('identity') or request.POST.get('email') or '').strip()
@@ -102,19 +85,10 @@ def show_login(request):
         if user is not None:
             login(request, user)
             profile, _ = UserProfile.objects.get_or_create(user=user)
-<<<<<<< HEAD
-            if profile.role == 'LEMBAGA':
-                if not _is_institution_profile_complete(user):
-                    messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
-                    return redirect('main:edit_institution_profile')
-                return redirect('donasi:dashboard_lembaga')  # Diarahkan ke Dashboard Donasi
-            return redirect('main:show_main')
-=======
             if profile.role == 'LEMBAGA' and not is_institution_profile_complete(user):
                 messages.info(request, 'Silakan lengkapi profil lembaga Anda terlebih dahulu.')
                 return redirect('main:edit_institution_profile')
             return _redirect_authenticated_user(request, user, next_url)
->>>>>>> 2eb9b7da434c686c3ad06603596528b44e43d512
         else:
             messages.error(request, 'Email/username atau kata sandi salah.')
             return render(request, 'login.html', {
@@ -587,11 +561,8 @@ def google_callback(request):
     if profile.role == 'LEMBAGA':
         if not is_institution_profile_complete(user):
             return redirect('main:edit_institution_profile')
-<<<<<<< HEAD
-=======
         if _is_safe_next_url(request, next_url):
             return redirect(next_url)
->>>>>>> 2eb9b7da434c686c3ad06603596528b44e43d512
         return redirect('donasi:dashboard_lembaga')
 
     has_address = bool(profile.address.strip() or UserAddress.objects.filter(user=user).exists())
