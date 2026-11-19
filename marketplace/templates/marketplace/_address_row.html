@@ -1,4 +1,7 @@
 <div class="co-block co-block-row">
-    <span><span class="eyebrow">Dikirim ke · {{ address.city }}</span><br><b>{{ address.recipient }}</b> · <span class="soft">{{ address.address }}, {{ address.city }} · {{ address.phone }}</span></span>
+    <span>
+        <span class="eyebrow">Dikirim ke{% if address.label_display %} · {{ address.label_display }}{% endif %} · {{ address.city }}{% if address.postal_code %} {{ address.postal_code }}{% endif %}</span><br>
+        <b>{{ address.recipient }}</b> · <span class="soft">{{ address.address }}{% if address.district %}, {{ address.district }}{% endif %}, {{ address.city }}{% if address.postal_code %} {{ address.postal_code }}{% endif %} · {{ address.phone }}</span>
+    </span>
     <a href="{% url 'marketplace:checkout_address' %}">Ubah</a>
 </div>

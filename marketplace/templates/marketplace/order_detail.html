@@ -43,7 +43,7 @@
             {% endfor %}
             <div class="divided"><span>Ongkir · {{ order.get_courier_display }}</span><span>{{ order.shipping_cost|rupiah }}</span></div>
             <div class="divided" style="border:0; padding:0"><span>Total dibayar</span><b>{{ order.total|rupiah }}</b></div>
-            <span class="soft">Dikirim ke: {{ order.recipient }} · {{ order.address }}, {{ order.city }}</span>
+            <span class="soft">Dikirim ke{% if order.address_label %} ({{ order.address_label }}){% endif %}: {{ order.recipient }} · {{ order.address }}, {{ order.city }}{% if order.postal_code %} {{ order.postal_code }}{% endif %}</span>
         </div>
 
         <form method="post" style="display:flex; flex-direction:column; gap:8px">

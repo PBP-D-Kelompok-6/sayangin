@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from donasi.models import Penawaran
+from main.models import UserAddress, UserProfile
 from marketplace import views as marketplace_views
 from marketplace.forms import PHOTO_TYPES
 from marketplace.models import Product, ProductPhoto
@@ -385,6 +386,14 @@ def jual(request):
             ListingPhoto.objects.create(listing=listing, image=source_item.photo.name)
         _tayangkan_di_marketplace(listing, request.FILES.getlist("photos"), source_item)
         return redirect("lemari:jual_sukses", listing_id=listing.pk)
+    default_shipped_from = "Alamat utama · Jakarta Selatan"
+    primary_addr = UserAddress.objects.filter(user=request.user).first()
+    if primary_addr and primary_addr.city:
+        default_shipped_from = f"{primary_addr.get_label_display()} · {primary_addr.city}"
+    else:
+        profile = UserProfile.objects.filter(user=request.user).first()
+        if profile and profile.city:
+            default_shipped_from = f"{profile.get_address_label_display()} · {profile.city}"
     values = {
         "title": (
             listing.title
@@ -406,7 +415,7 @@ def jual(request):
         "price": listing.price if listing else "",
         "weight": listing.weight if listing else 800,
         "shipped_from": (
-            listing.shipped_from if listing else "Alamat utama · Jakarta Selatan"
+            listing.shipped_from if listing else default_shipped_from
         ),
     }
     return render(

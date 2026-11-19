@@ -14,11 +14,13 @@ from django.utils.crypto import get_random_string
 from django.views.decorators.http import require_GET, require_POST
 from django.views.static import serve
 
+from main.models import UserAddress, UserProfile
 from sayangin.pilihan import UKURAN_ANAK, UKURAN_BAJU
+from sayangin.wilayah import get_city_groups
 
 from .forms import PHOTO_TYPES, ProductForm
 from .models import BULAN_PANJANG, CartItem, Order, OrderItem, Product, ProductPhoto
-from .ongkir import ongkir
+from .ongkir import ongkir, ongkir_detail
 from .templatetags.rupiah import rupiah
 
 # Foto upload penjual disimpan di <proyek>/media/marketplace dan disajikan lewat /marketplace/foto/<nama>.
@@ -231,7 +233,15 @@ def _save_product(request, form):
 @login_required
 def product_create(request):
     last = Product.objects.filter(seller=request.user).first()
-    form = ProductForm(request.POST or None, request.FILES or None, initial={'city': last.city if last else ''})
+    initial_city = last.city if last else ''
+    if not initial_city:
+        primary_addr = UserAddress.objects.filter(user=request.user).first()
+        if primary_addr and primary_addr.city:
+            initial_city = primary_addr.city
+        else:
+            profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            initial_city = profile.city or ''
+    form = ProductForm(request.POST or None, request.FILES or None, initial={'city': initial_city})
     if request.method == 'POST' and form.is_valid():
         product = _save_product(request, form)
         if product.is_draft:
@@ -372,10 +382,81 @@ def cart(request):
     return render(request, 'marketplace/cart.html', {'groups': groups, 'subtotal': _subtotal(groups)})
 
 
+def _user_saved_addresses(user):
+    """Ambil semua UserAddress milik user; sinkronkan dulu bila masih ada alamat lama di UserProfile."""
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    if not UserAddress.objects.filter(user=user).exists() and (profile.address.strip() or profile.city.strip()):
+        UserAddress.objects.create(
+            user=user,
+            label=profile.address_label or 'RUMAH',
+            recipient_name=profile.full_name,
+            phone_number=profile.phone_number,
+            address=profile.address,
+            city=profile.city,
+            postal_code=profile.postal_code,
+            is_primary=True,
+        )
+    return profile, list(UserAddress.objects.filter(user=user))
+
+
+def _address_to_checkout_dict(addr, user, profile):
+    return {
+        'address_id': addr.pk,
+        'label': addr.label,
+        'label_display': addr.get_label_display(),
+        'recipient': (addr.recipient_name or profile.full_name or user.get_full_name() or user.username).strip(),
+        'phone': (addr.phone_number or profile.phone_number or '').strip(),
+        'address': addr.address.strip(),
+        'subdistrict': addr.subdistrict.strip(),
+        'district': addr.district.strip(),
+        'city': addr.city.strip(),
+        'province': addr.province.strip(),
+        'postal_code': addr.postal_code.strip(),
+        'rajaongkir_city_id': addr.rajaongkir_city_id.strip(),
+        'rajaongkir_destination_id': addr.rajaongkir_destination_id.strip(),
+    }
+
+
+def _resolve_active_checkout_address(request):
+    """Segarkan alamat checkout dari UserAddress bila terhubung ke profil agar perubahan langsung ikut."""
+    address = request.session.get('checkout_address')
+    if not address:
+        return None
+    addr_id = address.get('address_id')
+    if addr_id:
+        addr = UserAddress.objects.filter(user=request.user, pk=addr_id).first()
+        if addr:
+            profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            refreshed = _address_to_checkout_dict(addr, request.user, profile)
+            if not refreshed['phone'] and address.get('phone'):
+                refreshed['phone'] = address['phone']
+            request.session['checkout_address'] = refreshed
+            return refreshed
+    return address
+
+
+def _clear_checkout_shipping_session(request):
+    request.session.pop('checkout_couriers', None)
+    request.session.pop('checkout_costs', None)
+    request.session.pop('checkout_courier_labels', None)
+
+
+def _seller_origin_info(seller, product_city):
+    """Cocokkan kota produk penjual dengan alamat profil penjual untuk ID/kode pos RajaOngkir."""
+    city_low = (product_city or '').strip().lower()
+    if not city_low:
+        return '', ''
+    for addr in UserAddress.objects.filter(user=seller):
+        if addr.city.strip().lower() == city_low:
+            return addr.postal_code.strip(), addr.rajaongkir_destination_id.strip()
+    return '', ''
+
+
 @login_required
 def checkout(request):
     """Pintu masuk: lanjut ke langkah pertama yang belum lengkap."""
-    if 'checkout_address' in request.session:
+    active = _resolve_active_checkout_address(request)
+    if active and all(active.get(f) for f in ADDRESS_FIELDS):
         return redirect('marketplace:checkout_shipping')
     return redirect('marketplace:checkout_address')
 
@@ -387,35 +468,175 @@ def checkout_address(request):
         messages.error(request, 'Keranjangmu kosong.')
         return redirect('marketplace:catalog')
 
-    # Isi otomatis dari sesi atau alamat pesanan terakhir, supaya tidak mengetik ulang.
+    profile, saved_addresses = _user_saved_addresses(request.user)
+    session_addr = _resolve_active_checkout_address(request) or {}
+
+    address_cards = []
+    for addr in saved_addresses:
+        recipient = (addr.recipient_name or profile.full_name or request.user.get_full_name() or request.user.username).strip()
+        phone = (addr.phone_number or profile.phone_number or '').strip()
+        address_cards.append({
+            'obj': addr,
+            'id': addr.pk,
+            'label': addr.label,
+            'label_display': addr.get_label_display(),
+            'is_primary': addr.is_primary,
+            'recipient': recipient,
+            'phone': phone,
+            'has_phone': bool(phone),
+            'formatted_address': addr.formatted_address,
+            'city': addr.city,
+            'province': addr.province,
+            'postal_code': addr.postal_code,
+            'rajaongkir_city_id': addr.rajaongkir_city_id,
+            'rajaongkir_destination_id': addr.rajaongkir_destination_id,
+        })
+
+    requested_addr_id = (request.POST.get('selected_address_id') or request.GET.get('address_id') or '').strip()
+    saved_ids = {c['id'] for c in address_cards}
+    selected_address_id = None
+    if requested_addr_id.isdigit() and int(requested_addr_id) in saved_ids:
+        selected_address_id = int(requested_addr_id)
+    elif session_addr.get('address_id') in saved_ids:
+        selected_address_id = session_addr['address_id']
+    elif address_cards:
+        selected_address_id = address_cards[0]['id']
+
+    # Fallback form bila user belum punya alamat tersimpan di profil.
     last = Order.objects.filter(buyer=request.user).first()
-    initial = request.session.get('checkout_address') or (
-        {f: getattr(last, f) for f in ADDRESS_FIELDS} if last else {'recipient': request.user.get_full_name()})
+    initial = {
+        'label': session_addr.get('label') or 'RUMAH',
+        'recipient': session_addr.get('recipient') or profile.full_name or (last.recipient if last else '') or request.user.get_full_name(),
+        'phone': session_addr.get('phone') or profile.phone_number or (last.phone if last else ''),
+        'address': session_addr.get('address') or (last.address if last else ''),
+        'city': session_addr.get('city') or (last.city if last else ''),
+        'postal_code': session_addr.get('postal_code') or (last.postal_code if last else ''),
+        'province': session_addr.get('province', ''),
+        'district': session_addr.get('district', ''),
+        'subdistrict': session_addr.get('subdistrict', ''),
+        'rajaongkir_destination_id': session_addr.get('rajaongkir_destination_id', ''),
+    }
     form, errors = initial, {}
+    phone_fallback = ''
+
     if request.method == 'POST':
-        form = {f: request.POST.get(f, '').strip() for f in ADDRESS_FIELDS}
-        errors = {f: 'Wajib diisi.' for f, v in form.items() if not v}
-        if not errors:
-            request.session['checkout_address'] = form
-            return redirect('marketplace:checkout_shipping')
+        chosen_id = (request.POST.get('selected_address_id') or '').strip()
+        if chosen_id:
+            addr = UserAddress.objects.filter(user=request.user, pk=chosen_id).first() if chosen_id.isdigit() else None
+            if not addr:
+                errors['selected_address_id'] = 'Pilih alamat dari profilmu terlebih dahulu.'
+            else:
+                selected_address_id = addr.pk
+                checkout_data = _address_to_checkout_dict(addr, request.user, profile)
+                phone_fallback = request.POST.get('phone_fallback', '').strip()
+                if not checkout_data['phone']:
+                    if phone_fallback:
+                        addr.phone_number = phone_fallback
+                        addr.save(update_fields=['phone_number', 'updated_at'])
+                        if not profile.phone_number.strip():
+                            profile.phone_number = phone_fallback
+                            profile.save(update_fields=['phone_number'])
+                        checkout_data['phone'] = phone_fallback
+                    else:
+                        errors['phone_fallback'] = 'Isi nomor HP penerima supaya kurir bisa menghubungimu.'
+                if not errors:
+                    request.session['checkout_address'] = checkout_data
+                    _clear_checkout_shipping_session(request)
+                    return redirect('marketplace:checkout_shipping')
+        else:
+            form = {
+                'label': (request.POST.get('label') or 'RUMAH').strip().upper(),
+                'recipient': request.POST.get('recipient', '').strip(),
+                'phone': request.POST.get('phone', '').strip(),
+                'address': request.POST.get('address', '').strip(),
+                'city': request.POST.get('city', '').strip(),
+                'postal_code': request.POST.get('postal_code', '').strip(),
+                'province': request.POST.get('province', '').strip(),
+                'district': request.POST.get('district', '').strip(),
+                'subdistrict': request.POST.get('subdistrict', '').strip(),
+                'rajaongkir_destination_id': request.POST.get('rajaongkir_destination_id', '').strip(),
+            }
+            if form['label'] not in dict(UserAddress.ADDRESS_LABEL_CHOICES):
+                form['label'] = 'RUMAH'
+            errors = {f: 'Wajib diisi.' for f in ADDRESS_FIELDS if not form[f]}
+            if not errors:
+                # Simpan otomatis ke profil user agar tidak perlu mengetik ulang di transaksi berikutnya.
+                new_addr = UserAddress.objects.create(
+                    user=request.user,
+                    label=form['label'],
+                    recipient_name=form['recipient'],
+                    phone_number=form['phone'],
+                    address=form['address'],
+                    subdistrict=form['subdistrict'],
+                    district=form['district'],
+                    city=form['city'],
+                    province=form['province'],
+                    rajaongkir_destination_id=form['rajaongkir_destination_id'],
+                    postal_code=form['postal_code'],
+                    is_primary=not saved_addresses,
+                )
+                profile_updates = []
+                if not profile.full_name.strip():
+                    profile.full_name = form['recipient']
+                    profile_updates.append('full_name')
+                if not profile.phone_number.strip():
+                    profile.phone_number = form['phone']
+                    profile_updates.append('phone_number')
+                if profile_updates:
+                    profile.save(update_fields=profile_updates)
+
+                request.session['checkout_address'] = _address_to_checkout_dict(new_addr, request.user, profile)
+                _clear_checkout_shipping_session(request)
+                return redirect('marketplace:checkout_shipping')
+
+    checkout_url = reverse('marketplace:checkout_address')
+    profile_url = reverse('main:show_profile')
     return render(request, 'marketplace/checkout_address.html', {
-        'step': 1, 'form': form, 'errors': errors,
-        'groups': groups, 'subtotal': _subtotal(groups), 'count': _count(groups), 'shipping': 0,
+        'step': 1,
+        'form': form,
+        'errors': errors,
+        'phone_fallback': phone_fallback,
+        'saved_addresses': address_cards,
+        'selected_address_id': selected_address_id,
+        'profile_add_address_url': f'{profile_url}?add_address=1&next={checkout_url}',
+        'profile_manage_url': f'{profile_url}?next={checkout_url}',
+        'address_label_choices': UserProfile.ADDRESS_LABEL_CHOICES,
+        'city_groups': get_city_groups(),
+        'groups': groups,
+        'subtotal': _subtotal(groups),
+        'count': _count(groups),
+        'shipping': 0,
     })
 
 
 @login_required
 def checkout_shipping(request):
     groups = _cart_groups(request.user)
-    address = request.session.get('checkout_address')
+    address = _resolve_active_checkout_address(request)
     if not groups:
         return redirect('marketplace:cart')
-    if not address:
+    if not address or not all(address.get(f) for f in ADDRESS_FIELDS):
         return redirect('marketplace:checkout_address')
 
-    # Ongkir per penjual: dari kota penjual ke kota pembeli, sesuai total berat barangnya.
-    costs = {str(s.pk): ongkir(items[0].product.city, address['city'], sum(i.product.weight_grams for i in items))
-             for s, items in groups}
+    # Ongkir per penjual via RajaOngkir (memanfaatkan kode pos / destination ID profil bila tersedia).
+    details = {}
+    weights = {}
+    for s, items in groups:
+        weight_grams = sum(i.product.weight_grams for i in items)
+        weights[str(s.pk)] = weight_grams
+        origin_postal, origin_id = _seller_origin_info(s, items[0].product.city)
+        details[str(s.pk)] = ongkir_detail(
+            items[0].product.city,
+            address['city'],
+            weight_grams,
+            dest_postal_code=address.get('postal_code', ''),
+            dest_id=address.get('rajaongkir_destination_id', ''),
+            origin_postal_code=origin_postal,
+            origin_id=origin_id,
+        )
+
+    costs = {k: d['costs'] for k, d in details.items()}
+    courier_labels = {k: d['labels'] for k, d in details.items()}
     chosen = request.session.get('checkout_couriers', {})
     errors = {}
     if request.method == 'POST':
@@ -424,31 +645,45 @@ def checkout_shipping(request):
         if not errors:
             request.session['checkout_couriers'] = chosen
             request.session['checkout_costs'] = costs
+            request.session['checkout_courier_labels'] = courier_labels
             return redirect('marketplace:checkout_payment')
 
     shipping = sum(costs[k].get(chosen.get(k), 0) for k in costs)
     return render(request, 'marketplace/checkout_shipping.html', {
-        'step': 2, 'address': address,
-        'groups': [{'seller': s, 'items': items, 'courier': chosen.get(str(s.pk)), 'error': errors.get(str(s.pk)),
-                    'couriers': [(key, label, costs[str(s.pk)][key]) for key, label in Order.COURIER_CHOICES]}
-                   for s, items in groups],
-        'subtotal': _subtotal(groups), 'count': _count(groups), 'shipping': shipping,
+        'step': 2,
+        'address': address,
+        'groups': [{
+            'seller': s,
+            'items': items,
+            'weight_grams': weights[str(s.pk)],
+            'shipping_source': details[str(s.pk)]['source'],
+            'courier': chosen.get(str(s.pk)),
+            'error': errors.get(str(s.pk)),
+            'couriers': [
+                (key, courier_labels[str(s.pk)].get(key, label), costs[str(s.pk)][key])
+                for key, label in Order.COURIER_CHOICES
+            ],
+        } for s, items in groups],
+        'subtotal': _subtotal(groups),
+        'count': _count(groups),
+        'shipping': shipping,
     })
 
 
 @login_required
 def checkout_payment(request):
     groups = _cart_groups(request.user)
-    address = request.session.get('checkout_address')
+    address = _resolve_active_checkout_address(request)
     couriers = request.session.get('checkout_couriers', {})
     if not groups:
         return redirect('marketplace:cart')
-    if not address:
+    if not address or not all(address.get(f) for f in ADDRESS_FIELDS):
         return redirect('marketplace:checkout_address')
     if any(couriers.get(str(s.pk)) not in Order.COURIER_COST for s, _ in groups):
         return redirect('marketplace:checkout_shipping')
 
     saved = request.session.get('checkout_costs', {})
+    saved_labels = request.session.get('checkout_courier_labels', {})
     cost = {str(s.pk): saved.get(str(s.pk), Order.COURIER_COST)[couriers[str(s.pk)]] for s, _ in groups}
     error = None
     if request.method == 'POST':
@@ -460,8 +695,19 @@ def checkout_payment(request):
                 orders = []
                 for seller, items in groups:
                     courier = couriers[str(seller.pk)]
-                    order = Order(buyer=request.user, seller=seller, courier=courier,
-                                  shipping_cost=cost[str(seller.pk)], payment_method=payment, **address)
+                    order = Order(
+                        buyer=request.user,
+                        seller=seller,
+                        courier=courier,
+                        shipping_cost=cost[str(seller.pk)],
+                        payment_method=payment,
+                        recipient=address['recipient'],
+                        phone=address['phone'],
+                        address_label=address.get('label_display') or address.get('label') or '',
+                        address=address['address'],
+                        city=address['city'],
+                        postal_code=address.get('postal_code', ''),
+                    )
                     order.set_status('dibayar')
                     order.save()
                     OrderItem.objects.bulk_create([
@@ -470,20 +716,28 @@ def checkout_payment(request):
                     Product.objects.filter(pk__in=[i.product_id for i in items]).update(is_sold=True)
                     orders.append(order)
                 CartItem.objects.filter(user=request.user).delete()
-            request.session.pop('checkout_couriers', None)
-            request.session.pop('checkout_costs', None)
+            _clear_checkout_shipping_session(request)
             messages.success(request, 'Pembayaran diterima. Terima kasih sudah memilih preloved!')
             if len(orders) == 1:
                 return redirect('marketplace:order_detail', pk=orders[0].pk)
             return redirect('marketplace:orders')
 
-    labels = dict(Order.COURIER_CHOICES)
+    default_labels = dict(Order.COURIER_CHOICES)
     return render(request, 'marketplace/checkout_payment.html', {
-        'step': 3, 'address': address, 'error': error,
-        'groups': [{'seller': s, 'items': items, 'courier': labels[couriers[str(s.pk)]],
-                    'cost': cost[str(s.pk)]} for s, items in groups],
+        'step': 3,
+        'address': address,
+        'error': error,
+        'groups': [{
+            'seller': s,
+            'items': items,
+            'courier': saved_labels.get(str(s.pk), default_labels).get(
+                couriers[str(s.pk)], default_labels[couriers[str(s.pk)]]
+            ),
+            'cost': cost[str(s.pk)],
+        } for s, items in groups],
         'payments': Order.PAYMENT_CHOICES,
-        'subtotal': _subtotal(groups), 'count': _count(groups),
+        'subtotal': _subtotal(groups),
+        'count': _count(groups),
         'shipping': sum(cost.values()),
     })
 
