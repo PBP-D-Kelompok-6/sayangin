@@ -1,8 +1,9 @@
 import json
-from django.test import TestCase
+from unittest.mock import patch
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import User
-from main.models import UserProfile, InstitutionProfile, UserAddress
+from main.models import UserProfile, InstitutionProfile, UserAddress, resolve_rajaongkir_city
 
 
 class LandingAndMenuViewTests(TestCase):
@@ -199,13 +200,70 @@ class ProfileAndLogoutTests(TestCase):
         self.assertContains(response, 'Rumah · utama')
         self.assertContains(response, 'Jl. Margonda Raya No. 10, Depok 16424')
         self.assertContains(response, 'Bantuan &amp; kebijakan')
-        self.assertContains(response, 'site-header__actions')
+        self.assertContains(response, 'sg-actions')  # navbar bersama (partials/site_header.html)
         self.assertContains(response, 'cdn.tailwindcss.com')
         self.assertContains(response, 'id="keluar"')
         self.assertContains(response, 'Keluar dari <em>Sayangin</em>?')
         self.assertContains(response, 'value="XS"')
         self.assertContains(response, 'value="XL"')
         self.assertContains(response, 'value="XXL"')
+
+    def test_profile_stats_linked_to_dampak_numbers(self):
+        from django.utils import timezone
+        from donasi.models import Penawaran
+        from lemari.models import WardrobeItem
+        from marketplace.models import Order
+
+        self.client.login(username='nadia.r', password='password123')
+
+        # Awalnya belum ada aksi -> semua 0 (bukan angka statis 410 / 2 / 24).
+        empty_res = self.client.get(reverse('main:show_profile'))
+        self.assertEqual(empty_res.context['impact_points'], 0)
+        self.assertEqual(empty_res.context['impact_badges_count'], 0)
+        self.assertEqual(empty_res.context['impact_wardrobe_count'], 0)
+        self.assertContains(empty_res, 'data-impact-points>0</b>')
+        self.assertContains(empty_res, 'data-impact-badges>0</b>')
+        self.assertContains(empty_res, 'data-impact-wardrobe>0</b>')
+
+        other = User.objects.create_user(username='mitra_tes', email='mitra@email.com', password='password123')
+        # 2 barang di lemari (2 * 2 = 4 poin, meraih lencana "Sayangin Starter")
+        WardrobeItem.objects.create(owner=self.user, name='Kemeja Linen', category='atasan', last_used='1–3 bulan lalu')
+        WardrobeItem.objects.create(owner=self.user, name='Jaket Denim', category='luaran', last_used='3–6 bulan lalu')
+        # 1 penjualan selesai (10 poin, meraih lencana "Second Life") + 1 pembelian selesai (5 poin)
+        Order.objects.create(
+            buyer=other, seller=self.user, recipient='Mitra', phone='0812',
+            address='Jl. A', city='Depok', courier='reguler', shipping_cost=15000,
+            payment_method='transfer', status='selesai',
+        )
+        Order.objects.create(
+            buyer=self.user, seller=other, recipient='Nadia', phone='0812',
+            address='Jl. B', city='Depok', courier='reguler', shipping_cost=15000,
+            payment_method='transfer', status='selesai',
+        )
+        # 1 donasi diterima lembaga (20 poin, meraih lencana "First Giving")
+        Penawaran.objects.create(
+            donatur=self.user, lembaga=other, nama_barang='Kemeja Linen',
+            status=Penawaran.Status.SELESAI, diterima_pada=timezone.now(),
+        )
+        # Total = 4 + 10 + 5 + 20 = 39 poin, 3 lencana, 2 barang di lemari.
+        prof_res = self.client.get(reverse('main:show_profile'))
+        self.assertEqual(prof_res.context['impact_points'], 39)
+        self.assertEqual(prof_res.context['impact_badges_count'], 3)
+        self.assertEqual(prof_res.context['impact_wardrobe_count'], 2)
+        self.assertContains(prof_res, 'data-impact-points>39</b>')
+        self.assertContains(prof_res, 'data-impact-badges>3</b>')
+        self.assertContains(prof_res, 'data-impact-wardrobe>2</b>')
+        self.assertContains(prof_res, reverse('impact:show_impact_dashboard') + '?periode=semua')
+
+        # Angka di profil sama persis dengan JSON Dampak (/dampak/json/?periode=semua) & api_profile_data.
+        dampak_json = self.client.get(reverse('impact:show_impact_json') + '?periode=semua').json()
+        self.assertEqual(prof_res.context['impact_points'], dampak_json['points'])
+        self.assertEqual(prof_res.context['impact_badges_count'], dampak_json['earned_count'])
+
+        api_res = self.client.get(reverse('main:api_profile_data')).json()
+        self.assertEqual(api_res['impact']['points'], 39)
+        self.assertEqual(api_res['impact']['earned_badges'], 3)
+        self.assertEqual(api_res['impact']['wardrobe_count'], 2)
 
     def test_logout_post_clears_session_and_redirects_to_landing(self):
         self.client.login(username='nadia.r', password='password123')
@@ -251,6 +309,18 @@ class ProfileAndLogoutTests(TestCase):
         self.assertContains(final_res, 'Siti Aminah')
         self.assertContains(final_res, 'Jl. Kenanga No. 12, Depok')
         self.assertContains(final_res, 'id="keluar"')
+
+
+class FooterTests(TestCase):
+    def test_form_email_footer_membawa_email_ke_halaman_daftar(self):
+        response = self.client.get(reverse('main:show_register'), {'email': 'baru@email.com'})
+        self.assertContains(response, 'value="baru@email.com"')
+
+    def test_tunda_beli_dan_jadi_mitra_tidak_ada_di_beranda(self):
+        response = self.client.get(reverse('main:show_main'))
+        self.assertNotContains(response, 'Tunda Beli')
+        self.assertNotContains(response, 'TUNDA BELI')
+        self.assertNotContains(response, 'Jadi mitra')
 
 
 class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
@@ -441,6 +511,56 @@ class MultipleAddressesRajaOngkirAndAjaxTests(TestCase):
         self.assertContains(profile_page, 'data-address-filter="KOS"')
         self.assertContains(profile_page, 'Jl. Cisitu Indah No. 4')
 
+    @patch.dict('os.environ', {'RAJAONGKIR_API_KEY': ''})
+    def test_expanded_cities_rajaongkir_api_and_checkout_profile_return(self):
+        # Cek kota tambahan lintas provinsi & pastikan tidak terjadi tabrakan substring.
+        self.assertEqual(resolve_rajaongkir_city('Palembang'), ('327', '33', 'Sumatera Selatan'))
+        self.assertEqual(resolve_rajaongkir_city('Balikpapan'), ('19', '15', 'Kalimantan Timur'))
+        self.assertEqual(resolve_rajaongkir_city('Batam'), ('48', '17', 'Kepulauan Riau'))
+        self.assertEqual(resolve_rajaongkir_city('Jayapura'), ('158', '24', 'Papua'))
+        self.assertEqual(resolve_rajaongkir_city('Kab. Bandung'), ('22', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Bandung'), ('23', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Banjarmasin'), ('36', '13', 'Kalimantan Selatan'))
+        self.assertEqual(resolve_rajaongkir_city('Banjar'), ('34', '9', 'Jawa Barat'))
+        self.assertEqual(resolve_rajaongkir_city('Solo'), ('445', '10', 'Jawa Tengah'))
+
+        # Endpoint pencarian tujuan RajaOngkir (fallback lokal saat API key kosong).
+        dest_res = self.client.get(reverse('main:api_rajaongkir_destinations'), {'q': 'Palembang'})
+        self.assertEqual(dest_res.status_code, 200)
+        dest_data = dest_res.json()
+        self.assertEqual(dest_data['status'], 'ok')
+        self.assertEqual(dest_data['results'][0]['city'], 'Palembang')
+        self.assertEqual(dest_data['results'][0]['postal_code'], '30111')
+
+        # Tambah alamat dengan district/subdistrict/rajaongkir_destination_id.
+        add_res = self.client.post(reverse('main:api_add_address'), {
+            'label': 'KANTOR',
+            'address': 'Jl. Jenderal Sudirman No. 1',
+            'district': 'Ilir Timur I',
+            'subdistrict': 'Sungai Pangeran',
+            'city': 'Palembang',
+            'province': 'Sumatera Selatan',
+            'postal_code': '30121',
+            'rajaongkir_destination_id': '32701',
+        })
+        self.assertEqual(add_res.status_code, 201)
+        addr_payload = add_res.json()['address']
+        self.assertEqual(addr_payload['rajaongkir_city_id'], '327')
+        self.assertEqual(addr_payload['rajaongkir_destination_id'], '32701')
+        self.assertEqual(addr_payload['district'], 'Ilir Timur I')
+
+        # Kunjungi profil dari tombol + Tambah alamat checkout -> tampilkan banner kembali & auto-open flag.
+        checkout_url = reverse('marketplace:checkout_address')
+        prof_res = self.client.get(reverse('main:show_profile'), {'add_address': '1', 'next': checkout_url})
+        self.assertEqual(prof_res.status_code, 200)
+        self.assertTrue(prof_res.context['open_add_address'])
+        self.assertEqual(prof_res.context['next_url'], checkout_url)
+        self.assertContains(prof_res, 'Kembali ke Checkout')
+
+        # URL next eksternal ditolak.
+        unsafe_res = self.client.get(reverse('main:show_profile'), {'next': 'https://evil.example.com/'})
+        self.assertEqual(unsafe_res.context['next_url'], '')
+
 
 class SecurityAndGoogleAuthTests(TestCase):
     def setUp(self):
@@ -477,6 +597,8 @@ class SecurityAndGoogleAuthTests(TestCase):
         self.assertTrue(self.user.check_password('newsecurepass123'))
         self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
 
+    @override_settings(DEBUG=True)
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': '', 'GOOGLE_CLIENT_SECRET': ''})
     def test_google_login_and_register_personal_and_lembaga(self):
         # 1. Google OAuth page renders
         get_res = self.client.get(reverse('main:google_login') + '?mode=chooser')
@@ -531,6 +653,47 @@ class SecurityAndGoogleAuthTests(TestCase):
         self.assertEqual(yayasan.profile.role, 'LEMBAGA') # type: ignore
         self.assertTrue(yayasan.profile.google_connected) # type: ignore
 
+    @override_settings(DEBUG=False)
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': '', 'GOOGLE_CLIENT_SECRET': ''})
+    def test_google_chooser_and_post_callback_blocked_when_not_debug(self):
+        # 1. Tanpa kredensial OAuth di produksi (DEBUG=False), /auth/google/ ditolak ke login.
+        res_login = self.client.get(reverse('main:google_login') + '?mode=chooser', follow=True)
+        self.assertRedirects(res_login, reverse('main:show_login'))
+        self.assertContains(res_login, 'Login Google belum tersedia.')
+
+        # 2. Meskipun ada state di session, POST email langsung ke callback ditolak saat DEBUG=False.
+        session = self.client.session
+        session['google_oauth_state'] = 'test-state-123'
+        session.save()
+        res_cb = self.client.post(reverse('main:google_callback'), {
+            'state': 'test-state-123',
+            'email': 'nadia@email.com',
+            'full_name': 'Penyerang',
+        }, follow=True)
+        self.assertRedirects(res_cb, reverse('main:show_login'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    @override_settings(DEBUG=False)
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': 'real-cid', 'GOOGLE_CLIENT_SECRET': 'real-secret'})
+    def test_google_mode_chooser_ignored_when_not_debug_even_with_credentials(self):
+        res = self.client.get(reverse('main:google_login') + '?mode=chooser')
+        self.assertEqual(res.status_code, 302)
+        self.assertTrue(res['Location'].startswith('https://accounts.google.com/o/oauth2/v2/auth?'))
+
+    @override_settings(DEBUG=False, SECURE_PROXY_SSL_HEADER=('HTTP_X_FORWARDED_PROTO', 'https'))
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': 'real-cid', 'GOOGLE_CLIENT_SECRET': 'real-secret'})
+    def test_google_login_builds_https_redirect_uri_behind_proxy(self):
+        res = self.client.get(
+            reverse('main:google_login'),
+            HTTP_HOST='muhammad-ghazi51-sayang-in.pws.cs.ui.ac.id',
+            HTTP_X_FORWARDED_PROTO='https',
+        )
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(
+            'redirect_uri=https%3A%2F%2Fmuhammad-ghazi51-sayang-in.pws.cs.ui.ac.id%2Fauth%2Fgoogle%2Fcallback%2F',
+            res['Location'],
+        )
+
     def test_delete_account_validates_password_and_removes_user(self):
         self.client.login(username='nadia.r', password='password123')
 
@@ -562,3 +725,102 @@ class SecurityAndGoogleAuthTests(TestCase):
 
         self.assertEqual(bypass_res.status_code, 400)
         self.assertTrue(User.objects.filter(username='nadia.r').exists())
+
+
+class LembagaUXAndRoutingTests(TestCase):
+    def setUp(self):
+        self.personal_user = User.objects.create_user(
+            username='personal_u',
+            email='personal@email.com',
+            password='password123',
+        )
+        self.lembaga_user = User.objects.create_user(
+            username='lembaga_u',
+            email='lembaga@email.com',
+            password='password123',
+        )
+        self.lembaga_user.profile.role = 'LEMBAGA' # type: ignore
+        self.lembaga_user.profile.save() # type: ignore
+
+    def test_cross_role_profile_pages_redirect_gracefully_instead_of_403(self):
+        # Lembaga visiting personal profile/edit redirects to lembaga profile/edit
+        InstitutionProfile.objects.create(
+            user=self.lembaga_user,
+            name='Panti Kasih Ibu',
+            address='Jl. Merdeka No. 1',
+        )
+        self.client.login(username='lembaga_u', password='password123')
+        res_prof = self.client.get(reverse('main:show_profile'))
+        self.assertRedirects(res_prof, reverse('main:show_lembaga_profile'))
+        res_edit = self.client.get(reverse('main:edit_profile'))
+        self.assertRedirects(res_edit, reverse('main:edit_institution_profile'))
+        self.client.logout()
+
+        # Personal visiting lembaga profile/edit redirects to personal profile/edit
+        self.client.login(username='personal_u', password='password123')
+        res_l_prof = self.client.get(reverse('main:show_lembaga_profile'))
+        self.assertRedirects(res_l_prof, reverse('main:show_profile'))
+        res_l_edit = self.client.get(reverse('main:edit_institution_profile'))
+        self.assertRedirects(res_l_edit, reverse('main:edit_profile'))
+
+    def test_authenticated_lembaga_on_register_and_landing_redirects_appropriately(self):
+        self.client.login(username='lembaga_u', password='password123')
+        # Incomplete lembaga on / or /register/ redirects to edit_institution_profile
+        self.assertRedirects(self.client.get(reverse('main:show_main')), reverse('main:edit_institution_profile'))
+        self.assertRedirects(self.client.get(reverse('main:show_register')), reverse('main:edit_institution_profile'))
+
+        # Complete lembaga on /register/ redirects to donasi:dashboard_lembaga
+        InstitutionProfile.objects.create(
+            user=self.lembaga_user,
+            name='Panti Kasih Ibu',
+            address='Jl. Merdeka No. 1',
+        )
+        self.assertRedirects(self.client.get(reverse('main:show_register')), reverse('donasi:dashboard_lembaga'))
+
+        # Complete lembaga on / renders lembaga-specific navigation and CTAs
+        landing_res = self.client.get(reverse('main:show_main'))
+        self.assertEqual(landing_res.status_code, 200)
+        self.assertContains(landing_res, reverse('donasi:dashboard_lembaga'))
+        self.assertContains(landing_res, reverse('donasi:kebutuhan_buat'))
+
+    def test_mobile_menu_renders_lembaga_navigation_for_lembaga_user(self):
+        InstitutionProfile.objects.create(
+            user=self.lembaga_user,
+            name='Panti Kasih Ibu',
+            address='Jl. Merdeka No. 1',
+        )
+        self.client.login(username='lembaga_u', password='password123')
+        menu_res = self.client.get(reverse('main:show_menu'))
+        self.assertEqual(menu_res.status_code, 200)
+        self.assertContains(menu_res, 'Menu Mitra')
+        self.assertContains(menu_res, 'Dashboard Donasi')
+        self.assertContains(menu_res, 'Kelola Kebutuhan')
+        self.assertNotContains(menu_res, 'Jadi lembaga mitra')
+
+    def test_login_respects_next_parameter_when_profile_complete(self):
+        InstitutionProfile.objects.create(
+            user=self.lembaga_user,
+            name='Panti Kasih Ibu',
+            address='Jl. Merdeka No. 1',
+        )
+        target_next = reverse('donasi:kebutuhan_list')
+        login_res = self.client.post(reverse('main:show_login'), {
+            'identity': 'lembaga@email.com',
+            'password': 'password123',
+            'next': target_next,
+        })
+        self.assertRedirects(login_res, target_next)
+
+    @override_settings(DEBUG=True)
+    @patch.dict('os.environ', {'GOOGLE_CLIENT_ID': '', 'GOOGLE_CLIENT_SECRET': ''})
+    def test_google_callback_enforces_institution_onboarding_even_with_next_url(self):
+        init_res = self.client.get(reverse('main:google_login') + '?mode=chooser&jenis=lembaga&next=/donasi/lembaga/kebutuhan/')
+        state = init_res.context['state']
+        cb_res = self.client.post(reverse('main:google_callback'), {
+            'state': state,
+            'email': 'panti.baru@gmail.com',
+            'full_name': 'Panti Baru',
+            'jenis': 'lembaga',
+            'next': '/donasi/lembaga/kebutuhan/',
+        })
+        self.assertRedirects(cb_res, reverse('main:edit_institution_profile'))

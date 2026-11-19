@@ -42,6 +42,9 @@
     <main class="onboard__main onboard__main--center" id="konten">
       <form class="stack auth-form" id="login-form" style="--stack-gap: 18px" method="POST" action="{% url 'main:show_login' %}" novalidate>
         {% csrf_token %}
+        {% if next_url %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+        {% endif %}
 
         <h1 class="page-title"><span class="eyebrow">Selamat datang kembali</span>Masuk ke <em>akun</em></h1>
 
@@ -95,8 +98,8 @@
 
         <button class="btn btn--primary btn--lg btn--block" type="submit">Masuk</button>
         <div class="divider-text">atau</div>
-        <a class="btn btn--outline btn--lg btn--block" href="{% url 'main:google_login' %}">Lanjut dengan Google</a>
-        <p class="text-soft auth-footer-text">Belum punya akun? <a href="{% url 'main:show_register' %}">Daftar</a></p>
+        <a class="btn btn--outline btn--lg btn--block" href="{% url 'main:google_login' %}{% if next_url %}?next={{ next_url|urlencode }}{% endif %}">Lanjut dengan Google</a>
+        <p class="text-soft auth-footer-text">Belum punya akun? <a href="{% url 'main:show_register' %}{% if next_url %}?next={{ next_url|urlencode }}{% endif %}">Daftar</a></p>
       </form>
     </main>
   </div>

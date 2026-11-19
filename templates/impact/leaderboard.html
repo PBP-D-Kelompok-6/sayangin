@@ -1,7 +1,6 @@
-{% extends 'base.html' %}
+{% extends 'impact/base.html' %}
 
 {% block title %}Papan peringkat — Sayangin{% endblock %}
-{% block extra_css %}{% include 'impact/partials/assets.html' %}{% endblock %}
 
 {# Bar atas versi HP (sesuai Figma): judul serif besar, avatar di kanan untuk yang login #}
 {% block app_bar %}
@@ -59,7 +58,7 @@
       <h2 class="serif">Belum ada <em>peringkat</em> {% if period == 'bulan' %}bulan ini{% else %}sepanjang waktu{% endif %}</h2>
       <p class="text-soft">Peringkat muncul setelah ada aksi: jual, beli, donasi, atau catat barang di lemari.</p>
       <div class="dampak-empty__actions">
-        <a class="btn btn--primary" href="/lemari/">Catat barang di lemari</a>
+        <a class="btn btn--primary" href="{% url 'lemari:index' %}">Catat barang di lemari</a>
         {# tombol pindah periode hanya muncul kalau sedang di "Bulan ini" #}
         {% if period == 'bulan' %}<a class="btn btn--outline" href="?periode=semua">Lihat sepanjang waktu</a>{% endif %}
       </div>

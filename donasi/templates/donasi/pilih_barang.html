@@ -1,0 +1,30 @@
+{% extends "donasi/base_donasi.html" %}
+{% load static %}
+{% block title %}Pilih barang — Sayangin{% endblock %}
+{% block appbar_title %}Pilih barang{% endblock %}
+{% block content %}
+{% static 'img/logo.svg' as placeholder %}
+<main class="page__main container donate" id="konten">
+  <h1 class="page-title"><span class="eyebrow">Donasi ke {{ kebutuhan.nama_lembaga }}</span>Pilih barang <em>dari lemarimu</em></h1>
+  <div class="notice"><b>Butuh: {{ kebutuhan.nama_barang }}</b><br><span class="text-sm">{{ kebutuhan.get_kategori_display }}{% if kebutuhan.ukuran_list %} · ukuran {{ kebutuhan.ukuran_label }}{% endif %} · minimal {{ kebutuhan.get_kondisi_min_display|lower }}{% if kebutuhan.tenggat %} · tenggat {{ kebutuhan.tenggat|date:"j M Y" }}{% endif %}</span></div>
+  <div class="org-list">
+    {% for item in cocok %}
+    <div class="org">
+      <span class="org__img" style="--img: url('{% if item.photo %}{% url 'lemari:wardrobe_photo' item.pk %}{% else %}{{ placeholder }}{% endif %}')"></span>
+      <div class="org__info"><b>{{ item.name }}</b><span class="text-sm text-soft">{{ item.get_category_display }}{% if item.size %} · ukuran {{ item.size }}{% endif %}</span></div>
+      <a class="btn btn--primary btn--sm" href="{% url 'donasi:kirim_donasi' kebutuhan.pk %}?{{ item.query }}">Pilih</a>
+    </div>
+    {% empty %}
+    <div class="org"><span>Belum ada barang di lemarimu yang cocok dengan kebutuhan ini. <a href="{% url 'lemari:tambah_barang' %}">Tambah barang</a></span></div>
+    {% endfor %}
+  </div>
+  {% if tidak_cocok %}
+  <section class="stack" style="--stack-gap: 8px">
+    <h2 class="section-title">Belum <em>cocok</em></h2>
+    {% for item in tidak_cocok %}
+    <div class="org"><div class="org__info"><b>{{ item.name }}</b><span class="text-sm text-soft">{{ item.get_category_display }}{% if item.size %} · ukuran {{ item.size }}{% endif %} · kategori atau ukurannya beda dengan yang dibutuhkan</span></div></div>
+    {% endfor %}
+  </section>
+  {% endif %}
+</main>
+{% endblock %}

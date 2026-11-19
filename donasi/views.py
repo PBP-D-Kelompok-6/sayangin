@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.template.loader import render_to_string 
 from django.utils.dateparse import parse_date
@@ -23,36 +24,27 @@ URUTAN = {
 }
 FIELD_BARANG = ("nama", "kategori", "ukuran", "kondisi", "foto", "lemari_id")
 
-KATEGORI_LEMARI_MAP = {
-    "pakaian · luaran": "pakaian-luaran",
-    "pakaian-luaran": "pakaian-luaran",
-    "pakaian": "pakaian-atasan",
-    "pakaian · atasan": "pakaian-atasan",
-    "pakaian-atasan": "pakaian-atasan",
-    "pakaian · bawahan": "pakaian-bawahan",
-    "pakaian-bawahan": "pakaian-bawahan",
-    "sepatu": "alas-kaki",
-    "alas-kaki": "alas-kaki",
-    "buku": "buku",
-    "perlengkapan sekolah": "perlengkapan-sekolah",
-    "perlengkapan-sekolah": "perlengkapan-sekolah",
-    "mainan": "mainan",
-    "perabot": "perabot",
-    "lainnya": "lainnya",
-}
-
 
 def _is_htmx(request):
     return request.headers.get("HX-Request") == "true"
 
 
+def _query_barang_lemari(item):
+    """Query string yang membawa data barang Lemari ke alur donasi."""
+    data = {
+        "lemari_id": item.pk, "nama": item.name, "kategori": item.category,
+        "ukuran": item.size, "kondisi": Kondisi.TERAWAT,
+    }
+    if item.photo:
+        data["foto"] = reverse("lemari:wardrobe_photo", args=[item.pk])
+    return urlencode(data)
+
+
 def _barang_dari_request(request):
     """Data barang dari Lemari Digital yang dibawa lewat query string."""
     data = {f: request.GET.get(f, "").strip() for f in FIELD_BARANG}
-    # Ubah format kategori teks menjadi slug kategori donasi
-    kat_raw = data.get("kategori", "").lower()
-    if kat_raw in KATEGORI_LEMARI_MAP:
-        data["kategori"] = KATEGORI_LEMARI_MAP[kat_raw]
+    if data["kategori"] not in Kategori.values:
+        data["kategori"] = ""
     return data
 
 
@@ -102,6 +94,26 @@ def pilih_lembaga(request):
 
 
 @donatur_required
+def pilih_barang(request, kebutuhan_id):
+    """Dari satu kebutuhan lembaga: pilih barang di lemari yang akan didonasikan."""
+    from lemari.models import WardrobeItem
+    from lemari.views import _status_barang
+
+    kebutuhan = get_object_or_404(Kebutuhan.objects.aktif().select_related("lembaga"), pk=kebutuhan_id)
+    status = _status_barang(request.user)
+    cocok, tidak_cocok = [], []
+    for item in WardrobeItem.objects.filter(owner=request.user).exclude(pk__in=status):
+        item.query = _query_barang_lemari(item)
+        if any(k.pk == kebutuhan.pk for k in Kebutuhan.objects.cocok_dengan(item.category, item.size, Kondisi.TERAWAT)):
+            cocok.append(item)
+        else:
+            tidak_cocok.append(item)
+    return render(request, "donasi/pilih_barang.html", {
+        "kebutuhan": kebutuhan, "cocok": cocok, "tidak_cocok": tidak_cocok,
+    })
+
+
+@donatur_required
 def kirim_donasi(request, kebutuhan_id):
     kebutuhan = get_object_or_404(
         Kebutuhan.objects.aktif().select_related("lembaga"), pk=kebutuhan_id)
@@ -110,6 +122,14 @@ def kirim_donasi(request, kebutuhan_id):
     if not barang["nama"]:
         messages.error(request, "Pilih barang yang ingin kamu donasikan terlebih dahulu.")
         return redirect("donasi:pilih_lembaga")
+
+    # Barang yang masih ditawarkan atau sudah didonasikan tidak bisa ditawarkan lagi.
+    if barang["lemari_id"] and Penawaran.objects.filter(
+        donatur=request.user, lemari_id=barang["lemari_id"],
+        status__in=[Penawaran.Status.MENUNGGU, Penawaran.Status.DITERIMA, Penawaran.Status.SELESAI],
+    ).exists():
+        messages.error(request, "Barang ini sudah kamu tawarkan. Lihat statusnya di bawah.")
+        return redirect("donasi:tawaran_saya")
 
     kondisi = barang["kondisi"] if barang["kondisi"] in Kondisi.values else Kondisi.TERAWAT
     FOTO_AMAN = re.compile(r"^(https?://|/)[^\s'\"()\\]+$")
@@ -194,6 +214,20 @@ def dashboard_lembaga(request):
         "jumlah_menunggu": milik.filter(status=Penawaran.Status.MENUNGGU).count(),
         "kebutuhan_aktif": kebutuhan_aktif,
         "diterima_bulan_ini": diterima_bulan_ini,
+    })
+
+
+@lembaga_required
+def tawaran_lembaga(request):
+    milik = Penawaran.objects.filter(lembaga=request.user)
+    tawaran = list(
+        milik.filter(status__in=[Penawaran.Status.MENUNGGU, Penawaran.Status.DITERIMA])
+        .select_related("donatur", "kebutuhan")
+    )
+    tawaran.sort(key=lambda p: p.status != Penawaran.Status.MENUNGGU)
+    return render(request, "donasi/lembaga_tawaran.html", {
+        "tawaran": tawaran,
+        "jumlah_menunggu": milik.filter(status=Penawaran.Status.MENUNGGU).count(),
     })
 
 

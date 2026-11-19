@@ -5,12 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Barang lama, disayang lagi — Sayangin{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Sayangin: marketplace barang preloved dengan Lemari Digital, Tunda Beli, dan donasi tepat sasaran.{% endblock %}">
+    <meta name="description" content="{% block meta_description %}Sayangin: marketplace barang preloved dengan Lemari Digital dan donasi tepat sasaran.{% endblock %}">
     {% include 'includes/fonts.html' %}
     {% include 'includes/tailwind.html' %}
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/site-header.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">

@@ -6,6 +6,8 @@ from django.db import models
 from django.templatetags.static import static
 from django.utils import timezone
 
+from sayangin.pilihan import KATEGORI, KONDISI
+
 WIB = ZoneInfo('Asia/Jakarta')
 BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 BULAN_PANJANG = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
@@ -31,20 +33,8 @@ def tanggal(dt, with_time=True):
 
 
 class Product(models.Model):
-    CATEGORY_CHOICES = [
-        ('atasan', 'Atasan'),
-        ('bawahan', 'Bawahan'),
-        ('sepatu', 'Sepatu'),
-        ('tas', 'Tas'),
-        ('aksesori', 'Aksesori'),
-        ('buku', 'Buku'),
-        ('rumah', 'Rumah & dekor'),
-    ]
-    CONDITION_CHOICES = [
-        ('seperti_baru', 'Seperti baru'),
-        ('terawat', 'Bekas, terawat'),
-        ('cacat', 'Ada cacat'),
-    ]
+    CATEGORY_CHOICES = KATEGORI
+    CONDITION_CHOICES = KONDISI
 
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=120)
@@ -136,8 +126,10 @@ class Order(models.Model):
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sales')
     recipient = models.CharField(max_length=100)
     phone = models.CharField(max_length=20)
+    address_label = models.CharField(max_length=20, blank=True, default='')
     address = models.TextField()
     city = models.CharField(max_length=60)
+    postal_code = models.CharField(max_length=10, blank=True, default='')
     courier = models.CharField(max_length=10, choices=COURIER_CHOICES)
     shipping_cost = models.PositiveIntegerField()
     payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES)

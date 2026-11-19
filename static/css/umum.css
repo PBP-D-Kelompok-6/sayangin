@@ -39,7 +39,6 @@
   background: rgba(255,255,255,.62); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 20px 50px rgba(26,18,16,.12);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 6px;
 }
-.hero__add { align-self: flex-end; border: 1px solid var(--color-border-strong); }
 .hero__copy { position: absolute; left: 32px; bottom: 32px; max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
 .hero__lead { font-family: var(--font-serif); font-size: 32px; line-height: 1.05; }
 .hero__ctas { display: flex; gap: 10px; }
@@ -84,6 +83,19 @@
 .phases__tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .phases__tabs .btn { --btn-h: 44px; padding-inline: 8px; }
 .photo--phases { --img: url(../img/jaket-kulit.jpg); --fit: auto 88%; --ratio: auto; height: 200px; border-radius: 0; }
+.phases__tabs .btn { transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
+.photo--phases, .phases__text { transition: opacity .2s ease; }
+.phases.is-switching .photo--phases, .phases.is-switching .phases__text { opacity: 0; }
+.phases__text { font-size: 18px; line-height: 1.45; color: var(--color-text); min-height: 2.9em; }
+@media (prefers-reduced-motion: reduce) {
+  .phases__tabs .btn, .photo--phases, .phases__text { transition: none; }
+}
+.phases { scroll-margin-top: 96px; } /* supaya tidak tertutup navbar saat dituju dari link "Cara kerja" */
+@media (min-width: 768px) {
+  .phases { padding-block: 40px 64px; }
+  .phases__tabs { max-width: 560px; }
+  .photo--phases { height: 360px; border-radius: var(--radius-md); }
+}
 
 /* ---------- Kategori ---------- */
 .cats { padding-bottom: 96px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
@@ -201,7 +213,7 @@
   .need > span:last-child { grid-column: 3; grid-row: 1 / span 2; }
 }
 
-/* ---------- Empat pilihan ---------- */
+/* ---------- Tiga pilihan ---------- */
 .choices { position: relative; padding-block: 40px 96px; display: flex; flex-direction: column; align-items: center; border-top: 1px solid var(--color-border); }
 .choices .eyebrow { padding: 24px 0; font-size: 12px; }
 .choices__word { font-family: var(--font-serif); font-size: 84px; line-height: 1.02; color: #CFC6C1; }
@@ -234,7 +246,6 @@
   display: block; margin: 56px 0 0 -8px; font-family: var(--font-serif); font-size: clamp(104px, 25vw, 330px); line-height: .95; letter-spacing: -.035em; padding-bottom: .12em;
   background: var(--wordmark-dark); -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.site-footer__bottom { display: flex; justify-content: space-between; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.14); font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: .12em; text-transform: uppercase; color: #BFB2AC; }
 @media (max-width: 767px) {
   .site-footer { padding: 40px 20px 20px; }
   .site-footer__top { grid-template-columns: 1fr 1fr; gap: 24px; }

@@ -37,7 +37,109 @@
     .replace(/'/g, '&#39;');
   };
 
-  /* ---------- Landing: Empat pilihan (JUAL / DONASI / SIMPAN / TUNDA BELI) ---------- */
+  const ensureCityOption = (selectEl, cityName) => {
+    if (!selectEl || !cityName) return;
+    const existing = [...selectEl.options].find(
+      (o) => o.value.toLowerCase() === cityName.toLowerCase()
+    );
+    if (existing) {
+      selectEl.value = existing.value;
+    } else {
+      const opt = new Option(cityName, cityName, true, true);
+      selectEl.add(opt);
+      selectEl.value = cityName;
+    }
+  };
+
+  /* ---------- RajaOngkir Destination Autocomplete (Profil & Edit Profil) ---------- */
+  document.querySelectorAll('[data-ro-lookup]').forEach((lookup) => {
+    const form = lookup.closest('form');
+    if (!form) return;
+    const apiUrl = lookup.getAttribute('data-ro-url') || '/api/rajaongkir/destinations/';
+    const qInput = lookup.querySelector('[data-ro-query]');
+    const resultsBox = lookup.querySelector('[data-ro-results]');
+    const statusEl = lookup.querySelector('[data-ro-status]');
+    const provInput = lookup.querySelector('[data-ro-province]');
+    const distInput = lookup.querySelector('[data-ro-district]');
+    const subInput = lookup.querySelector('[data-ro-subdistrict]');
+    const destIdInput = lookup.querySelector('[data-ro-dest-id]');
+    const citySelect = form.querySelector('[data-ro-city]');
+    const postalInput = form.querySelector('[data-ro-postal]');
+    let roTimer = null;
+
+    const initialCity = citySelect?.getAttribute('data-initial-city');
+    if (initialCity) {
+      ensureCityOption(citySelect, initialCity);
+    }
+
+    qInput?.addEventListener('input', () => {
+      const q = (qInput.value || '').trim();
+      clearTimeout(roTimer);
+      if (q.length < 2) {
+        if (resultsBox) {
+          resultsBox.hidden = true;
+          resultsBox.innerHTML = '';
+        }
+        return;
+      }
+      roTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`${apiUrl}?q=${encodeURIComponent(q)}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          const data = await res.json();
+          const items = data.results || [];
+          if (!resultsBox) return;
+          if (!items.length) {
+            resultsBox.innerHTML = '<div class="ro-empty">Lokasi tidak ditemukan. Coba nama kota atau kode pos lain.</div>';
+            resultsBox.hidden = false;
+            return;
+          }
+          resultsBox.innerHTML = '';
+          items.forEach((item) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ro-item';
+            const srcLabel = item.source === 'rajaongkir' ? 'RajaOngkir' : 'Katalog';
+            btn.innerHTML = `<span>${escapeHtml(item.label)}</span><small>${srcLabel}</small>`;
+            btn.addEventListener('click', () => {
+              ensureCityOption(citySelect, item.city);
+              if (postalInput && item.postal_code) postalInput.value = item.postal_code;
+              if (provInput) provInput.value = item.province || '';
+              if (distInput) distInput.value = item.district || '';
+              if (subInput) subInput.value = item.subdistrict || '';
+              if (destIdInput) destIdInput.value = item.destination_id || '';
+              qInput.value = item.label;
+              if (statusEl) {
+                statusEl.textContent = `Terpilih: ${item.city}${item.province ? ', ' + item.province : ''}${item.postal_code ? ' · ' + item.postal_code : ''}`;
+              }
+              resultsBox.hidden = true;
+            });
+            resultsBox.appendChild(btn);
+          });
+          resultsBox.hidden = false;
+        } catch {
+          if (resultsBox) resultsBox.hidden = true;
+        }
+      }, 250);
+    });
+
+    citySelect?.addEventListener('change', () => {
+      const opt = citySelect.selectedOptions?.[0];
+      if (opt && opt.dataset.postal && postalInput && !postalInput.value) {
+        postalInput.placeholder = `Contoh: ${opt.dataset.postal}`;
+      }
+      if (destIdInput) destIdInput.value = '';
+      if (distInput) distInput.value = '';
+      if (subInput) subInput.value = '';
+      if (provInput) provInput.value = '';
+      if (statusEl && citySelect.value) {
+        statusEl.textContent = `Kota terpilih: ${citySelect.value}${opt?.dataset.postal ? ' (contoh kode pos ' + opt.dataset.postal + ')' : ''}`;
+      }
+    });
+  });
+
+  /* ---------- Landing: Tiga pilihan (JUAL / DONASI / SIMPAN) ---------- */
   const choiceWords = [...document.querySelectorAll('[data-choice-word]')];
   const choicePreview = document.querySelector('[data-choice-preview]');
   const choiceCaption = document.querySelector('[data-choice-caption]');
@@ -64,7 +166,7 @@
     });
   }
 
-  /* ---------- Landing (mobile): Fase cara kerja ---------- */
+  /* ---------- Landing: Fase cara kerja ---------- */
   const phaseTabs = [...document.querySelectorAll('[data-phase-tab]')];
   const phasePhoto = document.querySelector('[data-phase-photo]');
   const phaseText = document.querySelector('[data-phase-text]');
@@ -74,15 +176,26 @@
     { img: '/static/img/tas-kulit.jpg', text: 'Salurkan ke pembeli baru atau lembaga mitra yang benar-benar membutuhkan.' },
   ];
   if (phaseTabs.length) {
-    phaseTabs.forEach((tab, idx) => {
-      tab.addEventListener('click', (e) => {
-        e.preventDefault();
-        phaseTabs.forEach((t, i) => {
-          const active = i === idx;
-          t.setAttribute('aria-selected', String(active));
-          t.classList.toggle('btn--dark', active);
-          t.classList.toggle('btn--outline', !active);
-        });
+    const PHASE_MS = 2500;
+    const PHASE_FADE_MS = 200; // sama dengan transition di umum.css
+    const phaseSection = phaseTabs[0].closest('.phases');
+    let phaseNow = 0;
+    let phaseTimer = null;
+    let phaseFade = null;
+    // Gambar dimuat lebih dulu supaya tidak berkedip saat pertama kali berganti.
+    phaseData.forEach(({ img }) => { new Image().src = img; });
+    const showPhase = (idx) => {
+      phaseNow = idx;
+      phaseTabs.forEach((t, i) => {
+        const active = i === idx;
+        t.setAttribute('aria-selected', String(active));
+        t.classList.toggle('btn--dark', active);
+        t.classList.toggle('btn--outline', !active);
+      });
+      // Pudar keluar dulu, ganti isinya, lalu pudar masuk.
+      phaseSection.classList.add('is-switching');
+      clearTimeout(phaseFade);
+      phaseFade = setTimeout(() => {
         const item = phaseData[idx];
         if (item && phasePhoto) {
           phasePhoto.style.setProperty('--img', `url(${item.img})`);
@@ -90,8 +203,23 @@
         if (item && phaseText) {
           phaseText.textContent = item.text;
         }
+        phaseSection.classList.remove('is-switching');
+      }, PHASE_FADE_MS);
+    };
+    // Berganti sendiri, kecuali pengguna meminta gerakan dikurangi di pengaturan perangkatnya.
+    const startPhaseTimer = () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      clearInterval(phaseTimer);
+      phaseTimer = setInterval(() => showPhase((phaseNow + 1) % phaseTabs.length), PHASE_MS);
+    };
+    phaseTabs.forEach((tab, idx) => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        showPhase(idx);
+        startPhaseTimer(); // dipencet tetap bisa; hitungannya mulai lagi dari langkah itu
       });
     });
+    startPhaseTimer();
   }
 
   /* ---------- Drawer menu (mobile) ---------- */
@@ -257,7 +385,11 @@
                  data-recipient-name="${escapeHtml(addr.recipient_name)}"
                  data-phone-number="${escapeHtml(addr.phone_number)}"
                  data-address="${escapeHtml(addr.address)}"
+                 data-subdistrict="${escapeHtml(addr.subdistrict || '')}"
+                 data-district="${escapeHtml(addr.district || '')}"
                  data-city="${escapeHtml(addr.city)}"
+                 data-province="${escapeHtml(addr.province || '')}"
+                 data-rajaongkir-destination-id="${escapeHtml(addr.rajaongkir_destination_id || '')}"
                  data-postal-code="${escapeHtml(addr.postal_code)}"
                  data-is-primary="${addr.is_primary ? 'true' : 'false'}">Ubah</a>
               <button class="link-btn text-sm text-muted" type="button" data-address-delete="${addr.id}">Hapus</button>
@@ -265,6 +397,19 @@
           </div>
         `;
       }).join('');
+    };
+
+    const resetRajaOngkirModalFields = () => {
+      if (!formAlamat) return;
+      const qEl = formAlamat.querySelector('[data-ro-query]');
+      const rEl = formAlamat.querySelector('[data-ro-results]');
+      const sEl = formAlamat.querySelector('[data-ro-status]');
+      if (qEl) qEl.value = '';
+      if (rEl) {
+        rEl.hidden = true;
+        rEl.innerHTML = '';
+      }
+      if (sEl) sEl.textContent = 'Ketik nama daerah atau kode pos 5 digit untuk mengisi kota & kode pos otomatis.';
     };
 
     const openAddressModalForAdd = (e) => {
@@ -275,10 +420,19 @@
       formAlamat.querySelector('input[name="address_id"]').value = '';
       const defaultRadio = formAlamat.querySelector('input[name="label"][value="RUMAH"]');
       if (defaultRadio) defaultRadio.checked = true;
+      const recipEl = formAlamat.querySelector('input[name="recipient_name"]');
+      if (recipEl) recipEl.value = recipEl.defaultValue;
+      const phoneEl = formAlamat.querySelector('input[name="phone_number"]');
+      if (phoneEl) phoneEl.value = phoneEl.defaultValue;
       formAlamat.querySelector('textarea[name="address"]').value = '';
       formAlamat.querySelector('select[name="city"]').value = '';
       formAlamat.querySelector('input[name="postal_code"]').value = '';
+      ['province', 'district', 'subdistrict', 'rajaongkir_destination_id'].forEach((name) => {
+        const el = formAlamat.querySelector(`input[name="${name}"]`);
+        if (el) el.value = '';
+      });
       formAlamat.querySelector('input[name="is_primary"]').checked = true;
+      resetRajaOngkirModalFields();
       openModal(modalAlamat);
     };
 
@@ -294,6 +448,10 @@
       const phoneNumber = triggerEl.getAttribute('data-phone-number') || '';
       const addressText = triggerEl.getAttribute('data-address') || '';
       const city = triggerEl.getAttribute('data-city') || '';
+      const province = triggerEl.getAttribute('data-province') || '';
+      const district = triggerEl.getAttribute('data-district') || '';
+      const subdistrict = triggerEl.getAttribute('data-subdistrict') || '';
+      const roDestId = triggerEl.getAttribute('data-rajaongkir-destination-id') || '';
       const postalCode = triggerEl.getAttribute('data-postal-code') || '';
       const isPrimary = triggerEl.getAttribute('data-is-primary') === 'true';
 
@@ -303,9 +461,18 @@
       formAlamat.querySelector('input[name="recipient_name"]').value = recipientName;
       formAlamat.querySelector('input[name="phone_number"]').value = phoneNumber;
       formAlamat.querySelector('textarea[name="address"]').value = addressText;
-      formAlamat.querySelector('select[name="city"]').value = city;
+      ensureCityOption(formAlamat.querySelector('select[name="city"]'), city);
       formAlamat.querySelector('input[name="postal_code"]').value = postalCode;
+      const setHidden = (name, val) => {
+        const el = formAlamat.querySelector(`input[name="${name}"]`);
+        if (el) el.value = val;
+      };
+      setHidden('province', province);
+      setHidden('district', district);
+      setHidden('subdistrict', subdistrict);
+      setHidden('rajaongkir_destination_id', roDestId);
       formAlamat.querySelector('input[name="is_primary"]').checked = isPrimary;
+      resetRajaOngkirModalFields();
       openModal(modalAlamat);
     };
 
@@ -503,6 +670,14 @@
           return;
         }
         closeModal(modalAlamat);
+        const nextUrl = profileRoot.getAttribute('data-next-url') || '';
+        if (nextUrl) {
+          showToast('Alamat disimpan. Kembali ke checkout…');
+          const savedId = data.address?.id;
+          const sep = nextUrl.includes('?') ? '&' : '?';
+          window.location.href = savedId ? `${nextUrl}${sep}address_id=${encodeURIComponent(savedId)}` : nextUrl;
+          return;
+        }
         showToast(data.message || 'Alamat berhasil disimpan.');
         await fetchAndRenderFilteredAddresses();
       } catch {
@@ -512,6 +687,18 @@
         }
       }
     });
+
+    // Buka otomatis modal Tambah/Ubah Alamat bila datang dari Checkout (+ Tambah alamat / Ubah).
+    const shouldOpenAddAddress = profileRoot.getAttribute('data-open-add-address') === 'true';
+    const editAddrIdParam = profileRoot.getAttribute('data-edit-address-id') || '';
+    if (shouldOpenAddAddress) {
+      openAddressModalForAdd();
+    } else if (editAddrIdParam) {
+      const editTrigger = document.querySelector(`[data-address-edit="${editAddrIdParam}"]`);
+      if (editTrigger) {
+        openAddressModalForEdit(editTrigger);
+      }
+    }
 
     /* ---------- Auto-save Preferensi via AJAX ---------- */
     const prefUrl = profileRoot.getAttribute('data-api-preferences-url');

@@ -1,5 +1,5 @@
 /* Kerangka halaman: isi disusun ke bawah dengan jarak 20px */
-.dampak { display: flex; flex-direction: column; gap: 20px; padding-block: 24px 64px; }
+.dampak { display: flex; flex-direction: column; gap: 20px; padding-block: 32px 64px; } /* 32px dari navbar, sama dengan Lemari & Profil */
 .dampak--narrow { max-width: 760px; } /* halaman form dibuat lebih sempit */
 .dampak em { color: var(--maroon); } /* kata miring di judul berwarna maroon */
 .dampak h2, .dampak h3 { margin: 0; font-size: 26px; }
@@ -117,4 +117,10 @@
   .dampak-tantangan .dampak-filter { display: grid; grid-template-columns: 1fr 1fr; }
   .dampak-tantangan .dampak-filter .select { width: 100%; min-width: 0; }
   .dampak-tantangan .dampak-card, .dampak-form { padding: 16px; }
+}
+
+/* Menu bawah HP (partials/bottom_nav.html) menempel di bawah layar: beri ruang supaya isi terakhir tidak tertutup */
+/* main.dampak lebih spesifik dari aturan padding-block di atas (.dampak-peringkat, .dampak-tantangan) */
+@media (max-width: 767px) {
+  main.dampak { padding-bottom: calc(var(--bottom-nav-h) + 24px); }
 }

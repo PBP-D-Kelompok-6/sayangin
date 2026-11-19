@@ -38,8 +38,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1:8000",
 ]
 
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = PRODUCTION
+SESSION_COOKIE_SECURE = PRODUCTION
+if PRODUCTION:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
 
@@ -55,6 +57,7 @@ INSTALLED_APPS = [
     'impact',
     'marketplace',
     'lemari',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -81,6 +84,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'marketplace.context_processors.cart_count',
+                'sayangin.pilihan.opsi_form',
             ],
         },
     },

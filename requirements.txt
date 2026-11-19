@@ -6,3 +6,4 @@ requests
 urllib3
 python-dotenv
 django-tailwind
+djangorestframework

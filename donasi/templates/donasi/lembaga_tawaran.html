@@ -1,0 +1,17 @@
+{% extends "donasi/base_donasi.html" %}
+{% load static %}
+{% block title %}Tawaran masuk — Sayangin{% endblock %}
+{% block page_class %} has-bottom-nav{% endblock %}
+{% block header %}
+{% include "donasi/_header_lembaga.html" with aktif="tawaran" %}
+<header class="app-bar only-mobile"><a class="icon-btn" href="{% url 'donasi:dashboard_lembaga' %}" aria-label="Kembali">←</a><span class="app-bar__label">Tawaran masuk</span></header>
+{% endblock %}
+{% block content %}
+<main class="page__main container org-dash" id="konten">
+  <h1 class="page-title"><span class="eyebrow">Mitra · donasi</span>Tawaran <em>masuk</em></h1>
+  <section id="tawaran">
+    {% for p in tawaran %}{% include "donasi/_offer_row.html" %}{% empty %}<p class="text-soft">Belum ada tawaran masuk.</p>{% endfor %}
+  </section>
+</main>
+{% endblock %}
+{% block bottom_nav %}{% include "donasi/_bottom_nav_lembaga.html" with aktif="tawaran" %}{% endblock %}

@@ -19,7 +19,8 @@
     {% for p in daftar %}
     <div class="offer" id="tawaran-{{ p.pk }}">
       <span class="offer__img" style="--img: url('{{ p.foto_url|default:placeholder }}')"></span>
-      <span class="spacer"><b>{{ p.jumlah }} {{ p.nama_barang }}</b><br><span class="text-sm text-soft">ke {{ p.lembaga.institution_profile.name|default:p.lembaga.get_full_name|default:p.lembaga.username }} · {{ p.get_status_display }} · {{ p.dibuat|date:"j M Y" }}</span></span>
+      <span class="spacer"><b>{{ p.jumlah }} {{ p.nama_barang }}</b><br><span class="text-sm text-soft">ke {{ p.lembaga.institution_profile.name|default:p.lembaga.get_full_name|default:p.lembaga.username }} · {{ p.dibuat|date:"j M Y" }}{% if p.status == "diterima" and p.tanggal_rencana %} · antar {{ p.tanggal_rencana|date:"j M" }}{% endif %}</span></span>
+      <span class="offer-status offer-status--{{ p.status }}">{{ p.get_status_display }}</span>
       <span class="offer__actions">
         {% if p.status == "menunggu" %}
         <button class="btn btn--outline btn--sm" type="button" hx-delete="{% url 'donasi:batalkan_tawaran' p.pk %}" hx-target="#tawaran-{{ p.pk }}" hx-swap="outerHTML" hx-confirm="Batalkan tawaran donasi ini?">Batalkan</button>
@@ -27,7 +28,7 @@
       </span>
     </div>
     {% empty %}
-    <p class="text-soft">Belum ada tawaran donasi. <a href="{% url 'lemari:index' %}">Pilih barang dari lemarimu</a> untuk mulai berdonasi.</p>
+    <p class="text-soft">Belum ada tawaran donasi. <a href="{% url 'donasi:pilih_lembaga' %}">Lihat kebutuhan lembaga</a> untuk mulai berdonasi.</p>
     {% endfor %}
   </div>
 </main>
