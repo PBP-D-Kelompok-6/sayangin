@@ -452,6 +452,15 @@ class MarketplaceApiTest(TestCase):
     def test_cart_needs_login(self):
         self.assertEqual(self.client.get(reverse('marketplace:api_cart')).status_code, 403)
 
+    def test_lembaga_cannot_use_cart_or_orders(self):
+        lembaga = User.objects.create_user('panti', password='x')
+        lembaga.profile.role = 'LEMBAGA'
+        lembaga.profile.save()
+        self.client.login(username='panti', password='x')
+        self.assertEqual(self.client.get(reverse('marketplace:api_cart')).status_code, 403)
+        self.assertEqual(self.client.get(reverse('marketplace:api_orders')).status_code, 403)
+        self.assertEqual(self.client.get(reverse('marketplace:api_catalog')).status_code, 200)  # katalog tetap terbuka
+
     def test_cart_add_and_remove(self):
         self.client.login(username='ira', password='x')
         r = self.client.post(reverse('marketplace:api_cart'), {'product': self.p1.pk}, content_type='application/json')

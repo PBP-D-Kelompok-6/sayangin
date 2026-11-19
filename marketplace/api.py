@@ -3,13 +3,22 @@
 # Filter katalog dan isi keranjang memakai fungsi yang sama dengan halaman web (views.py).
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, serializers, status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 
-from impact.api import CsrfExemptSessionAuthentication  # login Flutter lewat session cookie, tanpa CSRF
+from main.permissions import IsPersonal  # keranjang & pesanan hanya untuk akun personal (lembaga tidak jual-beli)
 from marketplace.models import CartItem, Order, Product
 from marketplace.templatetags.rupiah import rupiah
 from marketplace.views import _cart_groups, _subtotal, filter_products
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """Login Flutter memakai session cookie (pbp_django_auth). CSRF tidak dicek karena
+    aplikasi HP tidak punya form HTML yang membawa token CSRF."""
+
+    def enforce_csrf(self, request):
+        return
 
 
 def _absolute(request, path):
@@ -108,7 +117,7 @@ def product_api(request, pk):
     return Response(ProductDetailSerializer(product, context={'request': request}).data)
 
 
-# ---------- Keranjang (wajib login) ----------
+# ---------- Keranjang (wajib login, akun personal) ----------
 
 def _cart_response(request):
     groups = _cart_groups(request.user)
@@ -127,7 +136,7 @@ def _cart_response(request):
 # POST /marketplace/api/keranjang/ {product}  -> tambah barang
 @api_view(['GET', 'POST'])
 @authentication_classes([CsrfExemptSessionAuthentication])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsPersonal])
 def cart_api(request):
     if request.method == 'POST':
         product = get_object_or_404(Product.objects.available(), pk=request.data.get('product'))
@@ -141,18 +150,18 @@ def cart_api(request):
 # DELETE /marketplace/api/keranjang/<product_id>/
 @api_view(['DELETE'])
 @authentication_classes([CsrfExemptSessionAuthentication])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsPersonal])
 def cart_item_api(request, pk):
     CartItem.objects.filter(user=request.user, product_id=pk).delete()
     return Response(_cart_response(request))
 
 
-# ---------- Pesanan (wajib login) ----------
+# ---------- Pesanan (wajib login, akun personal) ----------
 
 # GET /marketplace/api/pesanan/ -> pesanan yang kubeli, terbaru dulu
 @api_view(['GET'])
 @authentication_classes([CsrfExemptSessionAuthentication])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsPersonal])
 def orders_api(request):
     orders = Order.objects.filter(buyer=request.user).prefetch_related('items').select_related('buyer', 'seller')
     return Response(OrderSerializer(orders, many=True, context={'request': request}).data)
@@ -161,7 +170,7 @@ def orders_api(request):
 # GET /marketplace/api/pesanan/<id>/ -> hanya pembeli atau penjualnya; orang lain dapat 404
 @api_view(['GET'])
 @authentication_classes([CsrfExemptSessionAuthentication])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsPersonal])
 def order_api(request, pk):
     order = get_object_or_404(Order.objects.select_related('buyer', 'seller').prefetch_related('items'), pk=pk)
     if request.user not in (order.buyer, order.seller):
