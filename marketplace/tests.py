@@ -324,3 +324,26 @@ class MarketplaceApiTest(TestCase):
         User.objects.create_user('lain', password='x')
         self.client.login(username='lain', password='x')
         self.assertEqual(self.client.get(reverse('marketplace:api_order', args=[order.pk])).status_code, 404)
+
+class SeedMarketplaceTest(TestCase):
+    """python manage.py seed_marketplace: ~100 barang contoh, semua fotonya ada, aman dijalankan ulang."""
+
+    def test_seed_creates_100_valid_products_once(self):
+        from io import StringIO
+        from pathlib import Path
+
+        from django.conf import settings
+        from django.core.management import call_command
+
+        call_command('seed_marketplace', stdout=StringIO())
+        self.assertEqual(Product.objects.count(), 100)
+        categories = dict(Product.CATEGORY_CHOICES)
+        conditions = dict(Product.CONDITION_CHOICES)
+        for p in Product.objects.all():
+            self.assertIn(p.category, categories, p.name)
+            self.assertIn(p.condition, conditions, p.name)
+            self.assertTrue((Path(settings.BASE_DIR) / 'marketplace' / 'static' / p.image).is_file(), p.image)
+        self.assertEqual(set(Product.objects.values_list('category', flat=True)), set(categories))
+
+        call_command('seed_marketplace', stdout=StringIO())  # dijalankan ulang tidak dobel
+        self.assertEqual(Product.objects.count(), 100)
