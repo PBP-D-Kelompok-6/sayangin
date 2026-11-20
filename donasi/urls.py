@@ -1,9 +1,12 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = "donasi"
 
 urlpatterns = [
+    # Endpoint REST Framework
+    path("api/v1/", include("donasi.api_urls")),
+
     # ---------------------------------------------------------------------------
     # Sisi donatur
     # ---------------------------------------------------------------------------
