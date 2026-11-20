@@ -86,17 +86,18 @@ def _other_keywords(q):
     return [o for o in dict.fromkeys(options) if o and o != q.lower()][:3]
 
 
-def catalog(request):
+def filter_products(params):
+    """Filter katalog dari query string; dipakai halaman web dan API Flutter (api.py) supaya hasilnya sama."""
     products = Product.objects.available().select_related('seller')
-    q = request.GET.get('q', '').strip()
-    categories = request.GET.getlist('kategori')
-    conditions = request.GET.getlist('kondisi')
-    sizes = request.GET.getlist('ukuran')
-    city = request.GET.get('lokasi', '')
-    seller = request.GET.get('penjual', '')
-    price_min = _int_or_none(request.GET.get('min'))
-    price_max = _int_or_none(request.GET.get('maks'))
-    sort = request.GET.get('urut', 'terbaru')
+    q = params.get('q', '').strip()
+    categories = params.getlist('kategori')
+    conditions = params.getlist('kondisi')
+    sizes = params.getlist('ukuran')
+    city = params.get('lokasi', '')
+    seller = params.get('penjual', '')
+    price_min = _int_or_none(params.get('min'))
+    price_max = _int_or_none(params.get('maks'))
+    sort = params.get('urut', 'terbaru')
 
     if q:
         products = products.filter(name__icontains=q)
@@ -114,7 +115,18 @@ def catalog(request):
         products = products.filter(price__gte=price_min)
     if price_max is not None:
         products = products.filter(price__lte=price_max)
-    products = products.order_by(SORTS.get(sort, '-created_at'))
+    return products.order_by(SORTS.get(sort, '-created_at'))
+
+
+def catalog(request):
+    products = filter_products(request.GET)
+    q = request.GET.get('q', '').strip()
+    categories = request.GET.getlist('kategori')
+    conditions = request.GET.getlist('kondisi')
+    sizes = request.GET.getlist('ukuran')
+    city = request.GET.get('lokasi', '')
+    seller = request.GET.get('penjual', '')
+    sort = request.GET.get('urut', 'terbaru')
 
     # Gelembung filter aktif: tiap gelembung adalah link yang membuang satu nilai.
     labels = {
